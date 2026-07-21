@@ -25,11 +25,11 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
   res.json({ received: true });
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '6mb' }));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
-function loginPage(msg) {
+function loginPage(msg, logo) {
   return '<!doctype html><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><title>Sign in</title>'
   + '<style>body{margin:0;font-family:-apple-system,Arial,sans-serif;background:#f5f7fb;color:#1e293b;display:flex;min-height:100vh;align-items:center;justify-content:center}'
   + '.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:34px;width:340px;box-shadow:0 1px 3px rgba(16,24,40,.06)}'
@@ -38,21 +38,21 @@ function loginPage(msg) {
   + 'input{width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:9px;font-size:15px;box-sizing:border-box}'
   + 'button{width:100%;margin-top:14px;padding:12px;border:0;border-radius:9px;background:#3073F1;color:#fff;font-size:15px;font-weight:700;cursor:pointer}'
   + '.err{color:#e63535;font-size:13px;margin-top:10px;text-align:center}</style>'
-  + '<div class="card"><div class="logo">WCMA</div><h1>Lead Management</h1><p class="s">' + SCHOOL_NAME + '</p>'
+  + '<div class="card">' + (logo ? '<div style="width:72px;height:72px;margin:0 auto 14px"><img src="' + logo + '" alt="logo" style="width:100%;height:100%;object-fit:contain"/></div>' : '<div class="logo">WCMA</div>') + '<h1>Lead Management</h1><p class="s">' + SCHOOL_NAME + '</p>'
   + '<form method="POST" action="/login"><input type="password" name="password" placeholder="Password" autofocus autocomplete="current-password"/>'
   + '<button type="submit">Sign in</button>' + (msg ? '<div class="err">' + msg + '</div>' : '') + '</form></div>';
 }
-app.get('/login', (req, res) => { if (auth.isAuthed(req)) return res.redirect('/admin'); res.send(loginPage('')); });
-app.post('/login', (req, res) => { if (auth.check((req.body.password || '').trim())) { auth.setCookie(res); return res.redirect('/admin'); } res.status(401).send(loginPage('Incorrect password.')); });
+app.get('/login', async (req, res) => { if (auth.isAuthed(req)) return res.redirect('/admin'); const s = await db.getSettings(); res.send(loginPage('', s.logo || '')); });
+app.post('/login', async (req, res) => { if (auth.check((req.body.password || '').trim())) { auth.setCookie(res); return res.redirect('/admin'); } const s = await db.getSettings(); res.status(401).send(loginPage('Incorrect password.', s.logo || '')); });
 app.get('/logout', (req, res) => { auth.clearCookie(res); res.redirect('/login'); });
 
 app.get('/', (req, res) => res.redirect('/signup'));
 app.get('/signup', (req, res) => { let html = fs.readFileSync(path.join(__dirname, 'views', 'console.html'), 'utf8'); html = html.replace('</body>', '<script src="/signup-mode.js"></script>\n</body>'); res.set('Content-Type','text/html').send(html); });
-app.get('/api/programs', (req, res) => res.json(programs));
+app.get('/api/programs', async (req, res) => { try { const s = await db.getSettings(); return res.json((s && Array.isArray(s.programs) && s.programs.length) ? s.programs : programs); } catch (e) { return res.json(programs); } });
 
 app.post('/api/book', async (req, res) => {
   try {
-    const b = req.body || {}; const program = programs.find(p => p.id === b.programId);
+    const b = req.body || {}; const _st = await db.getSettings(); const _list = (_st && Array.isArray(_st.programs) && _st.programs.length) ? _st.programs : programs; const program = _list.find(p => p.id === b.programId);
     if (!program) return res.status(400).json({ error: 'Invalid program' });
     if (!b.student || !b.email || !b.phone) return res.status(400).json({ error: 'Missing required fields' });
     const lead = await db.createLead({ student: b.student, age: b.age ? Number(b.age) : undefined, guardian: b.guardian || '', email: b.email, phone: b.phone, program: program.name, programId: program.id, price: program.price, when: b.when || '', source: b.source || 'direct', status: 'booked', payStatus: program.price > 0 ? 'pending' : 'none' });
@@ -87,13 +87,16 @@ app.post('/api/leads/sync', auth.requireAuth, async (req, res) => {
     if (typeof s.notifyEmail !== 'undefined') patch.notifyEmail = !!s.notifyEmail;
     if (typeof s.notifySms !== 'undefined') patch.notifySms = !!s.notifySms;
     if (s.twilioSid) patch.twilioSid = s.twilioSid; if (s.twilioToken) patch.twilioToken = s.twilioToken; if (s.twilioFrom) patch.twilioFrom = s.twilioFrom;
+    if (Array.isArray(s.programs)) patch.programs = s.programs;
+    ['logo','brandColor','bgColor','logoBg','schoolSlug'].forEach(function(k){ if (typeof s[k] === 'string') patch[k] = s[k]; });
+    if (typeof s.monthlyGoal !== 'undefined' && s.monthlyGoal !== null) patch.monthlyGoal = s.monthlyGoal;
     if (Object.keys(patch).length) await db.saveSettings(patch);
   } catch (e) { console.error('[sync] settings', e.message); }
   res.json({ ok: true, mapping });
 });
 app.get('/api/settings', auth.requireAuth, async (req, res) => {
   const s = await db.getSettings(); const sk = s.stripeKey || process.env.STRIPE_SECRET_KEY || '';
-  res.json({ stripeConnected: /^sk_/.test(sk), stripeMode: /^sk_live_/.test(sk) ? 'live' : (/^sk_test_/.test(sk) ? 'test' : 'none'), emailConnected: !!((s.sendgridKey || process.env.SENDGRID_KEY) && (s.fromEmail || process.env.FROM_EMAIL)), smsConnected: !!(s.twilioSid && s.twilioToken && s.twilioFrom) });
+  res.json({ stripeConnected: /^sk_/.test(sk), stripeMode: /^sk_live_/.test(sk) ? 'live' : (/^sk_test_/.test(sk) ? 'test' : 'none'), emailConnected: !!((s.sendgridKey || process.env.SENDGRID_KEY) && (s.fromEmail || process.env.FROM_EMAIL)), smsConnected: !!(s.twilioSid && s.twilioToken && s.twilioFrom), logo: s.logo || '' });
 });
 
 const PORT = process.env.PORT || 3000;
