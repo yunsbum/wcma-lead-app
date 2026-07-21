@@ -1,7 +1,7 @@
 /* Public /signup: shows the v109 customer booking design and routes bookings to the backend. */
 (function () {
   function val(id){var e=document.getElementById(id);return e?String(e.value||'').trim():'';}
-  function start(){
+  function boot(){
     try { if (typeof openPublic==='function') openPublic(); else if (typeof showView==='function') showView('cust'); } catch(e){}
     // hide any "back to console" control and the fake card fields (real payment goes through Stripe)
     document.querySelectorAll('[onclick*="backFromCustomer"]').forEach(function(el){el.style.display='none';});
@@ -22,5 +22,6 @@
       };
     }
   }
+  function start(){ fetch('/api/programs',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(p){ if(Array.isArray(p)&&p.length&&window.DB) DB.programs=p; }).catch(function(){}).then(function(){ boot(); }); }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
