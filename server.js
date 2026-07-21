@@ -54,6 +54,7 @@ app.get('/signup', (req, res) => {
   res.set('Cache-Control','no-store').set('Content-Type','text/html').send(html);
 });
 app.get('/api/programs', async (req, res) => { try { const s = await db.getSettings(); return res.json((s && Array.isArray(s.programs) && s.programs.length) ? s.programs : programs); } catch (e) { return res.json(programs); } });
+app.get('/api/branding', async (req, res) => { try { const s = await db.getSettings(); res.json({ logo: s.logo || '', brandColor: s.brandColor || '', bgColor: s.bgColor || '', logoBg: s.logoBg || '' }); } catch (e) { res.json({}); } });
 
 app.post('/api/book', async (req, res) => {
   try {
