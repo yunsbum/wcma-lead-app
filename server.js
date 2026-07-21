@@ -50,7 +50,7 @@ app.get('/', (req, res) => res.redirect('/signup'));
 app.get('/signup', (req, res) => {
   let html = fs.readFileSync(path.join(__dirname, 'views', 'console.html'), 'utf8');
   const js = fs.readFileSync(path.join(__dirname, 'public', 'signup-mode.js'), 'utf8');
-  html = html.replace('</body>', '<style>#persistNote{display:none!important}</style><script>' + js + '<\/script></body>');
+  html = html.replace('</body>', function () { return '<style>#persistNote{display:none!important}</style><script>' + js + '<\/script></body>'; });
   res.set('Cache-Control','no-store').set('Content-Type','text/html').send(html);
 });
 app.get('/api/programs', async (req, res) => { try { const s = await db.getSettings(); return res.json((s && Array.isArray(s.programs) && s.programs.length) ? s.programs : programs); } catch (e) { return res.json(programs); } });
@@ -72,7 +72,7 @@ app.get('/console', auth.requireAuth, (req, res) => res.redirect('/admin'));
 app.get('/admin', auth.requireAuth, (req, res) => {
   let html = fs.readFileSync(path.join(__dirname, 'views', 'console.html'), 'utf8');
   const js = fs.readFileSync(path.join(__dirname, 'public', 'console-bridge.js'), 'utf8');
-  html = html.replace('</body>', '<style>#persistNote{display:none!important}</style><script>' + js + '<\/script></body>');
+  html = html.replace('</body>', function () { return '<style>#persistNote{display:none!important}</style><script>' + js + '<\/script></body>'; });
   res.set('Cache-Control','no-store').set('Content-Type','text/html').send(html);
 });
 app.get('/admin/list', auth.requireAuth, async (req, res) => {
