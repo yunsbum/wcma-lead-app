@@ -1,0 +1,299 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Register — World Class Martial Arts</title>
+<style>
+:root{--brand:#3073F1;--brand-dark:#2657c2;--ink:#1e293b;--muted:#64748b;--line:#e5e7eb;--bg:#f5f7fb;--ok:#1cb454;--red:#e63535;--warn:#c2820a}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.top{background:#fff;border-bottom:1px solid var(--line);padding:14px 18px;display:flex;align-items:center;gap:12px}
+.top .lg{width:40px;height:40px;border-radius:10px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;overflow:hidden}
+.top .lg img{width:100%;height:100%;object-fit:contain}
+.top b{font-size:16px}
+.wrap{max-width:760px;margin:0 auto;padding:22px 16px 120px}
+h1{font-size:24px;margin:2px 0 2px}.lead{color:var(--muted);font-size:14px;margin:0 0 16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 1px 3px rgba(16,24,40,.05);margin-top:16px}
+.card h2{font-size:16px;margin:0 0 2px}.card .h-sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+label{display:block;font-size:12.5px;font-weight:600;margin:12px 0 5px;color:#334155}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;font-size:15px;background:#fff;font-family:inherit}
+textarea{min-height:60px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:560px){.grid2,.grid3{grid-template-columns:1fr}}
+.opt{font-weight:500;color:var(--muted)}
+.pcard{border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:14px;position:relative;background:#fff}
+.pcard .pnum{font-size:12.5px;font-weight:800;color:var(--brand);text-transform:uppercase;letter-spacing:.5px}
+.pcard .rm{position:absolute;top:12px;right:12px;background:none;border:0;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;width:auto;padding:4px 8px}
+.progs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:5px}
+@media(max-width:560px){.progs{grid-template-columns:1fr}}
+.prog{border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left}
+.prog.sel{border-color:var(--brand);box-shadow:0 0 0 2px rgba(48,115,241,.15)}
+.prog b{font-size:14px;display:block}.prog .t{color:var(--muted);font-size:11.5px;margin-top:2px}.prog .pr{color:var(--brand);font-weight:700;font-size:13px;margin-top:4px}
+.prog .rec{display:inline-block;font-size:10px;font-weight:800;color:var(--ok);background:#1cb45418;border-radius:5px;padding:1px 5px;margin-top:4px}
+.warn{color:var(--warn);font-size:12px;margin-top:6px}
+.slotbtn{margin-top:6px;display:inline-flex;align-items:center;gap:8px;border:1px dashed var(--brand);color:var(--brand);background:#3073F10a;border-radius:9px;padding:9px 12px;font-size:13.5px;font-weight:600;cursor:pointer;width:auto}
+.slotset{margin-top:6px;font-size:13.5px;background:#1cb45412;border:1px solid #1cb45433;border-radius:9px;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.slotset a{color:var(--brand);font-weight:600;cursor:pointer;font-size:12.5px}
+.picker{margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--bg)}
+.times{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.timechip{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;width:auto}
+.timechip.sel{border-color:var(--brand);background:var(--brand);color:#fff}
+.timechip.full{opacity:.45;cursor:not-allowed;text-decoration:line-through}
+.hint{color:var(--muted);font-size:12px;margin-top:6px}
+.addbtn{margin-top:14px;width:100%;padding:12px;border:1px dashed var(--brand);background:#fff;color:var(--brand);border-radius:10px;font-size:14.5px;font-weight:700;cursor:pointer}
+.sumrow{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.sumrow .who b{display:block}.sumrow .who span{color:var(--muted);font-size:12.5px}
+.sumrow .amt{font-weight:600;white-space:nowrap}
+.totrow{display:flex;justify-content:space-between;padding:8px 0;font-size:14px}
+.totrow.grand{font-size:18px;font-weight:800;border-top:2px solid var(--ink);margin-top:6px;padding-top:12px}
+.disc{color:var(--ok)}
+.promo-row{display:flex;gap:8px;margin-top:6px}.promo-row input{flex:1}
+.promo-row button{width:auto;padding:11px 16px;border:0;border-radius:9px;background:var(--ink);color:#fff;font-weight:600;cursor:pointer}
+.promomsg{font-size:12.5px;margin-top:6px}
+.pay{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(245,247,251,0),var(--bg) 24%);padding:16px 0 8px;margin-top:8px}
+.pay button{width:100%;padding:15px;border:0;border-radius:11px;background:var(--brand);color:#fff;font-size:16.5px;font-weight:800;cursor:pointer;box-shadow:0 6px 16px rgba(48,115,241,.28)}
+.pay button:disabled{opacity:.55;cursor:default;box-shadow:none}
+.norefund{color:var(--muted);font-size:12px;text-align:center;margin-top:10px}
+.err{color:var(--red);font-size:13.5px;margin-top:10px;text-align:center;font-weight:600}
+.banner{background:#fff4e5;border:1px solid #f0c987;color:#8a5a00;border-radius:11px;padding:14px 16px;margin-top:16px;font-size:14px}
+.banner button{margin-top:10px;width:auto;padding:10px 16px;border:0;border-radius:9px;background:var(--brand);color:#fff;font-weight:700;cursor:pointer}
+.lock{color:var(--muted);font-size:12px;text-align:center;margin-top:8px}
+</style></head>
+<body>
+<div class="top"><div class="lg" id="logo">WCMA</div><b id="schoolName">World Class Martial Arts</b></div>
+<div class="wrap">
+  <h1>Register for an Intro Class</h1>
+  <p class="lead">Sign up yourself or your whole family — add everyone, then pay once.</p>
+
+  <div id="retryBanner"></div>
+
+  <div class="card">
+    <h2>Your information</h2>
+    <p class="h-sub">The person paying and receiving confirmations.</p>
+    <div class="grid2">
+      <div><label>First name</label><input id="bFirst" autocomplete="given-name"/></div>
+      <div><label>Last name</label><input id="bLast" autocomplete="family-name"/></div>
+    </div>
+    <div class="grid2">
+      <div><label>Email</label><input id="bEmail" type="email" autocomplete="email"/></div>
+      <div><label>Mobile phone</label><input id="bPhone" type="tel" autocomplete="tel"/></div>
+    </div>
+    <div class="grid2">
+      <div><label>Address <span class="opt">— optional</span></label><input id="bAddress" autocomplete="street-address"/></div>
+      <div><label>Preferred contact <span class="opt">— optional</span></label><select id="bContact"><option value="">No preference</option><option>Text</option><option>Email</option><option>Phone call</option></select></div>
+    </div>
+    <label>How did you hear about us? <span class="opt">— optional</span></label>
+    <select id="bSource"><option value="">Select one…</option><option>Facebook</option><option>Instagram</option><option>Google Search</option><option>Friend / family referral</option><option>Drove by / saw the sign</option><option>Flyer or QR code</option><option>Other</option></select>
+  </div>
+
+  <div class="card">
+    <h2>Participants</h2>
+    <p class="h-sub">Add each person and choose their program and time.</p>
+    <div id="participants"></div>
+    <button class="addbtn" onclick="addParticipant()">+ Add another participant</button>
+  </div>
+
+  <div class="card">
+    <h2>Order summary</h2>
+    <p class="h-sub">Everything you're registering today.</p>
+    <div id="summary"></div>
+    <label>Promo code <span class="opt">— optional</span></label>
+    <div class="promo-row"><input id="promoInput" placeholder="e.g. SUMMER50"/><button onclick="applyPromo()">Apply</button></div>
+    <div class="promomsg" id="promoMsg"></div>
+  </div>
+
+  <div class="pay">
+    <button id="payBtn" onclick="pay()">Pay & complete registration</button>
+    <div class="err" id="err"></div>
+    <div class="norefund">By registering you agree that intro registration fees are non-refundable. Payment is processed securely by Stripe.</div>
+    <div class="lock">🔒 Secure checkout powered by Stripe</div>
+  </div>
+</div>
+<script>
+var PROGRAMS=[],BRANDING={},SCHED={schedule:{},exceptions:[],booked:{}},PROMOS=[];
+var participants=[],pidSeq=1,groupSlot={},promo=null,discount=0;
+var WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],MOs=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var DEFAULT_TIMES=['10:00 AM','11:00 AM','4:00 PM','5:00 PM','6:00 PM'];
+function money(c){return '$'+((c||0)/100).toFixed(2);}
+function hasSchedule(){var s=SCHED.schedule||{};return Object.keys(s).some(function(k){return (s[k]||[]).length;});}
+function newP(){return {pid:pidSeq++,first:'',last:'',dob:'',age:'',gender:'',programId:'',slotDate:'',slotTime:'',when:'',notes:'',picking:false};}
+
+function boot(){
+  if(BRANDING.brandColor){document.documentElement.style.setProperty('--brand',BRANDING.brandColor);}
+  if(BRANDING.bgColor){document.body.style.background=BRANDING.bgColor;}
+  if(BRANDING.logo){document.getElementById('logo').innerHTML='<img src="'+BRANDING.logo+'"/>';}
+  participants=[newP()];
+  render();
+  var q=new URLSearchParams(location.search);
+  if(q.get('canceled')&&q.get('order')){showRetry(q.get('order'));}
+}
+function showRetry(orderId){
+  document.getElementById('retryBanner').innerHTML='<div class="banner"><b>Payment was not completed.</b><br>Your spots are still held. You can try again with a different card.<br><button onclick="retry(\''+orderId+'\')">Try payment again</button></div>';
+}
+function retry(orderId){
+  var el=event.target;el.disabled=true;el.textContent='Starting…';
+  fetch('/api/order/'+orderId+'/retry',{method:'POST'}).then(function(r){return r.json();}).then(function(d){
+    if(d&&d.paid){location.href='/success?order='+orderId;return;}
+    if(d&&d.checkoutUrl){location.href=d.checkoutUrl;return;}
+    el.disabled=false;el.textContent='Try payment again';alert((d&&d.error)||'Could not restart payment.');
+  }).catch(function(){el.disabled=false;el.textContent='Try payment again';});
+}
+
+function ageFromDob(dob){if(!dob)return '';var d=new Date(dob+'T00:00:00');if(isNaN(d))return '';var t=new Date();var a=t.getFullYear()-d.getFullYear();var m=t.getMonth()-d.getMonth();if(m<0||(m===0&&t.getDate()<d.getDate()))a--;return a>=0&&a<120?a:'';}
+function recommend(age){if(age===''||age==null)return null;age=Number(age);var f=function(kw){return PROGRAMS.find(function(p){return (p.name||'').toLowerCase().indexOf(kw)>-1;});};if(age<=6)return f('tiny');if(age<=12)return f('junior');return f('adult');}
+
+function render(){
+  var box=document.getElementById('participants');box.innerHTML='';
+  participants.forEach(function(p,idx){box.appendChild(pcard(p,idx));});
+  renderSummary();
+}
+function pcard(p,idx){
+  var wrap=document.createElement('div');wrap.className='pcard';
+  var rec=recommend(p.age);
+  var progHTML=PROGRAMS.map(function(pr){
+    var sel=p.programId===pr.id?' sel':'';
+    var isRec=rec&&rec.id===pr.id;
+    return '<button class="prog'+sel+'" onclick="setProgram('+p.pid+',\''+pr.id+'\')"><b>'+pr.name+'</b><div class="t">'+(pr.tag||'')+'</div><div class="pr">'+money(pr.price)+'</div>'+(isRec?'<span class="rec">Recommended</span>':'')+'</button>';
+  }).join('');
+  var warn='';
+  if(p.programId&&rec&&rec.id!==p.programId){warn='<div class="warn">⚠ Based on age '+p.age+', we usually recommend <b>'+rec.name+'</b>. You can keep your choice.</div>';}
+  var slotHTML=slotSection(p);
+  wrap.innerHTML=
+    '<div class="pnum">Participant '+(idx+1)+'</div>'+
+    (idx>0?'<button class="rm" onclick="removeParticipant('+p.pid+')">Remove</button>':'')+
+    '<div class="grid2"><div><label>First name</label><input value="'+esc(p.first)+'" oninput="upd('+p.pid+',\'first\',this.value)"/></div>'+
+    '<div><label>Last name</label><input value="'+esc(p.last)+'" oninput="upd('+p.pid+',\'last\',this.value)"/></div></div>'+
+    '<div class="grid3"><div><label>Date of birth</label><input type="date" value="'+esc(p.dob)+'" onchange="setDob('+p.pid+',this.value)"/></div>'+
+    '<div><label>Age</label><input type="number" min="1" max="99" value="'+esc(p.age)+'" oninput="upd('+p.pid+',\'age\',this.value);render()"/></div>'+
+    '<div><label>Gender <span class="opt">— optional</span></label><select onchange="upd('+p.pid+',\'gender\',this.value)"><option value="">—</option><option'+(p.gender==='Male'?' selected':'')+'>Male</option><option'+(p.gender==='Female'?' selected':'')+'>Female</option></select></div></div>'+
+    '<label>Program</label><div class="progs">'+progHTML+'</div>'+warn+
+    slotHTML+
+    '<label>Medical notes / special instructions <span class="opt">— optional</span></label><textarea oninput="upd('+p.pid+',\'notes\',this.value)">'+esc(p.notes)+'</textarea>';
+  return wrap;
+}
+function slotSection(p){
+  if(!p.programId)return '';
+  var prog=PROGRAMS.find(function(x){return x.id===p.programId;});
+  var pname=prog?prog.name:'this program';
+  // count how many participants share this program before this one
+  var groupHasLeader=participants.some(function(x){return x.programId===p.programId&&x.pid!==p.pid&&x.slotTime;});
+  if(p.slotTime){
+    return '<div class="slotset"><span>🕐 '+p.when+'</span><a onclick="openPicker('+p.pid+')">Change time</a></div>';
+  }
+  if(groupHasLeader){
+    // inherit
+    var lead=participants.find(function(x){return x.programId===p.programId&&x.slotTime;});
+    if(lead){p.slotDate=lead.slotDate;p.slotTime=lead.slotTime;p.when=lead.when;return '<div class="slotset"><span>🕐 '+p.when+' <span class="opt">(same time as your other '+pname+')</span></span><a onclick="openPicker('+p.pid+')">Change time</a></div>';}
+  }
+  if(p.picking){return picker(p);}
+  return '<button class="slotbtn" onclick="openPicker('+p.pid+')">🕐 Choose a time for '+pname+'</button>';
+}
+function picker(p){
+  var today=new Date();var min=today.getFullYear()+'-'+pad(today.getMonth()+1)+'-'+pad(today.getDate());
+  var hint='';
+  if(hasSchedule()){var days=Object.keys(SCHED.schedule).filter(function(k){return (SCHED.schedule[k]||[]).length;}).map(function(k){return WD[k];});hint='<div class="hint">Available days: '+days.join(', ')+'</div>';}
+  var times='';
+  if(p._pdate){
+    var slots=slotsForDate(p._pdate,p);
+    if(!slots.length){times='<div class="hint">No classes on that day — please pick another date.</div>';}
+    else{times='<div class="times">'+slots.map(function(s){
+      var full=s.rem<=0;var cls='timechip'+(full?' full':'');
+      return '<button class="'+cls+'" '+(full?'':'onclick="chooseSlot('+p.pid+',\''+p._pdate+'\',\''+s.t+'\')"')+'>'+s.t+(full?' (full)':(s.rem<=3?' · '+s.rem+' left':''))+'</button>';
+    }).join('')+'</div>';}
+  }
+  return '<div class="picker"><label>Choose a date</label><input type="date" min="'+min+'" value="'+(p._pdate||'')+'" onchange="setPickDate('+p.pid+',this.value)"/>'+hint+times+'</div>';
+}
+function pad(n){return (n<10?'0':'')+n;}
+function keyOf(dstr){var d=new Date(dstr+'T00:00:00');return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function whenLabel(dstr,t){var d=new Date(dstr+'T00:00:00');return WD[d.getDay()]+', '+MOs[d.getMonth()]+' '+d.getDate()+' · '+t;}
+function cartDemand(dk,t,exceptPid){var n=0;participants.forEach(function(x){if(x.pid===exceptPid)return;if(x.slotDate===dk&&x.slotTime===t)n++;});return n;}
+function slotsForDate(dstr,p){
+  var d=new Date(dstr+'T00:00:00');var dk=keyOf(dstr);
+  var exs=(SCHED.exceptions||[]).filter(function(e){return e.dateKey===dk;});
+  if(exs.some(function(e){return e.type==='close';}))return [];
+  var slots;
+  if(hasSchedule()){slots=((SCHED.schedule||{})[d.getDay()]||[]).map(function(s){return {t:s.t,c:s.c};});
+    exs.forEach(function(e){if(e.type==='remove')slots=slots.filter(function(s){return s.t!==e.time;});else if(e.type==='add')slots.push({t:e.time,c:e.cap||1});});}
+  else {slots=DEFAULT_TIMES.map(function(t){return {t:t,c:99};});}
+  return slots.map(function(s){var k=dk+'|'+s.t;var bk=(SCHED.booked&&SCHED.booked[k])||0;var cu=cartDemand(dk,s.t,p?p.pid:null);return {t:s.t,c:s.c,rem:Math.max(0,s.c-bk-cu)};});
+}
+function openPicker(pid){var p=byId(pid);p.picking=true;render();}
+function setPickDate(pid,v){var p=byId(pid);p._pdate=v;render();}
+function chooseSlot(pid,dstr,t){var p=byId(pid);var dk=keyOf(dstr);var wl=whenLabel(dstr,t);
+  // assign to whole program group (same program = same time)
+  participants.forEach(function(x){if(x.programId===p.programId){x.slotDate=dk;x.slotTime=t;x.when=wl;x.picking=false;x._pdate=dstr;}});
+  groupSlot[p.programId]={slotDate:dk,slotTime:t,when:wl};
+  render();
+}
+function setProgram(pid,programId){var p=byId(pid);p.programId=programId;
+  if(groupSlot[programId]){p.slotDate=groupSlot[programId].slotDate;p.slotTime=groupSlot[programId].slotTime;p.when=groupSlot[programId].when;p.picking=false;}
+  else{p.slotDate='';p.slotTime='';p.when='';}
+  render();
+}
+function upd(pid,k,v){var p=byId(pid);p[k]=v;if(k!=='age'&&k!=='dob')return;renderSummary();}
+function setDob(pid,v){var p=byId(pid);p.dob=v;var a=ageFromDob(v);if(a!=='')p.age=a;render();}
+function byId(pid){return participants.find(function(x){return x.pid===pid;});}
+function addParticipant(){participants.push(newP());render();window.scrollBy({top:220,behavior:'smooth'});}
+function removeParticipant(pid){var p=byId(pid);participants=participants.filter(function(x){return x.pid!==pid;});
+  // if that program group now empty, clear groupSlot
+  if(p&&!participants.some(function(x){return x.programId===p.programId;}))delete groupSlot[p.programId];
+  render();}
+
+function subtotalCents(){var s=0;participants.forEach(function(p){var pr=PROGRAMS.find(function(x){return x.id===p.programId;});if(pr)s+=(pr.price||0);});return s;}
+function renderSummary(){
+  var sub=subtotalCents();
+  if(promo){discount=Math.min(sub,computeDiscount(promo,sub));}else{discount=0;}
+  var total=Math.max(0,sub-discount);
+  var rows=participants.map(function(p){
+    var pr=PROGRAMS.find(function(x){return x.id===p.programId;});
+    var nm=((p.first||'')+' '+(p.last||'')).trim()||'(participant)';
+    var prog=pr?pr.name:'— choose a program —';
+    var when=p.when?(' · '+p.when):'';
+    return '<div class="sumrow"><div class="who"><b>'+esc(nm)+'</b><span>'+esc(prog)+esc(when)+'</span></div><div class="amt">'+(pr?money(pr.price):'—')+'</div></div>';
+  }).join('');
+  var html=rows+'<div class="totrow"><span>Subtotal ('+participants.length+' participant'+(participants.length>1?'s':'')+')</span><span>'+money(sub)+'</span></div>';
+  if(discount>0)html+='<div class="totrow disc"><span>Promo'+(promo?' ('+promo.code+')':'')+'</span><span>−'+money(discount)+'</span></div>';
+  html+='<div class="totrow"><span>Tax</span><span>$0.00</span></div><div class="totrow grand"><span>Total</span><span>'+money(total)+'</span></div>';
+  document.getElementById('summary').innerHTML=html;
+  var btn=document.getElementById('payBtn');btn.textContent=total>0?('Pay '+money(total)+' & complete registration'):'Complete free registration';
+}
+function computeDiscount(p,price){if(!p)return 0;if(p.type==='percent')return Math.round(price*(p.value||0)/100);if(p.type==='amount')return Math.min(price,p.value||0);if(p.type==='free')return price;return 0;}
+function applyPromo(){
+  var code=(document.getElementById('promoInput').value||'').trim().toUpperCase();var msg=document.getElementById('promoMsg');
+  if(!code){promo=null;msg.textContent='';renderSummary();return;}
+  var p=PROMOS.find(function(x){return x.code&&x.code.toUpperCase()===code&&(x.status?x.status==='Active':true);});
+  if(!p){promo=null;msg.style.color='var(--red)';msg.textContent='✕ Invalid or expired code';renderSummary();return;}
+  if(p.max&&(p.used||0)>=p.max){promo=null;msg.style.color='var(--red)';msg.textContent='✕ This code has reached its limit';renderSummary();return;}
+  promo=p;msg.style.color='var(--ok)';var lab=p.type==='percent'?p.value+'% off':(p.type==='amount'?money(p.value)+' off':'Free');msg.textContent='✓ '+lab+' applied';renderSummary();
+}
+
+function pay(){
+  var err=document.getElementById('err');err.textContent='';
+  var buyer={first:v('bFirst'),last:v('bLast'),email:v('bEmail'),phone:v('bPhone'),address:v('bAddress'),contact:v('bContact'),source:v('bSource')};
+  if(!buyer.first||!buyer.last||!buyer.email||!buyer.phone){err.textContent='Please complete your name, email, and phone.';window.scrollTo({top:0,behavior:'smooth'});return;}
+  if(!participants.length){err.textContent='Please add at least one participant.';return;}
+  var needSlot=hasSchedule();
+  for(var i=0;i<participants.length;i++){var p=participants[i];
+    if(!p.first||!p.last){err.textContent='Participant '+(i+1)+' needs a first and last name.';return;}
+    if(!p.programId){err.textContent='Please choose a program for participant '+(i+1)+'.';return;}
+    if(!p.slotTime){err.textContent='Please choose a time for participant '+(i+1)+'.';return;}
+  }
+  var payload={buyer:buyer,promoCode:promo?promo.code:'',participants:participants.map(function(p){return {programId:p.programId,first:p.first,last:p.last,dob:p.dob,age:p.age,gender:p.gender,slotDate:p.slotDate,slotTime:p.slotTime,when:p.when,medicalNotes:p.notes};})};
+  var btn=document.getElementById('payBtn');btn.disabled=true;var old=btn.textContent;btn.textContent='Processing…';
+  fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
+    .then(function(res){
+      if(!res.ok){btn.disabled=false;btn.textContent=old;err.textContent=(res.d&&res.d.error)||'Something went wrong. Please try again.';return;}
+      var d=res.d;
+      if(d.pay&&d.checkoutUrl){location.href=d.checkoutUrl;return;}
+      location.href='/success?order='+d.orderId;
+    }).catch(function(){btn.disabled=false;btn.textContent=old;err.textContent='Network error. Please try again.';});
+}
+
+function v(id){var e=document.getElementById(id);return e?String(e.value||'').trim():'';}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+var loaded=0;function ready(){if(++loaded>=4)boot();}
+fetch('/api/programs').then(function(r){return r.json();}).then(function(p){if(Array.isArray(p))PROGRAMS=p;}).catch(function(){}).then(ready);
+fetch('/api/branding').then(function(r){return r.json();}).then(function(b){if(b)BRANDING=b;}).catch(function(){}).then(ready);
+fetch('/api/schedule').then(function(r){return r.json();}).then(function(s){if(s)SCHED=s;}).catch(function(){}).then(ready);
+fetch('/api/promos').then(function(r){return r.json();}).then(function(p){if(Array.isArray(p))PROMOS=p;}).catch(function(){}).then(ready);
+</script>
+</body></html>
