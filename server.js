@@ -91,6 +91,24 @@ function validatePromo(promos, code, program) {
   disc = Math.max(0, Math.min(price, disc));
   return { code: p.code, discount: disc };
 }
+// Order-level promo that applies to EVERY eligible participant (per-person), summed.
+function computeOrderDiscount(promos, code, items) {
+  if (!code || !Array.isArray(promos)) return { code: '', discount: 0 };
+  const p = promos.find(x => x && x.code && String(x.code).toUpperCase() === String(code).toUpperCase() && (x.status ? x.status === 'Active' : true));
+  if (!p) return { code: '', discount: 0 };
+  if (p.max && (p.used || 0) >= p.max) return { code: '', discount: 0 };
+  let total = 0;
+  (items || []).forEach(it => {
+    const prog = it.prog || {}; const price = it.price || 0;
+    if (p.scope && p.scope !== 'All programs' && String(p.scope).indexOf(prog.name) === -1) return;
+    let d = 0;
+    if (p.type === 'percent') d = Math.round(price * (p.value || 0) / 100);
+    else if (p.type === 'amount') d = Math.min(price, p.value || 0);
+    else if (p.type === 'free') d = price;
+    total += Math.max(0, Math.min(price, d));
+  });
+  return { code: p.code, discount: total };
+}
 app.post('/api/book', async (req, res) => {
   try {
     const b = req.body || {}; const _st = await db.getSettings(); const _list = (_st && Array.isArray(_st.programs) && _st.programs.length) ? _st.programs : programs; const program = _list.find(p => p.id === b.programId);
@@ -147,7 +165,7 @@ app.post('/api/order', async (req, res) => {
       if (cap != null && (bookedMap[k] || 0) + demand[k] > cap) return res.status(409).json({ error: 'The ' + stime + ' time is full. Please pick another time.', slotFull: k });
     }
     const _promos = (_st && Array.isArray(_st.promos)) ? _st.promos : [];
-    const applied = validatePromo(_promos, b.promoCode, { name: 'Order', price: subtotal });
+    const applied = computeOrderDiscount(_promos, b.promoCode, items);
     const discount = Math.min(subtotal, applied.discount);
     const total = Math.max(0, subtotal - discount);
     const buyerId = 'buyer_' + Date.now() + Math.floor(Math.random() * 1000);

@@ -11,6 +11,18 @@
   function m(c){return (c===0)?'Free':'$'+((c||0)/100).toFixed(2);}
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function computeDisc(p,price){if(!p)return 0;if(p.type==='percent')return Math.round(price*(p.value||0)/100);if(p.type==='amount')return Math.min(price,p.value||0);if(p.type==='free')return price;return 0;}
+  // Promo applies to EVERY eligible participant (per-person), summed across the order.
+  function orderDiscount(p){ if(!p)return 0; var d=0; cart.forEach(function(it){ var price=it.price||0; if(p.scope&&p.scope!=='All programs'&&String(p.scope).indexOf(it.program)===-1)return; d+=Math.max(0,Math.min(price,computeDisc(p,price))); }); return d; }
+  function toastMsg(mm){if(typeof toast==='function'){try{toast(mm);}catch(e){}}}
+  function injectAddButtons(){
+    if(document.getElementById('addBtns'))return;
+    var toPay=document.getElementById('toPay');if(!toPay)return;
+    var foot=toPay.closest('.foot')||toPay.parentNode;
+    var div=document.createElement('div');div.id='addBtns';div.style.cssText='display:flex;flex-direction:column;gap:10px;margin-top:4px';
+    div.innerHTML='<button class="btn btn-ghost" type="button" style="width:100%" onclick="crAddStudent()">+ Add another student</button>'
+      +'<button class="btn btn-ghost" type="button" style="width:100%" onclick="crAddProgram()">+ Add another program</button>';
+    foot.parentNode.insertBefore(div, foot);
+  }
 
   function injectReview(){
     if(document.getElementById('cartReview'))return;
@@ -26,9 +38,8 @@
       +'<div class="promo-row"><input class="fi" id="crPromo" placeholder="e.g. SUMMER50" /><button class="btn-apply" onclick="crApply()">Apply</button></div>'
       +'<div id="crPromoMsg" style="font-size:12.5px;margin-top:6px"></div>'
       +'<div class="foot" style="flex-direction:column;gap:10px;margin-top:16px">'
+      +'<button class="btn btn-ghost" style="width:100%" onclick="crBackToAdd()">‹ Add another student or program</button>'
       +'<button class="btn btn-primary" style="width:100%" id="crPay" onclick="crPay()">Pay &amp; complete registration</button>'
-      +'<button class="btn btn-ghost" style="width:100%" onclick="crAddStudent()">+ Add another student</button>'
-      +'<button class="btn btn-ghost" style="width:100%" onclick="crAddProgram()">+ Add another program</button>'
       +'</div>'
       +'<div id="crErr" style="color:var(--red,#e63535);font-size:13px;margin-top:10px;text-align:center;font-weight:600"></div>'
       +'<div class="note" style="text-align:center;margin-top:12px">Intro registration fees are non-refundable · 🔒 Secured by Stripe</div>'
@@ -40,9 +51,12 @@
 
   function renderReview(){
     var sub=cart.reduce(function(s,i){return s+(i.price||0);},0);
-    var disc=promoObj?Math.min(sub,computeDisc(promoObj,sub)):0;
+    var disc=promoObj?Math.min(sub,orderDiscount(promoObj)):0;
     var total=Math.max(0,sub-disc);
-    var html='';
+    var rows=cart.map(function(it,idx){
+      return '<div class="srow"><span><b>'+esc(it.student||('Participant '+(idx+1)))+'</b><br><span style="color:#64748b">'+esc(it.program)+' · '+esc(it.when)+'</span></span><span>'+m(it.price)+'</span></div>';
+    }).join('');
+    var html=rows;
     if(disc>0)html+='<div class="srow"><span class="disc">Promo'+(promoObj?' ('+esc(promoObj.code)+')':'')+'</span><span class="disc">−'+m(disc)+'</span></div>';
     html+='<div class="srow total"><span>Total ('+cart.length+' participant'+(cart.length>1?'s':'')+')</span><span>'+m(total)+'</span></div>';
     document.getElementById('crSummary').innerHTML=html;
@@ -55,7 +69,7 @@
     var p=PROMOS.find(function(x){return x.code&&x.code.toUpperCase()===code&&(x.status?x.status==='Active':true);});
     if(!p){promoObj=null;msg.style.color='var(--red,#e63535)';msg.textContent='✕ Invalid or expired code';renderReview();return;}
     if(p.max&&(p.used||0)>=p.max){promoObj=null;msg.style.color='var(--red,#e63535)';msg.textContent='✕ This code has reached its limit';renderReview();return;}
-    promoObj=p;msg.style.color='var(--ok,#1cb454)';var lab=p.type==='percent'?p.value+'% off':(p.type==='amount'?m(p.value)+' off':'Free intro');msg.textContent='✓ '+lab+' applied';renderReview();
+    promoObj=p;msg.style.color='var(--ok,#1cb454)';msg.textContent='✓ Applied to all '+cart.length+' participant'+(cart.length>1?'s':'')+' — you save '+m(orderDiscount(p));renderReview();
   };
 
   function captureEntry(){
@@ -66,16 +80,29 @@
     return true;
   }
 
-  // Add another student -> keep same program & time, enter only the new student info.
+  // Add another student -> save this one, keep SAME program & time, enter the next student.
   window.crAddStudent=function(){
+    if(typeof validDetails==='function'&&!validDetails())return;
+    if(!captureEntry())return;
     var cr=document.getElementById('cartReview');if(cr)cr.classList.add('hidden');
     setVal('fStudent','');setVal('fAge','');setVal('fGuardian','');
-    var b=cart[0]||{};if(b.email)setVal('fEmail',b.email);if(b.phone)setVal('fPhone',b.phone);if(b.heard)setVal('fHeard',b.heard);
     if(typeof renderCSummary==='function'){try{renderCSummary();}catch(e){}}
     if(typeof cgo==='function')cgo(3);
+    toastMsg('Added — enter the next student, or Continue to payment');
   };
-  // Add another program -> start again from program selection (same buyer contact prefilled).
+  // Add another program -> save this one, then start again from program selection.
   window.crAddProgram=function(){
+    if(typeof validDetails==='function'&&!validDetails())return;
+    if(!captureEntry())return;
+    var cr=document.getElementById('cartReview');if(cr)cr.classList.add('hidden');
+    var b=cart[0]||{};
+    setVal('fStudent','');setVal('fAge','');setVal('fGuardian','');
+    if(b.email)setVal('fEmail',b.email);if(b.phone)setVal('fPhone',b.phone);if(b.heard)setVal('fHeard',b.heard);
+    if(typeof resetCustomer==='function')resetCustomer();else if(typeof cgo==='function')cgo(1);
+    toastMsg('Saved — now choose the next program');
+  };
+  // From the review page, go back to add more people/programs (cart is kept).
+  window.crBackToAdd=function(){
     var cr=document.getElementById('cartReview');if(cr)cr.classList.add('hidden');
     var b=cart[0]||{};
     setVal('fStudent','');setVal('fAge','');setVal('fGuardian','');
@@ -118,6 +145,7 @@
     // per-booking promo is replaced by one promo field on the summary page
     try{var fp=document.getElementById('fPromo');if(fp){var row=fp.closest('.promo-row');if(row){row.style.display='none';var lbl=row.previousElementSibling;if(lbl&&lbl.tagName==='LABEL')lbl.style.display='none';}}var pm=document.getElementById('promoMsg');if(pm)pm.style.display='none';document.querySelectorAll('#s3 .note').forEach(function(n){n.style.display='none';});}catch(e){}
     injectReview();
+    injectAddButtons();
     if(typeof window.toPayStep==='function'){ window.toPayStep=function(){ if(typeof validDetails==='function'&&!validDetails())return; if(!captureEntry())return; showReview(); }; }
     if(typeof renderLogos==='function'){try{renderLogos();}catch(e){}}
     var q=new URLSearchParams(location.search);if(q.get('canceled')&&q.get('order'))showRetry(q.get('order'));
