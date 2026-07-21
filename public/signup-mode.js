@@ -9,7 +9,7 @@
     if (typeof window.confirmBooking==='function') {
       var _cb=window.confirmBooking;
       window.confirmBooking=function(){
-        if(!window.cs||!cs.program||!cs.date||!cs.time){ return _cb(); }
+        if(typeof cs==='undefined'||!cs||!cs.program||!cs.date||!cs.time){ return _cb(); }
         var d=cs.date;
         var payload={programId:cs.program.id,student:val('fStudent'),age:val('fAge'),guardian:val('fGuardian'),
           email:val('fEmail'),phone:val('fPhone'),when:(WD[d.getDay()]+' '+usDate(d)+' · '+cs.time),source:val('fHeard')||'signup'};
@@ -22,6 +22,6 @@
       };
     }
   }
-  function start(){ fetch('/api/programs',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(p){ if(Array.isArray(p)&&p.length&&window.DB) DB.programs=p; }).catch(function(){}).then(function(){ boot(); }); }
+  function start(){ fetch('/api/programs',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(p){ if(Array.isArray(p)&&p.length&&typeof DB!=='undefined') DB.programs=p; }).catch(function(){}).then(function(){ boot(); }); }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
