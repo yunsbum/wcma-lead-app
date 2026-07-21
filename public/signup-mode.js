@@ -6,6 +6,7 @@
     // hide any "back to console" control and the fake card fields (real payment goes through Stripe)
     document.querySelectorAll('[onclick*="backFromCustomer"]').forEach(function(el){el.style.display='none';});
     var st=document.createElement('style'); st.textContent='#payFields{display:none!important}'; document.head.appendChild(st);
+    if(typeof renderLogos==='function'){try{renderLogos();}catch(e){}}
     if (typeof window.confirmBooking==='function') {
       var _cb=window.confirmBooking;
       window.confirmBooking=function(){
@@ -22,6 +23,9 @@
       };
     }
   }
-  function start(){ fetch('/api/programs',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(p){ if(Array.isArray(p)&&p.length&&typeof DB!=='undefined') DB.programs=p; }).catch(function(){}).then(function(){ boot(); }); }
+  function start(){ var done=0; function ready(){ if(++done>=2) boot(); }
+    fetch('/api/programs',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(p){ if(Array.isArray(p)&&p.length&&typeof DB!=='undefined') DB.programs=p; }).catch(function(){}).then(ready);
+    fetch('/api/branding',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(b){ if(b&&typeof DB!=='undefined'&&DB.settings){ if(b.logo)DB.settings.logo=b.logo; if(b.logoBg)DB.settings.logoBg=b.logoBg; if(b.bgColor)DB.settings.bgColor=b.bgColor; } }).catch(function(){}).then(ready);
+  }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
