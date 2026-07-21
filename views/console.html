@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>World Class Martial Arts — Intro App</title>
+<style>
+  :root{
+    /* Konrix theme palette (primary #3073F1) */
+    --brand:#3073F1;--brand-dark:#2560d0;--ink:#1e293b;--muted:#64748b;--muted2:#94a3b8;
+    --line:#e5e7eb;--bg:#f5f5f5;--card:#fff;--ok:#1cb454;--okbg:#e3f6ec;--warn:#e2a907;--warnbg:#fdf6e0;
+    --blue:#3073F1;--bluebg:#e6effe;--purple:#7c3aed;--purplebg:#f0e9fd;--red:#e63535;--redbg:#fdecec;
+    --gray:#c3c8cf;--graybg:#f1f3f5;--closed:#e63535;--closedbg:#fdecec;
+    --radius:8px;--shadow:0 1px 2px rgba(16,24,40,.04),0 4px 16px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;line-height:1.45}
+  .hidden{display:none!important}
+  /* top mode switch */
+  .modebar{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:10px 16px}
+  .modebar .brand{display:flex;align-items:center;gap:10px}
+  .modebar .mk{width:32px;height:32px;border-radius:8px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .modebar .brand b{font-size:14px}
+  .seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px}
+  .seg button{border:none;background:none;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);font-family:inherit}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+  .persistnote{font-size:11.5px;color:var(--warn);background:var(--warnbg);border:1px solid #f0e3c0;padding:8px 14px;text-align:center}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:11px;padding:13px 18px;font-size:15px;font-weight:650;cursor:pointer;font-family:inherit;transition:.15s}
+  .btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-dark)}
+  .btn-primary:disabled{background:var(--gray);cursor:not-allowed}
+  .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+  .btn-dark{background:var(--ink);color:#fff}
+  .btn-sm{padding:7px 12px;font-size:12.5px;border-radius:9px}
+  .pill{display:inline-block;font-size:11px;padding:3px 8px;border-radius:99px;font-weight:600}
+  .muted{color:var(--muted)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .pad{padding:20px}
+  h2.title{font-size:22px;font-weight:700;letter-spacing:-.4px;margin:2px 0 4px}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 18px}
+  .st-booked{background:var(--bluebg);color:var(--blue)}
+  .st-confirmed{background:var(--okbg);color:#137a45}
+  .st-showed{background:var(--purplebg);color:var(--purple)}
+  .st-noshow{background:var(--warnbg);color:var(--warn)}
+  .st-followup{background:#fff0e6;color:#c2410c}
+  .st-enrolled{background:#dcfce7;color:#166534}
+  .st-lost{background:var(--redbg);color:var(--red)}
+
+  /* ===== CUSTOMER ===== */
+  .cwrap{max-width:920px;margin:0 auto;padding:22px 20px 80px}
+  header.hero{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+  .hero .logo{width:52px;height:52px;border-radius:14px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;flex:0 0 auto}
+  .hero h1{font-size:20px;margin:0;font-weight:700}.hero p{margin:2px 0 0;color:var(--muted);font-size:13.5px}
+  .steps{display:flex;gap:6px;margin:0 0 22px;max-width:760px}
+  .steps .dot{height:4px;flex:1;background:var(--line);border-radius:999px;transition:.25s}
+  .steps .dot.on{background:var(--brand)}
+  .max760{max-width:760px}
+  .prog{display:flex;gap:14px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:14px;cursor:pointer;transition:.15s;background:#fff;margin-bottom:12px}
+  .prog:hover{border-color:var(--brand);transform:translateY(-1px);box-shadow:var(--shadow)}
+  .prog .thumb{width:56px;height:56px;border-radius:12px;background:var(--graybg);display:flex;align-items:center;justify-content:center;font-size:24px;flex:0 0 auto}
+  .prog .info{flex:1;min-width:0}.prog .info h3{margin:0;font-size:16px;font-weight:650}.prog .info p{margin:3px 0 0;color:var(--muted);font-size:13px}
+  .prog .price{text-align:right}.prog .price .amt{font-weight:700;font-size:16px}.prog .price .free{color:var(--ok)}.prog .price small{display:block;color:var(--muted);font-size:11.5px}
+  .chev{color:var(--gray);font-size:20px}
+  .book2{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}
+  .introcard{position:sticky;top:70px}
+  .introcard .banner{height:120px;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:center;font-size:46px;background:linear-gradient(135deg,#e6effe,#f2f6ff)}
+  .introcard .ib{padding:16px}.introcard h3{margin:0 0 2px;font-size:18px;font-weight:700}
+  .introcard .tag{color:var(--brand);font-size:12.5px;font-weight:600}
+  .introcard .desc{color:#3a3f47;font-size:13.5px;margin:10px 0 12px}
+  .introcard .exp{list-style:none;padding:0;margin:0}
+  .introcard .exp li{font-size:13px;color:#3a3f47;padding:5px 0 5px 22px;position:relative}
+  .introcard .exp li:before{content:"✓";position:absolute;left:0;color:var(--ok);font-weight:700}
+  .introcard .pricebar{display:flex;align-items:baseline;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+  .introcard .pricebar .big{font-size:22px;font-weight:750}.introcard .pricebar .big.free{color:var(--ok)}.introcard .pricebar small{color:var(--muted);font-size:12px}
+  .calbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .calbar button{background:#fff;border:1px solid var(--line);border-radius:10px;width:38px;height:38px;cursor:pointer;font-size:16px}
+  .calbar .mo{font-weight:700;font-size:16px}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .grid .wd{text-align:center;font-size:11px;color:var(--muted);font-weight:600;padding-bottom:2px}
+  .day{aspect-ratio:1/1;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:14px;border:1px solid transparent;cursor:pointer;user-select:none}
+  .day.empty{cursor:default}.day.available{background:var(--okbg);color:#137a45;font-weight:600}.day.available:hover{border-color:var(--ok)}
+  .day.soldout{background:var(--graybg);color:#9aa0a8;cursor:not-allowed}.day.closed{background:var(--closedbg);color:#c0392b;cursor:not-allowed}
+  .day.sel{outline:2px solid var(--brand);outline-offset:1px}
+  .legend{display:flex;gap:16px;margin-top:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+  .legend span{display:flex;align-items:center;gap:6px}.sw{width:10px;height:10px;border-radius:3px;display:inline-block}
+  .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:8px}
+  .slot{border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;cursor:pointer;background:#fff;transition:.15s}
+  .slot:hover{border-color:var(--brand)}.slot.sel{border-color:var(--brand);background:#eef4ff}
+  .slot .t{font-weight:650;font-size:15px}.slot .cap{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .slot.full{opacity:.6;background:var(--graybg)}.slot .waitlist{font-size:11px;color:var(--brand);margin-top:2px;font-weight:600}
+  label.fl{display:block;font-size:13px;font-weight:600;margin:14px 0 6px}
+  .fi{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:11px;font-size:15px;font-family:inherit;background:#fff}
+  .fi:focus{outline:none;border-color:var(--brand)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .promo-row{display:flex;gap:8px}.promo-row .fi{flex:1}
+  .btn-apply{padding:12px 16px;background:var(--ink);color:#fff;border:none;border-radius:11px;font-weight:650;cursor:pointer;font-family:inherit}
+  .summary{border:1px dashed var(--line);border-radius:12px;padding:14px 16px;margin-top:18px;background:#fafbfc}
+  .srow{display:flex;justify-content:space-between;font-size:14px;padding:4px 0}
+  .srow.total{border-top:1px solid var(--line);margin-top:6px;padding-top:10px;font-weight:700;font-size:16px}
+  .srow .disc{color:var(--ok)}
+  .back{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:6px 0;margin-bottom:6px}
+  .foot{display:flex;gap:10px;margin-top:20px;align-items:center}
+  .note{font-size:12px;color:var(--muted);margin-top:12px;text-align:center}
+  .stripe-box{border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:6px}
+  .card-line{display:flex;gap:10px}
+  .lock{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;justify-content:center;margin-top:12px}
+  .check{width:72px;height:72px;border-radius:50%;background:var(--okbg);color:var(--ok);display:flex;align-items:center;justify-content:center;font-size:38px;margin:6px auto 14px}
+  .detail{text-align:left;border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:18px}
+  .detail .drow{display:flex;justify-content:space-between;padding:7px 0;font-size:14px;border-bottom:1px solid var(--line)}
+  .detail .drow:last-child{border-bottom:none}.detail .drow .k{color:var(--muted)}
+  .autolist{text-align:left;margin-top:16px;font-size:13.5px;color:var(--muted)}.autolist li{margin:5px 0}
+  .modal-bg{position:fixed;inset:0;background:rgba(17,20,24,.45);display:flex;align-items:center;justify-content:center;z-index:60;padding:20px}
+  .modal{background:#fff;border-radius:18px;max-width:400px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+
+  /* ===== OWNER ===== */
+  .oshell{display:flex}
+  .oside{width:210px;background:#fff;border-right:1px solid var(--line);padding:16px 12px;position:sticky;top:53px;height:calc(100vh - 53px);flex:0 0 auto;overflow-y:auto}
+  .onav a{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;color:var(--ink);text-decoration:none;font-size:14px;cursor:pointer;margin-bottom:2px}
+  .onav a .ic{width:18px;text-align:center}.onav a:hover{background:var(--bg)}
+  .onav a.active{background:#eaf1fe;color:var(--brand);font-weight:600}
+  .onav a .cnt{margin-left:auto;background:var(--bg);color:var(--muted);font-size:11px;padding:1px 7px;border-radius:99px;font-weight:600}
+  .onav .grp{font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;padding:14px 11px 6px;font-weight:600}
+  .omain{flex:1;min-width:0;padding:22px 26px 60px}
+  .h{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px}
+  .h h1{font-size:22px;margin:0;font-weight:700;letter-spacing:-.4px}.h p{margin:4px 0 0;color:var(--muted);font-size:13.5px}
+  .opage{display:none}.opage.on{display:block}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:18px}
+  .stat{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff}
+  .stat .n{font-size:24px;font-weight:750}.stat .l{color:var(--muted);font-size:12px;margin-top:2px}
+  .stat .d{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:11px}
+  .stat .d .up{color:var(--ok);font-weight:700}.stat .d .dn{color:var(--red);font-weight:700}
+  .stat .d small{color:var(--muted)}
+  .dashgrid{display:grid;grid-template-columns:1fr 1.6fr;gap:16px;margin-bottom:16px}
+  .dashgrid.even{grid-template-columns:1fr 1fr}
+  @media(max-width:820px){.dashgrid,.dashgrid.even{grid-template-columns:1fr}}
+  .cardhead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+  .seg button{border:0;background:#fff;color:var(--muted);font-size:11.5px;font-weight:600;padding:5px 12px;cursor:pointer}
+  .seg button.on{background:var(--brand);color:#fff}
+  .legend{display:flex;gap:16px;margin-top:12px;font-size:12px;color:var(--muted);justify-content:center}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  .board{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px}
+  .col{flex:0 0 240px;background:#fff;border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;max-height:70vh}
+  .col .ch{padding:11px 13px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+  .col .ch b{font-size:13px}.col .ch .n{font-size:11px;background:var(--bg);color:var(--muted);padding:1px 8px;border-radius:99px;font-weight:600}
+  .col .body{padding:9px;display:flex;flex-direction:column;gap:9px;overflow-y:auto}
+  .lead{border:1px solid var(--line);border-radius:10px;padding:11px 12px;cursor:grab;background:#fff;transition:.12s}
+  .lead:active{cursor:grabbing}
+  .lead.dragging{opacity:.4}
+  .lead.archived{opacity:.62;background:var(--bg);cursor:pointer}
+  .col .body.dragover{background:#eef5ff;outline:2px dashed var(--brand);outline-offset:-4px;border-radius:8px}
+  .droph{border:1px dashed var(--line);border-radius:8px}
+  .savebtn{border:none;border-radius:10px;padding:9px 16px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s}
+  .savebtn.clean{background:var(--graybg);color:var(--muted);cursor:default;border:1px solid var(--line)}
+  .savebtn.dirty{background:#16a34a;color:#fff;box-shadow:0 0 0 3px rgba(22,163,74,.25);animation:savepulse 1.6s ease-in-out infinite}
+  .savebtn.dirty:hover{background:#128a3e;animation:none}
+  @keyframes savepulse{0%,100%{box-shadow:0 0 0 3px rgba(22,163,74,.22)}50%{box-shadow:0 0 0 6px rgba(22,163,74,.10)}}
+  .lead:hover{border-color:var(--brand);box-shadow:var(--shadow)}
+  .lead .nm{font-weight:650;font-size:13.5px}.lead .mt{color:var(--muted);font-size:12px;margin-top:2px}
+  .lead .foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px}.lead .src{font-size:11px;color:var(--muted2)}
+  .lead .warnflag{font-size:11px;color:var(--warn);margin-top:6px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:11.5px;padding:9px 10px;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+  td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tbody tr{cursor:pointer}tbody tr:hover{background:var(--bg)}
+  .rowact{color:var(--brand);cursor:pointer;font-weight:600;font-size:13px}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+  .filters input,.filters select{padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-size:13.5px;font-family:inherit;background:#fff}
+  .filters input.search{flex:1;min-width:180px}
+  .field{margin-bottom:14px}.field label{display:block;font-size:12.5px;font-weight:600;margin-bottom:5px}
+  .field input,.field select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit}
+  .toggle{width:40px;height:23px;border-radius:99px;background:var(--ok);position:relative;flex:0 0 auto;cursor:pointer}
+  .toggle:after{content:"";position:absolute;width:19px;height:19px;border-radius:50%;background:#fff;top:2px;right:2px}
+  .toggle.off{background:var(--line)}.toggle.off:after{left:2px;right:auto}
+  .setrow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .setrow:last-child{border:none}.setrow .txt{flex:1}.setrow .txt b{font-size:13.5px}.setrow .txt p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+  .qrwrap{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+  .qrbox{width:160px;height:160px;border:1px solid var(--line);border-radius:16px;padding:12px;background:#fff;flex:0 0 auto}
+  .qrbox svg{width:100%;height:100%;display:block}
+  .linkrow{display:flex;gap:8px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px 6px 6px 14px;max-width:420px}
+  .linkrow code{flex:1;font-size:13px;font-family:ui-monospace,Menlo,monospace}
+  /* drawer */
+  .drawer-bg{position:fixed;inset:0;background:rgba(17,20,24,.4);z-index:70;display:none}.drawer-bg.on{display:block}
+  .drawer{position:fixed;top:0;right:0;height:100vh;width:440px;max-width:94vw;background:#fff;z-index:71;transform:translateX(100%);transition:.22s;box-shadow:-10px 0 40px rgba(0,0,0,.12);display:flex;flex-direction:column}
+  .drawer.on{transform:translateX(0)}
+  .drawer .dh{padding:18px 20px;border-bottom:1px solid var(--line)}
+  .drawer .dh .x{float:right;cursor:pointer;color:var(--muted);font-size:20px}
+  .drawer .dh h2{margin:0;font-size:19px;font-weight:700}.drawer .dh .ct{color:var(--muted);font-size:13px;margin-top:3px}
+  .drawer .dbody{padding:18px 20px;overflow-y:auto;flex:1}
+  .kv{display:flex;gap:8px;font-size:13px;padding:4px 0}.kv .k{color:var(--muted);width:80px;flex:0 0 auto}.kv a{color:var(--brand);text-decoration:none}
+  .sec-t{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:20px 0 10px}
+  .statusbtns{display:flex;flex-wrap:wrap;gap:7px}
+  .sb{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 11px;font-size:12.5px;cursor:pointer;font-weight:600;font-family:inherit}.sb.act{border-color:transparent}
+  .compose{border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:4px;background:#fafbfc}
+  .compose .tabs{display:flex;gap:6px;margin-bottom:10px}
+  .compose .tb{flex:1;text-align:center;padding:8px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:13px;font-weight:600}
+  .compose .tb.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .compose select,.compose input,.compose textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:13.5px;font-family:inherit;margin-bottom:9px}
+  .compose textarea{min-height:92px;resize:vertical}
+  .charc{font-size:11px;color:var(--muted);text-align:right;margin:-4px 0 8px}
+  .tl{position:relative;padding-left:22px}.tl:before{content:"";position:absolute;left:7px;top:4px;bottom:4px;width:2px;background:var(--line)}
+  .tl .ev{position:relative;padding:0 0 14px}
+  .tl .ev .dot{position:absolute;left:-19px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:8px}
+  .tl .ev.msg .dot{border-color:var(--brand);color:var(--brand)}.tl .ev.sch .dot{border-color:var(--blue);color:var(--blue)}
+  .tl .ev .tx{font-size:13px}.tl .ev .tm{font-size:11px;color:var(--muted2);margin-top:1px}
+  textarea.notes{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13.5px;font-family:inherit;min-height:60px}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;opacity:0;transition:.25s;z-index:90;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  .databtns{display:flex;gap:8px;flex-wrap:wrap}
+  /* setup pages */
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+  .pcard{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff}
+  .pcard .ptop{display:flex;justify-content:space-between;align-items:flex-start}
+  .pcard .pic{font-size:26px}.pcard h3{margin:8px 0 2px;font-size:15.5px}
+  .pcard .pmeta{color:var(--muted);font-size:12.5px}
+  .pcard .pprice{font-weight:700;margin-top:10px;font-size:16px}.pcard .pprice.free{color:var(--ok)}
+  .weekrow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .weekrow:last-child{border:none}.weekrow .wday{width:52px;font-weight:600;font-size:13.5px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;flex:1}
+  .chip{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12.5px;display:flex;align-items:center;gap:8px}
+  .chip .cap{color:var(--muted)}.chip .x{color:var(--muted2);cursor:pointer}
+  .addslot{border:1px dashed var(--line);background:#fff;border-radius:8px;padding:6px 10px;font-size:12.5px;color:var(--muted);cursor:pointer}
+  .off{color:var(--muted2);font-size:12.5px}
+  .exrow{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .exrow:last-child{border:none}.exrow .exdate{width:120px;font-weight:600;font-size:13.5px}.exrow .extype{flex:1;font-size:13.5px}
+  .badge{font-size:11px;padding:2px 8px;border-radius:6px;font-weight:600}
+  .badge.close{background:var(--warnbg);color:var(--warn)}.badge.remove{background:#fdecea;color:#c0392b}
+  .badge.add{background:var(--okbg);color:#137a45}.badge.gcal{background:var(--bluebg);color:var(--blue)}
+  .autorow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .autorow:last-child{border:none}.autorow .txt{flex:1}.autorow .txt b{font-size:13.5px}.autorow .txt p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+  .tmpl{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+  .tmpl .tt{display:flex;align-items:center;justify-content:space-between}.tmpl h4{margin:0;font-size:14px}
+  .tmpl .tbd{font-size:13px;color:#3a3f47;margin-top:8px;white-space:pre-wrap}
+  /* login */
+  .loginwrap{min-height:calc(100vh - 54px);display:flex;align-items:center;justify-content:center;padding:24px}
+  .logincard{width:100%;max-width:380px;padding:30px 26px}
+  .loginhint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:12px}
+  .loginsep{display:flex;align-items:center;gap:10px;color:var(--muted2);font-size:11px;margin:20px 0 12px;text-transform:uppercase;letter-spacing:.5px}
+  .loginsep:before,.loginsep:after{content:"";flex:1;height:1px;background:var(--line)}
+  .publiclink{display:block;text-align:center;color:var(--brand);font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap}
+  .publiclink:hover{text-decoration:underline}
+  #topRight{display:flex;align-items:center;gap:8px}
+  .pubtag{font-size:11px;font-weight:600;color:#137a45;background:var(--okbg);padding:4px 10px;border-radius:99px}
+  .brandmark{display:inline-flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 auto}
+  .brandmark svg,.brandmark img{width:100%;height:100%;object-fit:contain;display:block}
+  .intcard{border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+  .intcard .ih{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .intcard .ih .il{font-size:22px}.intcard .ih b{font-size:14.5px}
+  .intcard .ih .stat{margin-left:auto;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px}
+  .stat.on{background:var(--okbg);color:#137a45}.stat.off{background:var(--graybg);color:var(--muted)}
+  /* program modal */
+  .modal.wide{max-width:520px;max-height:90vh;overflow-y:auto}
+  .mrow2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .mrow3{display:grid;grid-template-columns:80px 1fr 1fr;gap:12px}
+  .mlabel{display:block;font-size:12.5px;font-weight:600;margin:12px 0 5px}
+  .minput{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit}
+  textarea.minput{min-height:60px;resize:vertical}
+  .mcheck{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13.5px}
+  .pcard .pactions{margin-top:12px;display:flex;gap:8px}
+  .pcard .pactions button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}
+  .pcard .pactions .del{color:var(--red);border-color:#f3c8c8}
+  .infobar{display:flex;gap:10px;align-items:center;background:var(--bluebg);border:1px solid #cfe0fb;border-radius:10px;padding:12px 14px;font-size:13px;margin-bottom:16px}
+  .infobar .lk{margin-left:auto;color:var(--blue);font-weight:600;cursor:pointer;white-space:nowrap}
+  /* program images */
+  .timepick{display:flex;gap:8px;align-items:center}
+  .timepick select{flex:1;min-width:0}
+  .timepick span{color:var(--muted);font-weight:600}
+  .mediaedit{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:4px}
+  .mediathumbs{display:flex;flex-wrap:wrap;gap:8px}
+  .mediathumb{position:relative;width:66px;height:66px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+  .mediathumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .mediathumb .rm{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(17,20,24,.7);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .mediathumb.cover:after{content:"Cover";position:absolute;left:0;bottom:0;right:0;background:rgba(17,20,24,.7);color:#fff;font-size:9px;text-align:center;padding:1px}
+  .addphoto{display:inline-flex;align-items:center;gap:6px;border:1px dashed var(--line);border-radius:10px;padding:0 14px;height:66px;font-size:12.5px;color:var(--muted);cursor:pointer;font-weight:600}
+  .addphoto:hover{border-color:var(--brand);color:var(--brand)}
+  .prog .thumb img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+  .pcard .pic .picimg{width:44px;height:44px;object-fit:cover;border-radius:9px;display:block}
+  .introcard .banner.hasimg{background-size:cover;background-position:center}
+  .gal{display:flex;gap:6px;margin-top:12px}
+  .gal img{width:100%;height:56px;object-fit:cover;border-radius:8px;flex:1;min-width:0}
+  @media(max-width:720px){.book2{grid-template-columns:1fr}.introcard{position:static}.slots{grid-template-columns:repeat(2,1fr)}.row2{grid-template-columns:1fr}.oside{display:none}}
+</style>
+</head>
+<body>
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true"><defs>
+<path id="wcTop" d="M100,100 m-85,0 a85,85 0 0 1 170,0"/>
+<path id="wcBot" d="M100,100 m-80,0 a80,80 0 0 0 160,0"/>
+</defs></svg>
+<div class="modebar">
+  <div class="brand"><span class="brandmark" style="width:36px;height:36px"></span><b id="topTitle">World Class Martial Arts</b></div>
+  <div id="topRight"></div>
+</div>
+<div class="persistnote hidden" id="persistNote"></div>
+
+<!-- ================= LOGIN ================= -->
+<div id="viewLogin">
+  <div class="loginwrap">
+    <div class="card logincard">
+      <span class="brandmark" style="width:72px;height:72px;margin:0 auto 14px"></span>
+      <h2 class="title" style="text-align:center;margin:0">Lead Management</h2>
+      <p class="sub" style="text-align:center;margin:6px 0 18px">Sign in to manage intros, programs, and follow-ups.</p>
+      <label class="fl">Email</label><input class="fi" id="loginEmail" placeholder="you@worldclassmartialarts.com" />
+      <label class="fl">Password</label><input class="fi" id="loginPass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" />
+      <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="doLogin()">Sign in</button>
+      <div class="loginhint">🔒 Staff only · this screen keeps customers out of your data. (Demo: type anything and Sign in.)</div>
+      <div class="loginsep"><span>are you a customer?</span></div>
+      <a class="publiclink" onclick="openPublic()">Open the public booking page ↗</a>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CUSTOMER (public booking page) ================= -->
+<div id="viewCust" class="hidden">
+<div class="cwrap">
+  <header class="hero"><span class="brandmark" style="width:56px;height:56px;flex:0 0 auto"></span><div><h1>Start Your Martial Arts Journey</h1><p>Book your intro class today.</p></div></header>
+  <div class="steps" id="steps"><div class="dot on"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+
+  <section id="s1" class="max760">
+    <h2 class="title">Choose your program</h2><p class="sub">Pick the intro that fits you.</p>
+    <div id="progList"></div>
+  </section>
+
+  <section id="s2" class="hidden">
+    <button class="back" onclick="cgo(1)">‹ Programs</button>
+    <div class="book2">
+      <div class="card introcard" id="introCard"></div>
+      <div class="card pad">
+        <h2 class="title">Pick a date &amp; time</h2><p class="sub" style="margin-bottom:4px">Green dates have open spots.</p><div class="muted" id="tzNote" style="font-size:12.5px;margin:0 0 14px"></div>
+        <div class="calbar"><button onclick="shiftMonth(-1)">‹</button><div class="mo" id="calMonth"></div><button onclick="shiftMonth(1)">›</button></div>
+        <div class="grid" id="calGrid"></div>
+        <div class="legend"><span><i class="sw" style="background:var(--okbg);border:1px solid var(--ok)"></i>Available</span><span><i class="sw" style="background:var(--graybg)"></i>Sold out</span><span><i class="sw" style="background:var(--closedbg)"></i>Closed</span></div>
+        <div id="slotWrap" class="hidden"><h3 style="font-size:15px;margin:20px 0 4px" id="slotTitle">Times</h3><div class="slots" id="slotList"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s3" class="hidden max760">
+    <button class="back" onclick="cgo(2)">‹ Date &amp; time</button>
+    <div class="card pad">
+      <h2 class="title">Student &amp; contact details</h2><p class="sub" id="s3sub"></p>
+      <div class="row2">
+        <div><label class="fl">Student name</label><input class="fi" id="fStudent" placeholder="Student's full name" /></div>
+        <div><label class="fl">Student age</label><input class="fi" id="fAge" type="number" min="2" max="99" placeholder="e.g. 8" /></div>
+      </div>
+      <label class="fl">Parent / guardian name <span class="muted" style="font-weight:400">(if student is under 18)</span></label>
+      <input class="fi" id="fGuardian" placeholder="Optional" />
+      <div class="row2">
+        <div><label class="fl">Email</label><input class="fi" id="fEmail" placeholder="you@email.com" /></div>
+        <div><label class="fl">Mobile phone</label><input class="fi" id="fPhone" placeholder="(555) 123-4567" /></div>
+      </div>
+      <label class="fl">How did you hear about us?</label>
+      <select class="fi" id="fHeard">
+        <option value="">Select one…</option>
+        <option>Facebook</option><option>Instagram</option><option>Google Search</option>
+        <option>Friend / family referral</option><option>Drove by / saw the sign</option>
+        <option>Flyer or QR code</option><option>Other</option>
+      </select>
+      <label class="fl">Promo code</label>
+      <div class="promo-row"><input class="fi" id="fPromo" placeholder="e.g. SUMMER50" /><button class="btn-apply" onclick="applyPromo()">Apply</button></div>
+      <div id="promoMsg" style="font-size:12.5px;margin-top:6px"></div>
+      <div class="summary" id="summary"></div>
+      <div class="foot"><button class="btn btn-primary" style="width:100%" id="toPay" onclick="toPayStep()">Continue to payment</button></div>
+      <div class="note">Try a code: <b>SUMMER50</b> · <b>FACEBOOK</b> · <b>FREEINTRO</b></div>
+    </div>
+  </section>
+
+  <section id="s4" class="hidden max760">
+    <button class="back" onclick="cgo(3)">‹ Details</button>
+    <div class="card pad">
+      <h2 class="title">Payment</h2><p class="sub">Secure checkout powered by Stripe.</p>
+      <div class="summary" id="paySummary"></div>
+      <div id="payFields"><label class="fl">Card information</label>
+        <div class="stripe-box"><input class="fi" placeholder="1234 1234 1234 1234" style="border:none;padding:8px 4px" />
+          <div class="card-line" style="border-top:1px solid var(--line);margin-top:4px;padding-top:4px">
+            <input class="fi" placeholder="MM / YY" style="border:none;padding:8px 4px" /><input class="fi" placeholder="CVC" style="border:none;padding:8px 4px" /></div></div>
+      </div>
+      <div class="foot"><button class="btn btn-primary" style="width:100%" id="payBtn" onclick="pay()">Pay &amp; confirm booking</button></div>
+      <div class="lock">🔒 Prototype — no real charge.</div>
+    </div>
+  </section>
+
+  <section id="s5" class="hidden max760">
+    <div class="card pad" style="text-align:center">
+      <div class="check">✓</div>
+      <h2 class="title" style="text-align:center">You're booked!</h2>
+      <p class="sub" style="text-align:center">A confirmation was sent to <span id="confEmail"></span>.</p>
+      <div class="detail" id="confDetail"></div>
+      <ul class="autolist" id="confAuto"></ul>
+      <div class="foot"><button class="btn btn-ghost" style="width:100%" onclick="crestart()">Book another intro</button></div>
+    </div>
+  </section>
+</div>
+</div>
+
+<!-- ================= OWNER ================= -->
+<div id="viewOwn" class="hidden">
+<div class="oshell">
+  <aside class="oside">
+    <nav class="onav">
+      <a onclick="onav('dash')" id="on-dash" class="active"><span class="ic">📊</span>Overview</a>
+      <a onclick="onav('pipe')" id="on-pipe"><span class="ic">📥</span>Lead Follow-Up<span class="cnt" id="pipeCount">0</span></a>
+      <div class="grp">Setup Lead Campaign</div>
+      <a onclick="onav('prog')" id="on-prog"><span class="ic">🥋</span>Intro Programs</a>
+      <a onclick="onav('sched')" id="on-sched"><span class="ic">🗓️</span>Schedule</a>
+      <a onclick="onav('exc')" id="on-exc"><span class="ic">⚠️</span>Exceptions</a>
+      <a onclick="onav('promo')" id="on-promo"><span class="ic">🏷️</span>Promo Codes</a>
+      <a onclick="onav('msg')" id="on-msg"><span class="ic">💬</span>Messages &amp; Automations</a>
+      <div class="grp">Settings</div>
+      <a onclick="onav('general')" id="on-general"><span class="ic">🕐</span>General</a>
+      <a onclick="onav('notif')" id="on-notif"><span class="ic">🔔</span>Notifications</a>
+      <a onclick="onav('link')" id="on-link"><span class="ic">🌐</span>Link &amp; QR</a>
+      <a onclick="onav('integrations')" id="on-integrations"><span class="ic">🔌</span>Integrations</a>
+      <a onclick="onav('branding')" id="on-branding"><span class="ic">🎨</span>Branding</a>
+    </nav>
+  </aside>
+  <main class="omain">
+    <section class="opage on" id="op-dash">
+      <div class="h"><div><h1>Overview</h1><p>Intro performance — compared to last month and last year.</p></div><span class="pill" style="background:#eef2ff;color:#4f5bd5">Trend figures are sample data</span></div>
+      <div class="stats" id="ownStats"></div>
+      <div class="dashgrid">
+        <div class="card pad">
+          <div class="cardhead"><b style="font-size:14px">Monthly Goal</b>
+            <span style="display:flex;align-items:center;gap:8px">
+              <span class="muted" id="goalMonth" style="font-size:12px"></span>
+              <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)">Goal <input id="goalInput" type="number" min="1" class="minput" style="width:60px;padding:4px 8px;font-size:12px" onchange="saveGoal()" title="Set this school's monthly enrollment goal" /></span>
+            </span>
+          </div>
+          <div id="goalDonut" style="margin-top:12px"></div>
+        </div>
+        <div class="card pad">
+          <div class="cardhead"><b style="font-size:14px">Intros by Month</b>
+            <div class="seg" id="rangeSeg">
+              <button data-r="all" class="on" onclick="setRange('all')">All</button>
+              <button data-r="6m" onclick="setRange('6m')">6M</button>
+              <button data-r="12m" onclick="setRange('12m')">1Y</button>
+            </div>
+          </div>
+          <div id="yoyChart" style="margin-top:14px"></div>
+          <div class="legend"><span><i style="background:var(--brand)"></i>This year</span><span><i style="background:#c7d7fb"></i>Last year</span></div>
+        </div>
+      </div>
+      <div class="dashgrid even">
+        <div class="card pad"><b style="font-size:14px">Bookings by source</b><div id="chChannel" style="margin-top:12px"></div></div>
+        <div class="card pad"><b style="font-size:14px">Conversion funnel</b><div id="funnel" style="margin-top:12px"></div></div>
+      </div>
+    </section>
+
+    <section class="opage" id="op-pipe">
+      <div class="h"><div><h1>Lead Follow-Up</h1><p>Click a card to update status or message the lead.</p></div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:var(--muted)"><input type="checkbox" id="showArch" onchange="toggleShowArch()" /> Show archived (<span id="archCount">0</span>)</label><button class="btn btn-primary btn-sm" onclick="openLeadNew()">+ Add lead (phone/walk-in)</button></div></div>
+      <div class="board" id="board"></div>
+      <div class="card pad" style="margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div><b style="font-size:14px">All intro data</b><div class="muted" id="dataMeta" style="font-size:12.5px">Every record is saved automatically. Download it whenever you need it.</div></div>
+        <button class="btn btn-primary btn-sm" onclick="exportExcel()">⬇︎ Download Excel file</button>
+      </div>
+    </section>
+
+    <section class="opage" id="op-prog">
+      <div class="h"><div><h1>Intro Programs</h1><p>What customers can book from your landing page.</p></div><button class="btn btn-primary btn-sm" onclick="openProgNew()">+ New program</button></div>
+      <div class="infobar">🌐 <div>Programs here appear on your <b>public booking page</b>. Add or edit one, then preview exactly what customers see.</div><span class="lk" onclick="openPreview()">Preview booking page ↗</span></div>
+      <div class="pgrid" id="pgrid"></div>
+    </section>
+
+    <section class="opage" id="op-sched">
+      <div class="h"><div><h1>Weekly Schedule</h1><p>Set recurring times once. They repeat automatically every week.</p></div>
+        <select class="btn btn-ghost btn-sm" style="border:1px solid var(--line)"><option>Adult Intro</option><option>Tiny Tigers</option><option>Junior Program</option></select></div>
+      <div class="card pad" id="weekBuilder"></div>
+      <p class="muted" style="font-size:12.5px;margin-top:12px">One-time change (holiday, belt test)? Use <a onclick="onav('exc')" style="color:var(--brand);cursor:pointer">Exceptions</a> — the weekly schedule stays untouched.</p>
+    </section>
+
+    <section class="opage" id="op-exc">
+      <div class="h"><div><h1>Schedule Exceptions</h1><p>Override specific dates without changing your weekly schedule.</p></div><button class="btn btn-primary btn-sm" onclick="openExcModal()">+ Add exception</button></div>
+      <div class="card pad" id="excList"></div>
+      <p class="muted" style="font-size:12.5px;margin-top:12px">Rows marked <span class="badge gcal">Google</span> sync automatically from your Google Calendar.</p>
+    </section>
+
+    <section class="opage" id="op-promo">
+      <div class="h"><div><h1>Promo Codes</h1><p>Discounts you can tie to a program or an ad channel.</p></div><button class="btn btn-primary btn-sm" onclick="openPromoNew()">+ New code</button></div>
+      <div class="card" style="overflow-x:auto"><table id="promoTable"></table></div>
+    </section>
+
+    <section class="opage" id="op-msg">
+      <div class="h"><div><h1>Messages &amp; Automations</h1><p>Templates you can send from any lead, plus the follow-ups that send themselves.</p></div></div>
+      <div class="card pad" style="margin-bottom:18px">
+        <b style="font-size:14px">Automated follow-ups</b>
+        <div style="margin-top:8px" id="autoList"></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between"><b style="font-size:14px">Message templates</b><button class="btn btn-primary btn-sm" onclick="openTmplNew()">+ New template</button></div>
+      <div id="tmplList" style="margin-top:10px"></div>
+    </section>
+
+    <section class="opage" id="op-notif">
+      <div class="h"><div><h1>School Notifications</h1><p>Get alerted the moment a new intro comes in.</p></div><button class="btn-sm savebtn clean" id="save-notif" onclick="saveSettings()">Saved ✓</button></div>
+      <div class="card pad">
+        <div class="field"><label>School email (receives new-intro alerts)</label><input id="setEmail" placeholder="frontdesk@worldclassmartialarts.com" /></div>
+        <div class="field"><label>School phone (receives new-intro text)</label><input id="setPhone" placeholder="(555) 010-2020" /></div>
+        <div class="setrow"><div class="toggle" id="tgEmail" onclick="tg('tgEmail')"></div><div class="txt"><b>Email the school on every new intro</b><p>Sends student name, age, program, time, and where they heard about you.</p></div></div>
+        <div class="setrow"><div class="toggle" id="tgSms" onclick="tg('tgSms')"></div><div class="txt"><b>Text the school phone on every new intro</b><p>A short SMS to the front-desk line so nobody misses a booking.</p></div></div>
+      </div>
+      <p class="muted" style="font-size:12px;margin-top:12px">In production these send through email (SendGrid/SES) and SMS (Twilio). In this app they're recorded on each lead's timeline so you can see exactly what would go out.</p>
+    </section>
+
+    <section class="opage" id="op-link">
+      <div class="h"><div><h1>Booking Link &amp; QR</h1><p>One link for every ad, flyer, and QR decal.</p></div></div>
+      <div class="card pad">
+        <div class="qrwrap">
+          <div class="qrbox" id="qrbox"></div>
+          <div style="flex:1;min-width:240px">
+            <div class="muted" style="font-size:12.5px;margin-bottom:6px">Public booking URL <span class="pill st-confirmed">Auto-generated</span></div>
+            <div class="linkrow"><code id="bookUrl">thedojoapp.com/lead/worldclass</code><button class="btn btn-dark btn-sm" id="copyBtn" onclick="copyLink()">Copy link</button></div>
+            <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="downloadQR()">⬇︎ Download QR (SVG)</button></div>
+            <p class="muted" style="font-size:12px;margin-top:14px">Add <code>?src=flyer</code> to a printed QR to track scans separately from your online ads.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="opage" id="op-general">
+      <div class="h"><div><h1>General</h1><p>Basic settings for your Lead Management.</p></div><button class="btn-sm savebtn clean" id="save-gen" onclick="saveGeneral()">Saved ✓</button></div>
+      <div class="card pad">
+        <div class="field"><label>Time zone</label><select id="setTz" onchange="updateTzPreview();markDirty('save-gen')"></select></div>
+        <p class="muted" style="font-size:12.5px;margin:0">Defaults to this device's local time zone. All schedule times and booking times use this zone, and it's shown to customers on the booking page.</p>
+        <div class="muted" style="font-size:12.5px;margin-top:12px" id="tzPreview"></div>
+      </div>
+    </section>
+
+    <section class="opage" id="op-integrations">
+      <div class="h"><div><h1>Integrations</h1><p>Connect payments and texting now, or leave blank and wire them at launch.</p></div><button class="btn-sm savebtn clean" id="save-int" onclick="saveIntegrations()">Saved ✓</button></div>
+      <div class="intcard"><div class="ih"><span class="il">💳</span><b>Stripe — payments</b><span class="stat off" id="stStripe">Not connected</span></div>
+        <p class="muted" style="font-size:12.5px;margin:0 0 10px">Collect intro fees online. Paste your Stripe key now, or connect at launch.</p>
+        <div class="field"><label>Stripe key (publishable or secret)</label><input id="setStripe" placeholder="pk_live_… / sk_live_…" /></div>
+      </div>
+      <div class="intcard"><div class="ih"><span class="il">💬</span><b>Twilio — SMS &amp; reminders</b><span class="stat off" id="stTwilio">Not connected</span></div>
+        <p class="muted" style="font-size:12.5px;margin:0 0 10px">Send texts, reminders, and no-show follow-ups. Add credentials now, or connect at launch.</p>
+        <div class="mrow2"><div class="field"><label>Account SID</label><input id="setTwSid" placeholder="AC…" /></div><div class="field"><label>Auth token</label><input id="setTwTok" type="password" placeholder="••••••••" /></div></div>
+        <div class="field"><label>From number</label><input id="setTwFrom" placeholder="+1 555 010 2020" /></div>
+      </div>
+      <div class="intcard"><div class="ih"><span class="il">✉️</span><b>Email — confirmations &amp; follow-ups</b><span class="stat off" id="stEmail">Not connected</span></div>
+        <p class="muted" style="font-size:12.5px;margin:0 0 10px">The system that actually sends emails (confirmations, reminders, enroll offers). Use SendGrid, or connect at launch.</p>
+        <div class="mrow2"><div class="field"><label>SendGrid API key</label><input id="setSg" type="password" placeholder="SG.•••" /></div><div class="field"><label>From email</label><input id="setFromEmail" placeholder="frontdesk@worldclassmartialarts.com" /></div></div>
+      </div>
+      <div class="intcard"><div class="ih"><span class="il">📅</span><b>Google Calendar</b><span class="stat off" id="stGoogle">Not connected</span></div>
+        <p class="muted" style="font-size:12.5px;margin:0 0 10px">Auto-block busy days (Belt Test, holidays) and write each confirmed intro to your calendar. Connect your Google account once.</p>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="setGoogleAcct" class="minput" style="max-width:280px" placeholder="calendar@worldclassmartialarts.com" /><button class="btn btn-dark btn-sm" id="googleBtn" onclick="toggleGoogle()">Connect Google</button></div>
+      </div>
+      <p class="muted" style="font-size:12px">🔒 Stored on this device for setup only. At deployment these move to a secure server vault and switch on real charges, texts, emails &amp; calendar sync — no rebuild needed. Don't share this file while keys are saved.</p>
+    </section>
+
+    <section class="opage" id="op-branding">
+      <div class="h"><div><h1>Branding</h1><p>Your logo and colors show on the Hub, the login screen, and the public booking page.</p></div><button class="btn-sm savebtn clean" id="save-brand" onclick="saveBranding()">Saved ✓</button></div>
+      <div class="card pad" style="margin-bottom:16px">
+        <b style="font-size:14px">Logo</b>
+        <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-top:10px">
+          <span class="brandmark" style="width:96px;height:96px"></span>
+          <div>
+            <label class="addphoto" style="height:auto;padding:11px 16px">Upload logo<input type="file" accept="image/*" style="display:none" onchange="uploadLogo(event)" /></label>
+            <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="resetLogo()">Use default</button>
+            <p class="muted" style="font-size:12px;margin:12px 0 0;max-width:380px">PNG or JPG (transparent PNG works best). Auto-resized. Upload the World Class Martial Arts logo file here to use it everywhere.</p>
+          </div>
+        </div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
+          <label class="mlabel">Logo background (the bright area around your logo)</label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input id="setLogoBg" type="color" style="height:40px;width:56px;padding:4px;border:1px solid var(--line);border-radius:8px" oninput="setLogoBg(this.value)" />
+            <button class="btn btn-ghost btn-sm" onclick="setLogoBg('#ffffff')">White</button>
+            <button class="btn btn-ghost btn-sm" onclick="setLogoBg('#f5f5f5')">Light</button>
+            <button class="btn btn-ghost btn-sm" onclick="setLogoBg('transparent')">None</button>
+          </div>
+          <p class="muted" style="font-size:12px;margin:8px 0 0">Puts your logo on a bright padded chip so it stands out on any header color.</p>
+        </div>
+      </div>
+      <div class="card pad">
+        <b style="font-size:14px">Colors &amp; background</b>
+        <div class="mrow2" style="margin-top:12px">
+          <div class="field"><label>Brand / accent color (buttons, highlights)</label><input id="setBrandColor" type="color" style="height:44px;padding:4px" oninput="applyThemeLive()" /></div>
+          <div class="field"><label>Booking page background</label><input id="setBgColor" type="color" style="height:44px;padding:4px" oninput="applyThemeLive()" /></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="setBg('#f5f5f5')">Light gray</button>
+          <button class="btn btn-ghost btn-sm" onclick="setBg('#ffffff')">White</button>
+          <button class="btn btn-ghost btn-sm" onclick="setBg('#0f1720')">Dark</button>
+          <button class="btn btn-ghost btn-sm" onclick="setBg('#eef4ff')">Brand tint</button>
+          <button class="btn btn-ghost btn-sm" onclick="resetTheme()">Reset colors</button>
+        </div>
+        <p class="muted" style="font-size:12px;margin-top:10px">Changes preview live. Click Save to keep them. Use <b>View booking page ↗</b> to see the customer view.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+</div>
+
+<!-- shared drawer / modal / toast -->
+<div class="drawer-bg" id="drawerBg" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer"><div class="dh"><span class="x" onclick="closeDrawer()">✕</span><h2 id="dName">—</h2><div class="ct" id="dCtx"></div></div><div class="dbody" id="dBody"></div></div>
+<div class="modal-bg hidden" id="progModal"><div class="modal wide">
+  <h2 class="title" id="progModalTitle">New program</h2>
+  <p class="sub" style="margin-bottom:8px">This is exactly what customers see on the booking page.</p>
+  <div class="mrow2">
+    <div><label class="mlabel">Program name</label><input class="minput" id="pfName" placeholder="Adult Intro" /></div>
+    <div><label class="mlabel">Tagline</label><input class="minput" id="pfTag" placeholder="Ages 15+ · Private" /></div>
+  </div>
+  <label class="mlabel">Icon <span class="muted" style="font-weight:400">(emoji, or upload a small icon/logo — shown in the program list)</span></label>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <input class="minput" id="pfIcon" maxlength="2" placeholder="🥋" style="width:60px;text-align:center" oninput="renderIconPrev()" />
+    <span id="pfIconPrev" style="width:40px;height:40px;border:1px solid var(--line);border-radius:8px;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;font-size:22px;background:#fff"></span>
+    <label class="addphoto" style="height:40px;padding:0 12px;font-size:12px">Upload icon<input type="file" accept="image/*" style="display:none" onchange="uploadIcon(event)" /></label>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="clearIcon()">Clear icon</button>
+  </div>
+  <label class="mlabel">Short description (list view)</label><input class="minput" id="pfDesc" placeholder="45-min private intro for adults" />
+  <label class="mlabel">Photos / images <span class="muted" style="font-weight:400">(shown on the booking page — first photo is the cover)</span></label>
+  <div class="mediaedit"><div id="pfMedia" class="mediathumbs"></div>
+    <label class="addphoto">＋ Add photos<input type="file" accept="image/*" multiple style="display:none" onchange="addPhotos(event)" /></label></div>
+  <label class="mlabel">About (booking page)</label><textarea class="minput" id="pfAbout" placeholder="A one-on-one session with a certified instructor…"></textarea>
+  <label class="mlabel">What to expect (one per line)</label><textarea class="minput" id="pfExp" placeholder="Meet your instructor 1-on-1&#10;Learn 3 techniques"></textarea>
+  <div class="mrow3">
+    <div><label class="mlabel">Price ($)</label><input class="minput" id="pfPrice" type="number" min="0" step="1" placeholder="29" /></div>
+    <div><label class="mlabel">Seats / slot</label><input class="minput" id="pfCap" type="number" min="1" placeholder="2" /></div>
+    <div><label class="mlabel">Minutes</label><input class="minput" id="pfDur" type="number" min="5" placeholder="45" /></div>
+  </div>
+  <label class="mcheck"><input type="checkbox" id="pfActive" checked /> Active (shown on the booking page)</label>
+  <div class="foot" style="justify-content:space-between">
+    <button class="btn btn-ghost btn-sm" id="pfDelete" onclick="deleteProg()" style="color:var(--red)">Delete</button>
+    <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" onclick="closeProg()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveProg()">Save program</button></div>
+  </div>
+</div></div>
+<div class="modal-bg hidden" id="leadModal"><div class="modal wide">
+  <h2 class="title">Add lead (phone / walk-in)</h2>
+  <p class="sub" style="margin-bottom:8px">Log an inquiry that came in by phone or in person.</p>
+  <div class="mrow2"><div><label class="mlabel">Student name</label><input class="minput" id="lfStudent" /></div><div><label class="mlabel">Age</label><input class="minput" id="lfAge" type="number" min="2" max="99" /></div></div>
+  <div class="mrow2"><div><label class="mlabel">Parent / guardian</label><input class="minput" id="lfGuardian" placeholder="Optional" /></div><div><label class="mlabel">Program of interest</label><select class="minput" id="lfProgram"></select></div></div>
+  <div class="mrow2"><div><label class="mlabel">Email</label><input class="minput" id="lfEmail" placeholder="Optional" /></div><div><label class="mlabel">Phone</label><input class="minput" id="lfPhone" /></div></div>
+  <div class="mrow2"><div><label class="mlabel">How did they hear?</label><select class="minput" id="lfHeard"><option>Phone call</option><option>Walk-in</option><option>Facebook</option><option>Instagram</option><option>Google Search</option><option>Friend / family referral</option><option>Drove by / saw the sign</option><option>Flyer or QR code</option><option>Other</option></select></div><div><label class="mlabel">Stage</label><select class="minput" id="lfStatus"></select></div></div>
+  <label class="mlabel">Preferred day/time or note</label><input class="minput" id="lfWhen" placeholder="e.g. Wants Sat morning; call back Tue" />
+  <label class="mlabel">Notes</label><textarea class="minput" id="lfNotes"></textarea>
+  <div class="foot" style="justify-content:flex-end"><button class="btn btn-ghost btn-sm" onclick="closeLead()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveLead()">Add to pipeline</button></div>
+</div></div>
+<div class="modal-bg hidden" id="slotModal"><div class="modal">
+  <h2 class="title">Add time — <span id="sfDay"></span></h2>
+  <label class="mlabel">Time</label><div class="timepick"><select class="minput" id="sfHour"></select><span>:</span><select class="minput" id="sfMin"></select><select class="minput" id="sfAP"><option>AM</option><option>PM</option></select></div>
+  <label class="mlabel">Capacity (seats per time)</label><input class="minput" id="sfCap" type="number" min="1" value="2" />
+  <div class="foot" style="justify-content:flex-end"><button class="btn btn-ghost btn-sm" onclick="closeSlot()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveSlot()">Add time</button></div>
+</div></div>
+<div class="modal-bg hidden" id="confirmModal"><div class="modal">
+  <h2 class="title" id="cfTitle">Are you sure?</h2>
+  <p class="sub" id="cfMsg" style="margin-bottom:10px"></p>
+  <div class="foot" style="justify-content:flex-end"><button class="btn btn-ghost btn-sm" onclick="cfCancel()">Cancel</button><button class="btn btn-primary btn-sm" id="cfOk" onclick="cfConfirm()" style="background:var(--red)">Delete</button></div>
+</div></div>
+<div class="modal-bg hidden" id="excModal"><div class="modal">
+  <h2 class="title">Add exception</h2><p class="sub" style="margin-bottom:8px">Override one date without touching your weekly schedule.</p>
+  <label class="mlabel">Date</label><input class="minput" id="efDate" type="date" lang="en-US" onchange="excDatePrev()" />
+  <div class="muted" id="efDatePrev" style="font-size:12px;margin-top:4px"></div>
+  <label class="mlabel">What happens</label>
+  <select class="minput" id="efType" onchange="excTypeChange()"><option value="close">Close the whole day</option><option value="remove">Remove one time</option><option value="add">Add an extra time</option></select>
+  <div id="efTimeWrap"><label class="mlabel">Time</label><div class="timepick"><select class="minput" id="efHour"></select><span>:</span><select class="minput" id="efMin"></select><select class="minput" id="efAP"><option>AM</option><option>PM</option></select></div></div>
+  <div id="efCapWrap"><label class="mlabel">Capacity</label><input class="minput" id="efCap" type="number" min="1" value="1" /></div>
+  <label class="mlabel">Reason (staff only)</label><input class="minput" id="efReason" placeholder="Belt Test, Holiday…" />
+  <div class="foot" style="justify-content:flex-end"><button class="btn btn-ghost btn-sm" onclick="closeExc()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveException()">Add exception</button></div>
+</div></div>
+<div class="modal-bg hidden" id="promoModal"><div class="modal">
+  <h2 class="title" id="promoModalTitle">New promo code</h2>
+  <div class="mrow2"><div><label class="mlabel">Code</label><input class="minput" id="prCode" placeholder="SUMMER50" /></div><div><label class="mlabel">Type</label><select class="minput" id="prType" onchange="promoTypeChange()"><option value="percent">Percent off</option><option value="amount">Amount off</option><option value="free">Free intro</option></select></div></div>
+  <div id="prValueWrap"><label class="mlabel" id="prValueLabel">Percent off (0–100)</label><input class="minput" id="prValue" type="number" min="0" /></div>
+  <div class="mrow2"><div><label class="mlabel">Applies to</label><select class="minput" id="prScope"></select></div><div><label class="mlabel">Channel (optional)</label><input class="minput" id="prChannel" placeholder="Facebook" /></div></div>
+  <div class="mrow2"><div><label class="mlabel">Max uses (blank = unlimited)</label><input class="minput" id="prMax" type="number" min="0" /></div><div><label class="mlabel">Status</label><select class="minput" id="prStatus"><option>Active</option><option>Disabled</option></select></div></div>
+  <div class="foot" style="justify-content:space-between"><button class="btn btn-ghost btn-sm" id="prDelete" onclick="deletePromo()" style="color:var(--red)">Delete</button><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" onclick="closePromo()">Cancel</button><button class="btn btn-primary btn-sm" onclick="savePromo()">Save code</button></div></div>
+</div></div>
+<div class="modal-bg hidden" id="tmplModal"><div class="modal">
+  <h2 class="title" id="tmplModalTitle">New template</h2>
+  <div class="mrow2"><div><label class="mlabel">Name</label><input class="minput" id="tmName" /></div><div><label class="mlabel">Channel</label><select class="minput" id="tmCh" onchange="tmChChange()"><option value="sms">Text (SMS)</option><option value="email">Email</option></select></div></div>
+  <div id="tmSubjectWrap"><label class="mlabel">Email subject</label><input class="minput" id="tmSubject" /></div>
+  <label class="mlabel">Message body</label><textarea class="minput" id="tmBody" style="min-height:120px"></textarea>
+  <p class="muted" style="font-size:11.5px;margin:4px 0 0">Use {name}, {program}, {when} — they fill in automatically.</p>
+  <div class="foot" style="justify-content:space-between"><button class="btn btn-ghost btn-sm" id="tmDelete" onclick="deleteTmpl()" style="color:var(--red)">Delete</button><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" onclick="closeTmpl()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveTmpl()">Save template</button></div></div>
+</div></div>
+<div class="modal-bg hidden" id="wlModal"><div class="modal"><h2 class="title">Join the wait list</h2><p class="sub" id="wlSub"></p><label class="fl">Name</label><input class="fi" id="wlName" /><label class="fl">Mobile phone</label><input class="fi" id="wlPhone" /><div class="foot" style="flex-direction:column"><button class="btn btn-primary" style="width:100%" onclick="joinWaitlist()">Notify me if a spot opens</button><button class="btn btn-ghost" style="width:100%" onclick="closeWL()">Cancel</button></div></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// Self-contained QR encoder (byte mode, ECC M, versions 1-10) -> SVG string.
+// Ported from a decode-verified Python implementation.
+var QR=(function(){
+  var EXP=new Array(512),LOG=new Array(256),x=1;
+  for(var i=0;i<255;i++){EXP[i]=x;LOG[x]=i;x<<=1;if(x&0x100)x^=0x11d;}
+  for(i=255;i<512;i++)EXP[i]=EXP[i-255];
+  function gmul(a,b){if(a===0||b===0)return 0;return EXP[LOG[a]+LOG[b]];}
+  function rsGen(n){var g=[1];for(var i=0;i<n;i++){var g2=new Array(g.length+1).fill(0);for(var j=0;j<g.length;j++){g2[j]^=g[j];g2[j+1]^=gmul(g[j],EXP[i]);}g=g2;}return g;}
+  function rsEnc(data,n){var g=rsGen(n),msg=data.concat(new Array(n).fill(0));for(var i=0;i<data.length;i++){var c=msg[i];if(c!==0)for(var j=1;j<g.length;j++)msg[i+j]^=gmul(g[j],c);}return msg.slice(data.length);}
+  var QRM={1:[26,10,1,16,0,0],2:[44,16,1,28,0,0],3:[70,26,1,44,0,0],4:[100,18,2,32,0,0],5:[134,24,2,43,0,0],6:[172,16,4,27,0,0],7:[196,18,4,31,0,0],8:[242,22,2,38,2,39],9:[292,22,3,36,2,37],10:[346,26,4,43,1,44]};
+  var ALIGN={1:[],2:[6,18],3:[6,22],4:[6,26],5:[6,30],6:[6,34],7:[6,22,38],8:[6,24,42],9:[6,26,46],10:[6,28,50]};
+  function chooseVer(nb){for(var v=1;v<=10;v++){var q=QRM[v],dcw=q[2]*q[3]+q[4]*q[5],cb=v<10?8:16,avail=dcw*8-(4+cb);if(nb*8<=avail)return v;}throw"too long";}
+  function buildCW(data,ver){var q=QRM[ver],dcw=q[2]*q[3]+q[4]*q[5],cb=ver<10?8:16,bits=[];
+    function put(val,n){for(var i=n-1;i>=0;i--)bits.push((val>>i)&1);}
+    put(4,4);put(data.length,cb);for(var i=0;i<data.length;i++)put(data[i],8);
+    var term=Math.min(4,dcw*8-bits.length);put(0,term);while(bits.length%8!==0)bits.push(0);
+    var cws=[];for(i=0;i<bits.length;i+=8){var v=0;for(var j=0;j<8;j++)v=(v<<1)|bits[i+j];cws.push(v);}
+    var pad=[0xEC,0x11],k=0;while(cws.length<dcw){cws.push(pad[k%2]);k++;}
+    var layout=[],ec=q[1];for(i=0;i<q[2];i++)layout.push(q[3]);for(i=0;i<q[4];i++)layout.push(q[5]);
+    var idx=0,dblocks=[],eblocks=[];for(var b=0;b<layout.length;b++){var blk=cws.slice(idx,idx+layout[b]);idx+=layout[b];dblocks.push(blk);eblocks.push(rsEnc(blk,ec));}
+    var res=[],ml=Math.max.apply(null,dblocks.map(function(x){return x.length;}));
+    for(i=0;i<ml;i++)for(b=0;b<dblocks.length;b++)if(i<dblocks[b].length)res.push(dblocks[b][i]);
+    var me=Math.max.apply(null,eblocks.map(function(x){return x.length;}));
+    for(i=0;i<me;i++)for(b=0;b<eblocks.length;b++)if(i<eblocks[b].length)res.push(eblocks[b][i]);
+    return res;
+  }
+  function makeMatrix(ver,fin){var size=17+4*ver,m=[],res=[];for(var r=0;r<size;r++){m.push(new Array(size).fill(null));res.push(new Array(size).fill(false));}
+    function fp(r,c){for(var dr=-1;dr<8;dr++)for(var dc=-1;dc<8;dc++){var rr=r+dr,cc=c+dc;if(rr<0||rr>=size||cc<0||cc>=size)continue;var v;if(dr===-1||dr===7||dc===-1||dc===7)v=0;else if(dr===0||dr===6||dc===0||dc===6)v=1;else v=(dr>=2&&dr<=4&&dc>=2&&dc<=4)?1:0;m[rr][cc]=v;res[rr][cc]=true;}}
+    fp(0,0);fp(0,size-7);fp(size-7,0);
+    for(var i=0;i<size;i++){if(m[6][i]===null){m[6][i]=i%2===0?1:0;res[6][i]=true;}if(m[i][6]===null){m[i][6]=i%2===0?1:0;res[i][6]=true;}}
+    var ac=ALIGN[ver];for(var a=0;a<ac.length;a++)for(var b=0;b<ac.length;b++){var r=ac[a],c=ac[b];if(res[r][c])continue;for(var dr=-2;dr<=2;dr++)for(var dc=-2;dc<=2;dc++){var ring=Math.max(Math.abs(dr),Math.abs(dc));m[r+dr][c+dc]=(ring===0||ring===2)?1:0;res[r+dr][c+dc]=true;}}
+    m[size-8][8]=1;res[size-8][8]=true;
+    for(i=0;i<9;i++){if(!res[8][i]){res[8][i]=true;}if(!res[i][8]){res[i][8]=true;}}
+    for(i=0;i<8;i++){res[8][size-1-i]=true;res[size-1-i][8]=true;}res[8][8]=true;
+    var bitstr=[];for(var w=0;w<fin.length;w++)for(i=7;i>=0;i--)bitstr.push((fin[w]>>i)&1);
+    var bi=0,col=size-1,up=true;
+    while(col>0){if(col===6)col--;for(i=0;i<size;i++){var rr=up?(size-1-i):i;for(var cc2=col;cc2>=col-1;cc2--){if(!res[rr][cc2]&&m[rr][cc2]===null){m[rr][cc2]=bi<bitstr.length?bitstr[bi]:0;bi++;}}}col-=2;up=!up;}
+    return {m:m,size:size,res:res};
+  }
+  function applyMask(m,size,res,mask){var out=[];for(var r=0;r<size;r++)out.push(m[r].slice());
+    for(r=0;r<size;r++)for(var c=0;c<size;c++){if(res[r][c])continue;if(out[r][c]===null)out[r][c]=0;var cond=false;
+      if(mask===0)cond=(r+c)%2===0;else if(mask===1)cond=r%2===0;else if(mask===2)cond=c%3===0;else if(mask===3)cond=(r+c)%3===0;else if(mask===4)cond=(Math.floor(r/2)+Math.floor(c/3))%2===0;else if(mask===5)cond=((r*c)%2+(r*c)%3)===0;else if(mask===6)cond=(((r*c)%2+(r*c)%3)%2)===0;else if(mask===7)cond=(((r+c)%2+(r*c)%3)%2)===0;
+      if(cond)out[r][c]^=1;}return out;}
+  function placeFormat(m,size,mask){var fmt=(0<<3)|mask,g=0x537,v=fmt<<10;for(var i=14;i>=10;i--){if((v>>i)&1)v^=g<<(i-10);}var bits=((fmt<<10)|v)^0x5412;
+    function bit(i){return (bits>>i)&1;}
+    for(i=0;i<6;i++)m[i][8]=bit(i);m[7][8]=bit(6);m[8][8]=bit(7);m[8][7]=bit(8);for(i=9;i<15;i++)m[8][14-i]=bit(i);
+    for(i=0;i<8;i++)m[size-1-i][8]=bit(i);for(i=8;i<15;i++)m[8][size-15+i]=bit(i);m[size-8][8]=1;}
+  function penalty(m,size){var score=0,lines=[];for(var r=0;r<size;r++)lines.push(m[r]);for(var c=0;c<size;c++){var col=[];for(r=0;r<size;r++)col.push(m[r][c]);lines.push(col);}
+    for(var L=0;L<lines.length;L++){var run=1,ln=lines[L];for(var i=1;i<size;i++){if(ln[i]===ln[i-1])run++;else{if(run>=5)score+=3+(run-5);run=1;}}if(run>=5)score+=3+(run-5);}
+    for(r=0;r<size-1;r++)for(c=0;c<size-1;c++)if(m[r][c]===m[r][c+1]&&m[r][c]===m[r+1][c]&&m[r][c]===m[r+1][c+1])score+=3;
+    var p1=[1,0,1,1,1,0,1,0,0,0,0],p2=[0,0,0,0,1,0,1,1,1,0,1];
+    for(L=0;L<lines.length;L++){var ln2=lines[L];for(i=0;i<size-10;i++){var seg=ln2.slice(i,i+11),m1=true,m2=true;for(var k=0;k<11;k++){if(seg[k]!==p1[k])m1=false;if(seg[k]!==p2[k])m2=false;}if(m1||m2)score+=40;}}
+    var dark=0;for(r=0;r<size;r++)for(c=0;c<size;c++)if(m[r][c]===1)dark++;var ratio=Math.floor(dark*100/(size*size));score+=Math.floor(Math.abs(ratio-50)/5)*10;return score;}
+  function utf8(str){var out=[];for(var i=0;i<str.length;i++){var c=str.charCodeAt(i);if(c<128)out.push(c);else if(c<2048){out.push(192|(c>>6));out.push(128|(c&63));}else{out.push(224|(c>>12));out.push(128|((c>>6)&63));out.push(128|(c&63));}}return out;}
+  function modules(text,forceMask){var data=utf8(text),ver=chooseVer(data.length),fin=buildCW(data,ver),base=makeMatrix(ver,fin),size=base.size;
+    function bake(mask){var cand=applyMask(base.m,size,base.res,mask);placeFormat(cand,size,mask);for(var r=0;r<size;r++)for(var c=0;c<size;c++)if(cand[r][c]===null)cand[r][c]=0;return cand;}
+    if(forceMask!=null)return {m:bake(forceMask),size:size};
+    // Prefer masks 4-7 (broadest reader compatibility incl. strict scanners), lowest penalty among them.
+    var best=null,bestScore=1e18;for(var mask=4;mask<8;mask++){var cand=bake(mask),sc=penalty(cand,size);if(sc<bestScore){bestScore=sc;best=cand;}}
+    return {m:best,size:size};}
+  function svg(text,dark,quiet){dark=dark||'#111418';quiet=quiet==null?2:quiet;var q=modules(text),size=q.size,vb=size+2*quiet,rects=[];
+    for(var r=0;r<size;r++){var c=0;while(c<size){if(q.m[r][c]===1){var s=c;while(c<size&&q.m[r][c]===1)c++;rects.push('<rect x="'+s+'" y="'+r+'" width="'+(c-s)+'" height="1"/>');}else c++;}}
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+vb+' '+vb+'" shape-rendering="crispEdges"><rect width="'+vb+'" height="'+vb+'" fill="#fff"/><g transform="translate('+quiet+','+quiet+')" fill="'+dark+'">'+rects.join('')+'</g></svg>';}
+  return {svg:svg,modules:modules};
+})();
+function bookingUrl(){var s=(DB.settings.schoolSlug||'worldclass').toLowerCase().replace(/[^a-z0-9-]/g,'');return 'https://thedojoapp.com/lead/'+s;}
+const LOGO_SVG='<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><circle cx="100" cy="100" r="100" fill="#000"/><circle cx="100" cy="100" r="69" fill="#fff"/><text fill="#fff" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="27" letter-spacing="1.5"><textPath href="#wcTop" startOffset="50%" text-anchor="middle">WORLD CLASS</textPath></text><text fill="#fff" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="23" letter-spacing="1"><textPath href="#wcBot" startOffset="50%" text-anchor="middle">Martial Arts</textPath></text><polygon points="24.0,91.0 26.2,97.0 32.6,97.2 27.5,101.1 29.3,107.3 24.0,103.7 18.7,107.3 20.5,101.1 15.4,97.2 21.8,97.0" fill="#fff"/><polygon points="176.0,91.0 178.2,97.0 184.6,97.2 179.5,101.1 181.3,107.3 176.0,103.7 170.7,107.3 172.5,101.1 167.4,97.2 173.8,97.0" fill="#fff"/><g stroke="#fff" stroke-width="2.5" stroke-linejoin="round"><path d="M100,50 L90,90 L56,100 L90,110 L100,150 Z" fill="#E4032E"/><path d="M100,50 L110,90 L144,100 L110,110 L100,150 Z" fill="#2E4EA6"/></g><circle cx="114" cy="78" r="6.5" fill="#000"/><path d="M74,122 Q104,92 132,84" stroke="#000" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M96,150 Q100,120 120,104" stroke="#000" stroke-width="6" fill="none" stroke-linecap="round"/></svg>';
+function brandMark(){return DB.settings.logo?('<img src="'+DB.settings.logo+'" alt="logo"/>'):'<span class="logotext">LOGO</span>';}
+function renderLogos(){var bg=DB.settings.logoBg||'#ffffff';var clear=(bg==='transparent'||bg==='none');var hasLogo=!!DB.settings.logo;var els=document.querySelectorAll('.brandmark');for(var i=0;i<els.length;i++){var el=els[i];el.innerHTML=brandMark();var w=parseInt(el.style.width)||el.getBoundingClientRect().width||36;el.style.background=clear?'transparent':bg;el.style.borderRadius='22%';el.style.padding=clear?'0':Math.max(3,Math.round(w*0.14))+'px';el.style.boxShadow=clear?'':'0 1px 3px rgba(16,24,40,.12)';if(!hasLogo){var sp=el.querySelector('.logotext');if(sp){sp.style.fontSize=Math.max(8,Math.round(w*0.24))+'px';sp.style.fontWeight='800';sp.style.letterSpacing='.5px';sp.style.color='#9aa0a8';sp.style.fontFamily='-apple-system,Arial,sans-serif';}}}}
+const STAGES=[{k:'booked',label:'Booked'},{k:'confirmed',label:'Confirmed'},{k:'showed',label:'Showed Up'},{k:'noshow',label:'No-Show'},{k:'followup',label:'Follow-Up'},{k:'enrolled',label:'Enrolled'},{k:'lost',label:'Lost'}];
+const stLabel=k=>(STAGES.find(s=>s.k===k)||{label:k}).label;
+const PROGRAMS=[
+  {id:'adult',name:'Adult Intro',icon:'🥋',desc:'45-min private intro for adults',price:2900,cap:2,dur:45,tag:'Ages 15+ · Private',about:"A one-on-one session with a certified instructor. No experience needed.",exp:['Meet your instructor 1-on-1','Learn 3 foundational techniques','Try a real class format','Get a personalized plan']},
+  {id:'tiny',name:'Tiny Tigers (Ages 4–6)',icon:'🐯',desc:'30-min first class for little ones',price:1900,cap:4,dur:30,tag:'Ages 4–6 · Group',about:'A fun, high-energy first class built for short attention spans.',exp:['Games that build focus','Basic kicks &amp; stances','Respect ritual','Parents watch from the lobby']},
+  {id:'junior',name:'Junior Program (Ages 7–12)',icon:'🥋',desc:'45-min intro for kids',price:2900,cap:4,dur:45,tag:'Ages 7–12 · Group',about:'Structured intro that builds discipline, coordination, and confidence.',exp:['Warm-up &amp; conditioning','Punches, kicks &amp; blocks','Partner drills','Belt-path overview']},
+  {id:'free',name:'Free Trial Class',icon:'🎁',desc:'No-cost first class',price:0,cap:3,dur:45,tag:'All ages · Free',about:"Try a full class free. Zero pressure.",exp:['Full 45-min class','No payment required','Meet the instructors','Tour the facility']},
+];
+const MO=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const today=new Date();today.setHours(0,0,0,0);
+function key(d){return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function money(c){return c===0?'Free':'$'+(c/100).toFixed(2);}
+
+// ---------- PERSISTENT STORAGE ----------
+const LS_KEY='wcma_intro_db_v1';
+let persist=true;
+try{const t='__t';localStorage.setItem(t,'1');localStorage.removeItem(t);}catch(e){persist=false;}
+let DB=load();
+function defaultPrograms(){return PROGRAMS.map(p=>({id:p.id,name:p.name,icon:p.icon,desc:p.desc,price:p.price,cap:p.cap,dur:p.dur,tag:p.tag,about:p.about,exp:p.exp.slice(),status:'active'}));}
+function activePrograms(){return DB.programs.filter(p=>p.status!=='archived');}
+function localTz(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'America/Los_Angeles';}catch(e){return 'America/Los_Angeles';}}
+function seedSchedule(){return {0:[],1:[{t:'4:00 PM',c:2},{t:'5:00 PM',c:2},{t:'6:00 PM',c:2}],2:[],3:[{t:'5:00 PM',c:4},{t:'6:00 PM',c:4}],4:[],5:[{t:'4:30 PM',c:3},{t:'5:30 PM',c:3}],6:[{t:'10:00 AM',c:4},{t:'11:00 AM',c:4}]};}
+function seedPromos(){return [{id:'pr1',code:'SUMMER50',type:'percent',value:50,scope:'All programs',channel:'',max:100,used:23,status:'Active'},{id:'pr2',code:'FACEBOOK',type:'amount',value:1000,scope:'All programs',channel:'Facebook',max:0,used:41,status:'Active'},{id:'pr3',code:'FREEINTRO',type:'free',value:0,scope:'Adult Intro',channel:'Instagram',max:50,used:12,status:'Active'},{id:'pr4',code:'BACKTOSCHOOL',type:'amount',value:1500,scope:'All programs',channel:'',max:200,used:0,status:'Disabled'}];}
+function seedExceptions(){return [{id:'ex1',dateKey:key(new Date(2026,7,15)),dateLabel:usDate(new Date(2026,7,15)),type:'close',time:'',cap:0,reason:'Belt Test — closed all day'},{id:'ex2',dateKey:key(new Date(2026,7,22)),dateLabel:usDate(new Date(2026,7,22)),type:'remove',time:'6:00 PM',cap:0,reason:'Tournament prep'}];}
+function seedTemplates(){return [{id:'t1',name:'Reminder',ch:'sms',subject:'',body:"Hi {name}! Reminder: your {program} at World Class Martial Arts is {when}. Reply C to confirm or R to reschedule."},{id:'t2',name:'No-show follow-up',ch:'sms',subject:'',body:"Hi {name}, we missed you! Want to grab another time for your {program}? Rebook at our booking page."},{id:'t3',name:'Enroll offer',ch:'email',subject:'Your next step at World Class Martial Arts',body:"Hi {name},\n\nGreat having you for your {program}! For 48 hours we'll waive the registration fee if you'd like to join.\n\n— World Class Martial Arts"},{id:'t4',name:'Welcome / confirmation',ch:'email',subject:"You're booked!",body:"Hi {name},\n\nYou're booked for {program} on {when}. Arrive 10 min early in comfortable clothes.\n\n— World Class Martial Arts"}];}
+function pad2(n){return (n<10?'0':'')+n;}
+function usDate(d){return pad2(d.getMonth()+1)+'/'+pad2(d.getDate())+'/'+d.getFullYear();}
+function seedDB(){
+  return {version:5,settings:{schoolEmail:'frontdesk@worldclassmartialarts.com',schoolPhone:'(555) 010-2020',notifyEmail:true,notifySms:true,schoolSlug:'worldclass',monthlyGoal:20,domain:'worldclassmartialarts.com',stripeKey:'',twilioSid:'',twilioToken:'',twilioFrom:'',sendgridKey:'',fromEmail:'',logo:'',brandColor:'#3073F1',bgColor:'#f5f5f5',logoBg:'#ffffff',timezone:localTz(),googleConnected:false,googleAccount:'',automations:{confirmation:true,reminders:true,noshow:true,enroll:true,waitlist:false}},
+   schedule:seedSchedule(),exceptions:seedExceptions(),promos:seedPromos(),templates:seedTemplates(),
+   programs:defaultPrograms(),
+   leads:[
+    {id:1001,student:'John Smith',age:34,guardian:'',email:'john@email.com',phone:'(555) 201-3344',heard:'Facebook',program:'Adult Intro',when:'Mon 08/03/2026 · 5:00 PM',src:'Facebook',paid:'$14.50',status:'confirmed',notes:'',created:'Jul 18, 9:14 AM',
+     activity:[{t:'Booking created',tm:'Jul 18, 9:14 AM'},{t:'Confirmation email + text sent to customer',tm:'Jul 18, 9:14 AM',msg:1},{t:'School notified (email + text)',tm:'Jul 18, 9:14 AM',sch:1}]},
+    {id:1002,student:'Mia Lopez',age:5,guardian:'Maria Lopez',email:'maria@email.com',phone:'(555) 771-9080',heard:'Google Search',program:'Tiny Tigers (Ages 4–6)',when:'Wed 08/05/2026 · 5:00 PM',src:'Google Ads',paid:'$19.00',status:'showed',notes:'Loved it — deciding on schedule.',created:'Jul 15, 6:02 PM',
+     activity:[{t:'Booking created',tm:'Jul 15, 6:02 PM'},{t:'Reminder text sent',tm:'Aug 4, 5:00 PM',msg:1},{t:'Checked in — showed up',tm:'Aug 5, 4:58 PM'}]},
+    {id:1003,student:'Kevin Park',age:29,guardian:'',email:'kevin@email.com',phone:'(555) 443-1122',heard:'Instagram',program:'Free Trial Class',when:'Sat 08/08/2026 · 10:00 AM',src:'Instagram',paid:'Free',status:'booked',notes:'',created:'Jul 19, 11:20 AM',
+     activity:[{t:'Booking created',tm:'Jul 19, 11:20 AM'}]},
+    {id:1004,student:'Ana Reyes',age:41,guardian:'',email:'ana@email.com',phone:'(555) 660-7788',heard:'Drove by / saw the sign',program:'Adult Intro',when:'Fri 08/07/2026 · 4:30 PM',src:'QR Code',paid:'$29.00',status:'noshow',notes:'Auto no-show text sent.',created:'Jul 12, 2:31 PM',
+     activity:[{t:'Booking created',tm:'Jul 12, 2:31 PM'},{t:'Marked No-Show',tm:'Aug 7, 5:15 PM'},{t:'Auto no-show text sent',tm:'Aug 7, 6:15 PM',msg:1}]},
+    {id:1005,student:'Leo Cho',age:9,guardian:'Dan Cho',email:'dan@email.com',phone:'(555) 900-2210',heard:'Friend / family referral',program:'Junior Program (Ages 7–12)',when:'Mon 08/10/2026 · 6:00 PM',src:'Referral',paid:'$14.00',status:'followup',notes:'Wants to talk to spouse.',created:'Jul 10, 8:00 AM',
+     activity:[{t:'Booking created',tm:'Jul 10, 8:00 AM'},{t:'Showed up',tm:'Aug 10, 5:57 PM'},{t:'Enroll offer email sent',tm:'Aug 10, 8:00 PM',msg:1}]},
+    {id:1006,student:'Grace Kim',age:27,guardian:'',email:'grace@email.com',phone:'(555) 314-2277',heard:'Friend / family referral',program:'Adult Intro',when:'Wed 08/06/2026 · 6:00 PM',src:'Referral',paid:'$29.00',status:'enrolled',notes:'Signed 12-mo agreement 🎉',created:'Jul 9, 7:45 PM',
+     activity:[{t:'Booking created',tm:'Jul 9, 7:45 PM'},{t:'Showed up',tm:'Aug 6, 5:55 PM'},{t:'Enrolled — 12-month agreement',tm:'Aug 6, 6:40 PM'}]},
+   ]};
+}
+function load(){let d=null;if(persist){try{const raw=localStorage.getItem(LS_KEY);if(raw)d=JSON.parse(raw);}catch(e){}}if(!d)d=seedDB();if(!d.programs)d.programs=defaultPrograms();if(!d.schedule)d.schedule=seedSchedule();if(!d.exceptions)d.exceptions=seedExceptions();if(!d.promos)d.promos=seedPromos();if(!d.templates)d.templates=seedTemplates();(d.exceptions||[]).forEach(function(e){if(e.dateKey){var pr=e.dateKey.split('-');e.dateLabel=usDate(new Date(+pr[0],+pr[1]-1,+pr[2]));}});d.settings=Object.assign({schoolEmail:'frontdesk@worldclassmartialarts.com',schoolPhone:'(555) 010-2020',notifyEmail:true,notifySms:true,schoolSlug:'worldclass',monthlyGoal:20,domain:'worldclassmartialarts.com',stripeKey:'',twilioSid:'',twilioToken:'',twilioFrom:'',sendgridKey:'',fromEmail:'',logo:'',brandColor:'#3073F1',bgColor:'#f5f5f5',logoBg:'#ffffff',timezone:localTz(),googleConnected:false,googleAccount:'',automations:{confirmation:true,reminders:true,noshow:true,enroll:true,waitlist:false}},d.settings||{});if(persist)try{localStorage.setItem(LS_KEY,JSON.stringify(d));}catch(e){}return d;}
+function save(){if(persist){try{localStorage.setItem(LS_KEY,JSON.stringify(DB));return true;}catch(e){return false;}}return true;}
+function nextId(){return DB.leads.reduce((m,l)=>Math.max(m,l.id),1000)+1;}
+
+// ---------- VIEW / AUTH ----------
+let loggedIn=false, custFrom='login';
+function showView(v){
+  renderLogos();applyTheme();
+  document.getElementById('viewLogin').classList.toggle('hidden',v!=='login');
+  document.getElementById('viewCust').classList.toggle('hidden',v!=='cust');
+  document.getElementById('viewOwn').classList.toggle('hidden',v!=='manager');
+  const tr=document.getElementById('topRight'),pn=document.getElementById('persistNote'),tt=document.getElementById('topTitle');
+  if(v==='login'){tr.innerHTML='';pn.classList.add('hidden');tt.textContent='World Class Martial Arts';}
+  else if(v==='manager'){tr.innerHTML='<button class="btn btn-ghost btn-sm" onclick="openPreview()">View booking page ↗</button>';pn.classList.remove('hidden');tt.textContent='World Class Martial Arts · Lead Management';renderOwner();}
+  else if(v==='cust'){tr.innerHTML='<span class="pubtag">🌐 Public booking page</span><button class="btn btn-ghost btn-sm" onclick="backFromCustomer()">← Back to Lead Management</button>';pn.classList.add('hidden');tt.textContent='World Class Martial Arts';}
+  window.scrollTo({top:0});
+}
+function doLogin(){loggedIn=true;showView('manager');}
+function logout(){loggedIn=false;showView('login');}
+function openPreview(){custFrom='manager';resetCustomer();showView('cust');}
+function openPublic(){custFrom='login';resetCustomer();showView('cust');}
+function backFromCustomer(){showView('manager');}
+function resetCustomer(){cs={program:null,date:null,time:null,price:0,discount:0,promo:null,view:new Date(today),wlSlot:null};renderPrograms();cgo(1);}
+const APP_VERSION='v109';
+document.getElementById('persistNote').textContent = (persist
+  ? 'Prototype · Your entries are saved on this device. Download them anytime from the Pipeline (Download Excel).'
+  : '⚠ Preview mode — data won\'t persist here. Download this file and open it in your browser to save data permanently.') + '  ·  ' + APP_VERSION;
+
+// ================= CUSTOMER FLOW =================
+let cs={program:null,date:null,time:null,price:0,discount:0,promo:null,view:new Date(today),wlSlot:null};
+function renderPrograms(){const el=document.getElementById('progList');el.innerHTML='';const list=activePrograms();if(!list.length){el.innerHTML='<div class="card pad muted">No programs are available for booking right now.</div>';return;}list.forEach(p=>{const d=document.createElement('div');d.className='prog';d.onclick=()=>pickProgram(p);d.innerHTML=`<div class="thumb">${p.iconImg?`<img src="${p.iconImg}"/>`:p.icon}</div><div class="info"><h3>${p.name}</h3><p>${p.desc} · ${p.dur} min</p></div><div class="price"><div class="amt ${p.price===0?'free':''}">${money(p.price)}</div><small>${p.cap} ${p.cap>1?'seats':'seat'}/slot</small></div><div class="chev">›</div>`;el.appendChild(d);});}
+function pickProgram(p){cs.program=p;cs.date=null;cs.time=null;cs.price=p.price;cs.discount=0;cs.promo=null;renderIntro(p);document.getElementById('slotWrap').classList.add('hidden');cs.view=new Date(today.getFullYear(),today.getMonth(),1);renderCal();cgo(2);}
+function renderIntro(p){const hero=p.media&&p.media.length?`<div class="banner hasimg" style="background-image:url(${p.media[0]})"></div>`:(p.iconImg?`<div class="banner hasimg" style="background-image:url(${p.iconImg});background-size:contain;background-repeat:no-repeat;background-color:#fff"></div>`:`<div class="banner">${p.icon}</div>`);const gal=p.media&&p.media.length>1?`<div class="gal">${p.media.slice(1,4).map(m=>`<img src="${m}"/>`).join('')}</div>`:'';document.getElementById('introCard').innerHTML=`${hero}<div class="ib"><div class="tag">${p.tag}</div><h3>${p.name}</h3><div class="desc">${p.about}</div>${gal}<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 6px">What to expect</div><ul class="exp">${p.exp.map(e=>`<li>${e}</li>`).join('')}</ul><div class="pricebar"><span class="big ${p.price===0?'free':''}">${money(p.price)}</span><small>· ${p.dur} min · ${p.cap} ${p.cap>1?'spots':'spot'} per time</small></div></div>`;}
+function bookedCount(d,t){return DB.leads.filter(l=>l._d===key(d)&&l._t===t&&['booked','confirmed','showed','enrolled','followup'].includes(l.status)).length;}
+function shiftMonth(n){cs.view.setMonth(cs.view.getMonth()+n);renderCal();}
+function resolveSlots(d){if(d<today)return{status:'closed',slots:[]};const dk=key(d);const exs=DB.exceptions.filter(e=>e.dateKey===dk);if(exs.some(e=>e.type==='close'))return{status:'closed',slots:[]};let slots=(DB.schedule[d.getDay()]||[]).map(s=>({t:s.t,c:s.c}));exs.forEach(e=>{if(e.type==='remove')slots=slots.filter(s=>s.t!==e.time);else if(e.type==='add')slots.push({t:e.time,c:e.cap||1});});if(slots.length===0)return{status:'closed',slots:[]};slots=slots.map(s=>{const b=bookedCount(d,s.t);return{t:s.t,c:s.c,rem:Math.max(0,s.c-b)};});return{status:slots.some(s=>s.rem>0)?'available':'soldout',slots};}
+function renderCal(){const tn=document.getElementById('tzNote');if(tn)tn.textContent='🕐 All times shown in '+tzLabel();const v=cs.view;document.getElementById('calMonth').textContent=MO[v.getMonth()]+' '+v.getFullYear();const g=document.getElementById('calGrid');g.innerHTML='';WD.forEach(w=>{const c=document.createElement('div');c.className='wd';c.textContent=w;g.appendChild(c);});const start=new Date(v.getFullYear(),v.getMonth(),1).getDay();const days=new Date(v.getFullYear(),v.getMonth()+1,0).getDate();for(let i=0;i<start;i++){const e=document.createElement('div');e.className='day empty';g.appendChild(e);}for(let dd=1;dd<=days;dd++){const d=new Date(v.getFullYear(),v.getMonth(),dd);const r=resolveSlots(d);const cell=document.createElement('div');cell.className='day '+r.status;cell.textContent=dd;if(cs.date&&key(cs.date)===key(d))cell.classList.add('sel');if(r.status==='available')cell.onclick=()=>pickDate(d,cell);g.appendChild(cell);}}
+function pickDate(d,cell){cs.date=d;cs.time=null;document.querySelectorAll('.day.sel').forEach(x=>x.classList.remove('sel'));cell.classList.add('sel');const r=resolveSlots(d);const wrap=document.getElementById('slotWrap');wrap.classList.remove('hidden');document.getElementById('slotTitle').textContent=WD[d.getDay()]+', '+MO[d.getMonth()]+' '+d.getDate();const list=document.getElementById('slotList');list.innerHTML='';r.slots.forEach(s=>{const el=document.createElement('div');const full=s.rem<=0;el.className='slot'+(full?' full':'');el.innerHTML=`<div class="t">${s.t}</div>`+(full?`<div class="cap">Sold out</div><div class="waitlist">Join wait list ›</div>`:`<div class="cap">${s.rem} of ${s.c} ${s.rem===1?'seat':'seats'} left</div>`);el.onclick=full?()=>openWL(d,s.t):()=>pickTime(d,s.t,el);list.appendChild(el);});wrap.scrollIntoView({behavior:'smooth',block:'nearest'});}
+function pickTime(d,t,el){cs.time=t;document.querySelectorAll('.slot.sel').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');document.getElementById('s3sub').textContent=`${cs.program.name} · ${WD[d.getDay()]}, ${MO[d.getMonth()]} ${d.getDate()} · ${t}`;document.getElementById('fPromo').value='';document.getElementById('promoMsg').textContent='';cs.discount=0;cs.promo=null;renderCSummary();setTimeout(()=>cgo(3),180);}
+function openWL(d,t){cs.wlSlot={d,t};document.getElementById('wlSub').textContent=`${cs.program.name} · ${WD[d.getDay()]}, ${MO[d.getMonth()]} ${d.getDate()} · ${t} is full.`;document.getElementById('wlModal').classList.remove('hidden');}
+function closeWL(){document.getElementById('wlModal').classList.add('hidden');}
+function joinWaitlist(){closeWL();toast("Added to wait list — we'll text if a spot opens");}
+function applyPromo(){const code=document.getElementById('fPromo').value.trim().toUpperCase();const msg=document.getElementById('promoMsg');if(!code){msg.textContent='';cs.promo=null;cs.discount=0;renderCSummary();return;}const p=DB.promos.find(x=>x.code.toUpperCase()===code&&x.status==='Active');if(!p){msg.style.color='var(--closed)';msg.textContent='✕ Invalid or expired code';cs.promo=null;cs.discount=0;renderCSummary();return;}if(p.max&&(p.used||0)>=p.max){msg.style.color='var(--closed)';msg.textContent='✕ This code has reached its usage limit';cs.promo=null;cs.discount=0;renderCSummary();return;}if(p.scope&&p.scope!=='All programs'&&cs.program&&p.scope.indexOf(cs.program.name)===-1){msg.style.color='var(--closed)';msg.textContent='✕ Not valid for '+cs.program.name;cs.promo=null;cs.discount=0;renderCSummary();return;}let disc=0,label='';if(p.type==='percent'){disc=Math.round(cs.price*p.value/100);label=p.value+'% off';}else if(p.type==='amount'){disc=Math.min(cs.price,p.value);label=money(p.value)+' off';}else if(p.type==='free'){disc=cs.price;label='Free intro';}cs.discount=disc;cs.promo=code;msg.style.color='var(--ok)';msg.textContent='✓ '+label+' applied';renderCSummary();}
+function renderCSummary(){const total=Math.max(0,cs.price-cs.discount);const r=[`<div class="srow"><span>${cs.program.name}</span><span>${money(cs.price)}</span></div>`];if(cs.discount>0)r.push(`<div class="srow"><span class="disc">Promo ${cs.promo?'('+cs.promo+')':''}</span><span class="disc">−${money(cs.discount)}</span></div>`);r.push(`<div class="srow total"><span>Total due today</span><span>${money(total)}</span></div>`);document.getElementById('summary').innerHTML=r.join('');document.getElementById('toPay').textContent=total===0?'Confirm free booking':'Continue to payment';}
+function validDetails(){const s=document.getElementById('fStudent').value.trim();const a=document.getElementById('fAge').value.trim();const e=document.getElementById('fEmail').value.trim();const p=document.getElementById('fPhone').value.trim();const h=document.getElementById('fHeard').value;if(!s){toast('Enter the student name');return false;}if(!a){toast('Enter the student age');return false;}if(!e||!p){toast('Enter email and phone');return false;}if(!h){toast('Select how you heard about us');return false;}return true;}
+function toPayStep(){if(!validDetails())return;cgo(4);}
+function renderPay(){const total=Math.max(0,cs.price-cs.discount);const r=[`<div class="srow"><span>${cs.program.name}</span><span>${money(cs.price)}</span></div>`];if(cs.discount>0)r.push(`<div class="srow"><span class="disc">Promo (${cs.promo})</span><span class="disc">−${money(cs.discount)}</span></div>`);r.push(`<div class="srow total"><span>Total</span><span>${money(total)}</span></div>`);document.getElementById('paySummary').innerHTML=r.join('');const free=total===0;document.getElementById('payFields').style.display=free?'none':'block';document.getElementById('payBtn').textContent=free?'Confirm free booking':('Pay '+money(total)+' & confirm');}
+function pay(){const b=document.getElementById('payBtn');b.textContent='Processing…';b.disabled=true;setTimeout(()=>{b.disabled=false;confirmBooking();},800);}
+function confirmBooking(){
+  const total=Math.max(0,cs.price-cs.discount),d=cs.date;
+  const heard=document.getElementById('fHeard').value;
+  const lead={id:nextId(),student:document.getElementById('fStudent').value.trim(),age:parseInt(document.getElementById('fAge').value)||'',guardian:document.getElementById('fGuardian').value.trim(),
+    email:document.getElementById('fEmail').value.trim(),phone:document.getElementById('fPhone').value.trim(),heard:heard,
+    program:cs.program.name,when:`${WD[d.getDay()]} ${usDate(d)} · ${cs.time}`,_d:key(d),_t:cs.time,
+    src:heard,paid:money(total),status:'confirmed',promo:cs.promo||'',notes:'',created:'Just now',
+    activity:[{t:'Booking created',tm:'Just now'},{t:'Confirmation email + text sent to customer',tm:'Just now',msg:1}]};
+  // school notification
+  const st=DB.settings;const chans=[];if(st.notifyEmail&&st.schoolEmail)chans.push('email → '+st.schoolEmail);if(st.notifySms&&st.schoolPhone)chans.push('text → '+st.schoolPhone);
+  if(chans.length)lead.activity.push({t:'School notified ('+chans.join(', ')+')',tm:'Just now',sch:1});
+  // count the promo redemption so usage limits and the redemptions column stay accurate
+  if(cs.promo){var _pc=DB.promos.find(function(x){return x.code.toUpperCase()===cs.promo.toUpperCase();});if(_pc)_pc.used=(_pc.used||0)+1;}
+  DB.leads.push(lead);save();
+  document.getElementById('confEmail').textContent=lead.email||'your email';
+  document.getElementById('confDetail').innerHTML=`
+    <div class="drow"><span class="k">Student</span><span>${lead.student}${lead.age?' · age '+lead.age:''}</span></div>
+    <div class="drow"><span class="k">Program</span><span>${lead.program}</span></div>
+    <div class="drow"><span class="k">Date</span><span>${WD[d.getDay()]}, ${usDate(d)}</span></div>
+    <div class="drow"><span class="k">Time</span><span>${cs.time}</span></div>
+    <div class="drow"><span class="k">Paid</span><span>${money(total)}</span></div>
+    <div class="drow"><span class="k">Confirmation #</span><span>WC-${lead.id}</span></div>`;
+  const auto=['✉️ Confirmation email sent now','💬 Text confirmation sent to your phone','📅 Added to the school\'s calendar','⏰ Reminders 1 day &amp; 2 hours before'];
+  if(chans.length)auto.push('🔔 School notified: '+chans.join(' + '));
+  document.getElementById('confAuto').innerHTML=auto.map(a=>`<li>${a}</li>`).join('');
+  cgo(5);
+}
+function cgo(step){for(let i=1;i<=5;i++)document.getElementById('s'+i).classList.add('hidden');document.getElementById('s'+step).classList.remove('hidden');document.querySelectorAll('#steps .dot').forEach((d,i)=>d.classList.toggle('on',i<Math.min(step,4)));if(step===3)renderCSummary();if(step===4)renderPay();window.scrollTo({top:0,behavior:'smooth'});}
+function crestart(){cs={program:null,date:null,time:null,price:0,discount:0,promo:null,view:new Date(today),wlSlot:null};['fStudent','fAge','fGuardian','fEmail','fPhone','fPromo'].forEach(id=>document.getElementById(id).value='');document.getElementById('fHeard').value='';renderPrograms();cgo(1);}
+
+// ================= OWNER =================
+function renderOwner(){renderStats();renderBoard();renderSetup();loadSettingsUI();loadIntegrations();renderLinkQR();loadBranding();loadGeneral();}
+function tzLabel(){const tz=DB.settings.timezone||localTz();let abbr='';try{abbr=new Date().toLocaleTimeString('en-US',{timeZone:tz,timeZoneName:'short'}).split(' ').pop();}catch(e){}return tz.replace(/_/g,' ')+(abbr&&!/^\d/.test(abbr)?' ('+abbr+')':'');}
+function tzList(){try{if(Intl.supportedValuesOf)return Intl.supportedValuesOf('timeZone');}catch(e){}return ['America/Los_Angeles','America/Denver','America/Chicago','America/New_York','America/Phoenix','America/Anchorage','Pacific/Honolulu','America/Toronto','America/Vancouver','Europe/London','Asia/Seoul','Asia/Tokyo','UTC'];}
+function setSaveState(id,dirty){const b=document.getElementById(id);if(!b)return;b.classList.toggle('dirty',dirty);b.classList.toggle('clean',!dirty);b.textContent=dirty?'Save changes':'Saved ✓';}
+function markDirty(id){setSaveState(id,true);}
+function loadGeneral(){const sel=document.getElementById('setTz');if(!sel)return;const cur=DB.settings.timezone||localTz();sel.innerHTML=tzList().map(z=>`<option ${z===cur?'selected':''}>${z}</option>`).join('');updateTzPreview();setSaveState('save-gen',false);}
+function updateTzPreview(){const el=document.getElementById('tzPreview');if(!el)return;const tz=document.getElementById('setTz').value;let now='';try{now=new Date().toLocaleString('en-US',{timeZone:tz,dateStyle:'medium',timeStyle:'short'});}catch(e){}el.textContent='Current time in '+tz.replace(/_/g,' ')+': '+now;}
+function saveGeneral(){DB.settings.timezone=document.getElementById('setTz').value;save();setSaveState('save-gen',false);toast('Time zone saved ✓');}
+function renderLinkQR(){document.getElementById('qrbox').innerHTML=QR.svg(bookingUrl());document.getElementById('bookUrl').textContent=bookingUrl().replace('https://','');}
+function statPill(el,on){el.textContent=on?'Connected':'Not connected';el.className='stat '+(on?'on':'off');}
+function loadIntegrations(){const s=DB.settings,g=id=>document.getElementById(id);if(g('setStripe'))g('setStripe').value=s.stripeKey||'';if(g('setTwSid'))g('setTwSid').value=s.twilioSid||'';if(g('setTwTok'))g('setTwTok').value=s.twilioToken||'';if(g('setTwFrom'))g('setTwFrom').value=s.twilioFrom||'';if(g('setSg'))g('setSg').value=s.sendgridKey||'';if(g('setFromEmail'))g('setFromEmail').value=s.fromEmail||'';if(g('setGoogleAcct'))g('setGoogleAcct').value=s.googleAccount||'';if(g('stStripe'))statPill(g('stStripe'),!!s.stripeKey);if(g('stTwilio'))statPill(g('stTwilio'),s.twilioSid&&s.twilioToken);if(g('stEmail'))statPill(g('stEmail'),s.sendgridKey&&s.fromEmail);if(g('stGoogle'))statPill(g('stGoogle'),!!s.googleConnected);if(g('googleBtn'))g('googleBtn').textContent=s.googleConnected?'Disconnect':'Connect Google';setSaveState('save-int',false);const sec=document.getElementById('op-integrations');if(sec)sec.oninput=()=>markDirty('save-int');}
+function saveIntegrations(){DB.settings.stripeKey=document.getElementById('setStripe').value.trim();DB.settings.twilioSid=document.getElementById('setTwSid').value.trim();DB.settings.twilioToken=document.getElementById('setTwTok').value.trim();DB.settings.twilioFrom=document.getElementById('setTwFrom').value.trim();DB.settings.sendgridKey=document.getElementById('setSg').value.trim();DB.settings.fromEmail=document.getElementById('setFromEmail').value.trim();save();loadIntegrations();toast('Integration settings saved ✓');}
+function toggleGoogle(){if(DB.settings.googleConnected){DB.settings.googleConnected=false;DB.settings.googleAccount='';toast('Google Calendar disconnected');}else{const acct=document.getElementById('setGoogleAcct').value.trim();if(!acct){toast('Enter your Google account email first');return;}DB.settings.googleConnected=true;DB.settings.googleAccount=acct;toast('Google Calendar connected — busy days will auto-block (activates at launch)');}save();loadIntegrations();}
+function uploadLogo(ev){const f=ev.target.files[0];if(!f)return;resizeImage(f,400,url=>{DB.settings.logo=url;renderLogos();markDirty('save-brand');toast('Logo added — click Save to keep it');});ev.target.value='';}
+function resetLogo(){DB.settings.logo='';renderLogos();markDirty('save-brand');}
+// ----- Branding: colors & background -----
+function loadBranding(){const s=DB.settings,g=id=>document.getElementById(id);if(g('setBrandColor'))g('setBrandColor').value=s.brandColor||'#3073F1';if(g('setBgColor'))g('setBgColor').value=(/^#/.test(s.bgColor)?s.bgColor:'#f5f5f5');if(g('setLogoBg'))g('setLogoBg').value=(/^#/.test(s.logoBg)?s.logoBg:'#ffffff');setSaveState('save-brand',false);}
+function setLogoBg(c){DB.settings.logoBg=c;if(/^#([0-9a-f]{6})$/i.test(c))document.getElementById('setLogoBg').value=c;renderLogos();markDirty('save-brand');}
+function shade(hex,pct){try{let h=hex.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');let r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);r=Math.max(0,Math.min(255,Math.round(r*(1-pct))));g=Math.max(0,Math.min(255,Math.round(g*(1-pct))));b=Math.max(0,Math.min(255,Math.round(b*(1-pct))));return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');}catch(e){return hex;}}
+function hexLum(hex){try{let h=(hex||'').replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const r=parseInt(h.slice(0,2),16)/255,g=parseInt(h.slice(2,4),16)/255,b=parseInt(h.slice(4,6),16)/255;return 0.2126*r+0.7152*g+0.0722*b;}catch(e){return 1;}}
+function applyTheme(){const s=DB.settings,root=document.documentElement;root.style.setProperty('--brand',s.brandColor||'#3073F1');root.style.setProperty('--brand-dark',shade(s.brandColor||'#3073F1',0.18));const vc=document.getElementById('viewCust');if(vc){vc.style.background=s.bgColor||'';vc.style.color=hexLum(s.bgColor||'#f5f5f5')<0.5?'#f2f4f7':'';}}
+function applyThemeLive(){DB.settings.brandColor=document.getElementById('setBrandColor').value;DB.settings.bgColor=document.getElementById('setBgColor').value;applyTheme();markDirty('save-brand');}
+function setBg(c){DB.settings.bgColor=c;document.getElementById('setBgColor').value=/^#([0-9a-f]{6})$/i.test(c)?c:'#f5f5f5';applyTheme();markDirty('save-brand');}
+function saveBranding(){DB.settings.brandColor=document.getElementById('setBrandColor').value;DB.settings.bgColor=document.getElementById('setBgColor').value;if(!save()){toast('Logo image is too large to store — use a smaller file');return;}applyTheme();renderLogos();setSaveState('save-brand',false);toast('Branding saved ✓');}
+function resetTheme(){DB.settings.brandColor='#3073F1';DB.settings.bgColor='#f5f5f5';DB.settings.logoBg='#ffffff';loadBranding();applyTheme();renderLogos();markDirty('save-brand');toast('Colors reset — click Save');}
+// manual lead entry (phone / walk-in)
+function openLeadNew(){document.getElementById('lfProgram').innerHTML='<option value="">Not sure yet</option>'+DB.programs.map(p=>`<option>${p.name}</option>`).join('');document.getElementById('lfStatus').innerHTML=STAGES.map(s=>`<option value="${s.k}">${s.label}</option>`).join('');['lfStudent','lfAge','lfGuardian','lfEmail','lfPhone','lfWhen','lfNotes'].forEach(id=>document.getElementById(id).value='');document.getElementById('lfHeard').value='Phone call';document.getElementById('lfStatus').value='booked';document.getElementById('leadModal').classList.remove('hidden');}
+function closeLead(){document.getElementById('leadModal').classList.add('hidden');}
+function saveLead(){const name=document.getElementById('lfStudent').value.trim();if(!name){toast('Enter the student name');return;}const heard=document.getElementById('lfHeard').value;const lead={id:nextId(),student:name,age:parseInt(document.getElementById('lfAge').value)||'',guardian:document.getElementById('lfGuardian').value.trim(),email:document.getElementById('lfEmail').value.trim(),phone:document.getElementById('lfPhone').value.trim(),heard:heard,program:document.getElementById('lfProgram').value||'—',when:document.getElementById('lfWhen').value.trim()||'—',_d:'',_t:'',src:heard,paid:'—',status:document.getElementById('lfStatus').value,promo:'',notes:document.getElementById('lfNotes').value.trim(),created:'Just now',activity:[{t:'Lead added manually ('+heard+')',tm:'Just now'}]};DB.leads.push(lead);save();closeLead();renderBoard();renderStats();toast('Lead added to pipeline');}
+
+// ----- Setup pages (Programs / Schedule / Exceptions / Promo / Messages) -----
+function promoLabel(p){return p.type==='percent'?p.value+'% off':(p.type==='amount'?money(p.value)+' off':'Free intro');}
+function renderSetup(){
+  document.getElementById('pgrid').innerHTML=DB.programs.map(p=>`
+    <div class="pcard"><div class="ptop"><div class="pic">${p.iconImg?`<img src="${p.iconImg}" class="picimg"/>`:p.icon}</div><span class="pill ${p.status==='archived'?'st-lost':'st-confirmed'}">${p.status==='archived'?'Hidden':'Active'}</span></div>
+      <h3>${p.name}</h3><div class="pmeta">${p.dur} min · ${p.cap} ${p.cap>1?'seats':'seat'}/slot</div>
+      <div class="pprice ${p.price===0?'free':''}">${money(p.price)}</div>
+      <div class="pactions"><button onclick="openProgEdit('${p.id}')">Edit</button><button class="del" onclick="quickDeleteProg('${p.id}')">Delete</button></div></div>`).join('');
+  document.getElementById('weekBuilder').innerHTML=WD.map((wd,day)=>{const slots=(DB.schedule[day]||[]);return `<div class="weekrow"><div class="wday">${wd}</div><div class="chips">${slots.length? slots.map((s,i)=>`<div class="chip"><b>${s.t}</b><span class="cap">cap ${s.c}</span><span class="x" onclick="removeSlot(${day},${i})">✕</span></div>`).join('') : '<span class="off">No intro times</span>'}<span class="addslot" onclick="openSlotModal(${day})">+ Add time</span></div></div>`;}).join('');
+  document.getElementById('excList').innerHTML=DB.exceptions.length? DB.exceptions.map(e=>{const b={close:['close','Closed'],remove:['remove','Slot removed'],add:['add','Slot added']}[e.type];return `<div class="exrow"><div class="exdate">${e.dateLabel}</div><div class="extype"><span class="badge ${b[0]}">${b[1]}${e.time?' '+e.time:''}</span> &nbsp;<span class="muted">${e.reason||''}</span></div><span class="rowact" onclick="removeException('${e.id}')">Remove</span></div>`;}).join('') : '<div class="muted" style="padding:6px 0">No exceptions. Your weekly schedule applies every week.</div>';
+  document.getElementById('promoTable').innerHTML=`<thead><tr><th>Code</th><th>Discount</th><th>Applies to</th><th>Channel</th><th>Redemptions</th><th>Status</th><th></th></tr></thead><tbody>${DB.promos.map(p=>`<tr><td><b>${p.code}</b></td><td>${promoLabel(p)}</td><td>${p.scope}</td><td>${p.channel||'—'}</td><td>${p.used||0} / ${p.max?p.max:'∞'}</td><td><span class="pill ${p.status==='Active'?'st-confirmed':'st-lost'}">${p.status}</span></td><td><span class="rowact" onclick="openPromoEdit('${p.id}')">Edit</span></td></tr>`).join('')}</tbody>`;
+  document.getElementById('tmplList').innerHTML=DB.templates.map(t=>`<div class="tmpl"><div class="tt"><h4>${t.name} <span class="pill ${t.ch==='sms'?'st-booked':'st-showed'}">${t.ch==='sms'?'Text':'Email'}</span></h4><span class="rowact" onclick="openTmplEdit('${t.id}')">Edit</span></div><div class="tbd">${t.body}</div></div>`).join('');
+  renderAutomations();
+}
+const AUTO_DEFS=[{k:'confirmation',t:'Confirmation',d:'Email + text the moment a booking is made.'},{k:'reminders',t:'Reminders',d:'Text + email 1 day before and 2 hours before the intro.'},{k:'noshow',t:'No-show recovery',d:'Auto-text 1 hour after a missed intro, then an email next morning with a rebook link.'},{k:'enroll',t:'Enroll offer',d:'Email a limited-time membership offer the evening after they show up.'},{k:'waitlist',t:'Wait-list open seat',d:'Text the first person on the wait list when a spot frees up.'}];
+function renderAutomations(){const a=DB.settings.automations||{};document.getElementById('autoList').innerHTML=AUTO_DEFS.map(x=>{const on=!!a[x.k];return `<div class="autorow"><div class="toggle ${on?'':'off'}" onclick="toggleAuto('${x.k}')"></div><div class="txt"><b>${x.t}</b><p>${x.d}</p></div><span class="pill ${on?'st-confirmed':'st-lost'}" id="autopill-${x.k}">${on?'Active':'Off'}</span></div>`;}).join('');}
+function toggleAuto(k){DB.settings.automations=DB.settings.automations||{};DB.settings.automations[k]=!DB.settings.automations[k];save();renderAutomations();toast(AUTO_DEFS.find(x=>x.k===k).t+(DB.settings.automations[k]?' turned on':' turned off'));}
+// ----- Message template editing -----
+let editingTmplId=null;
+function openTmplNew(){editingTmplId=null;fillTmplForm(null);document.getElementById('tmplModalTitle').textContent='New template';document.getElementById('tmDelete').style.display='none';document.getElementById('tmplModal').classList.remove('hidden');}
+function openTmplEdit(id){editingTmplId=id;fillTmplForm(DB.templates.find(x=>x.id===id));document.getElementById('tmplModalTitle').textContent='Edit template';document.getElementById('tmDelete').style.display='';document.getElementById('tmplModal').classList.remove('hidden');}
+function fillTmplForm(t){document.getElementById('tmName').value=t?t.name:'';document.getElementById('tmCh').value=t?t.ch:'sms';document.getElementById('tmSubject').value=t?(t.subject||''):'';document.getElementById('tmBody').value=t?t.body:'';tmChChange();}
+function tmChChange(){document.getElementById('tmSubjectWrap').style.display=document.getElementById('tmCh').value==='email'?'block':'none';}
+function closeTmpl(){document.getElementById('tmplModal').classList.add('hidden');}
+function saveTmpl(){const name=document.getElementById('tmName').value.trim();if(!name){toast('Enter a template name');return;}const obj={name:name,ch:document.getElementById('tmCh').value,subject:document.getElementById('tmSubject').value.trim(),body:document.getElementById('tmBody').value};if(editingTmplId){const i=DB.templates.findIndex(x=>x.id===editingTmplId);DB.templates[i]={...DB.templates[i],...obj};}else{obj.id='t'+Date.now();DB.templates.push(obj);}save();closeTmpl();renderSetup();toast('Template saved');}
+function deleteTmpl(){if(!editingTmplId)return;const id=editingTmplId;askConfirm('Delete this template?',function(){DB.templates=DB.templates.filter(x=>x.id!==id);save();closeTmpl();renderSetup();toast('Template deleted');});}
+
+// ----- Schedule CRUD -----
+function timeVal(t){const m=t.match(/(\d+):(\d+)\s*(AM|PM)/i);if(!m)return 0;let h=parseInt(m[1])%12;if(/pm/i.test(m[3]))h+=12;return h*60+parseInt(m[2]);}
+// Parse & normalize free-typed times to "h:mm AM/PM". Returns null if invalid.
+function parseTimeInput(raw){let s=(raw||'').trim().toLowerCase().replace(/\./g,'');let ampm=null;if(/am$/.test(s)){ampm='AM';s=s.replace(/am$/,'');}else if(/pm$/.test(s)){ampm='PM';s=s.replace(/pm$/,'');}s=s.trim().replace(/[^0-9:]/g,'');if(!s)return null;let h,m;if(s.indexOf(':')>=0){const parts=s.split(':');h=parseInt(parts[0],10);m=parseInt(parts[1],10);}else{if(s.length<=2){h=parseInt(s,10);m=0;}else{m=parseInt(s.slice(-2),10);h=parseInt(s.slice(0,-2),10);}}if(isNaN(h)||isNaN(m)||m<0||m>59)return null;if(ampm){if(h<1||h>12)return null;}else{if(h<0||h>23)return null;ampm=h>=12?'PM':'AM';h=h%12;if(h===0)h=12;}return h+':'+(m<10?'0'+m:m)+' '+ampm;}
+let slotDay=null;
+// English time dropdowns (avoid native picker showing OS-locale AM/PM)
+function fillTimeSelects(pre,def){const hs=document.getElementById(pre+'Hour'),ms=document.getElementById(pre+'Min');if(hs&&!hs.options.length){let o='';for(let h=1;h<=12;h++)o+='<option>'+h+'</option>';hs.innerHTML=o;}if(ms&&!ms.options.length){let o='';for(let m=0;m<60;m+=5)o+='<option>'+(m<10?'0'+m:m)+'</option>';ms.innerHTML=o;}if(def){hs.value=def.h;ms.value=def.m;document.getElementById(pre+'AP').value=def.ap;}}
+function readTimeSelects(pre){return document.getElementById(pre+'Hour').value+':'+document.getElementById(pre+'Min').value+' '+document.getElementById(pre+'AP').value;}
+// in-app confirm (native confirm() is blocked in some embedded/iframe contexts)
+let cfAction=null;
+function askConfirm(msg,onYes,okLabel){document.getElementById('cfMsg').textContent=msg;document.getElementById('cfOk').textContent=okLabel||'Delete';cfAction=onYes;document.getElementById('confirmModal').classList.remove('hidden');}
+function cfCancel(){document.getElementById('confirmModal').classList.add('hidden');cfAction=null;}
+function cfConfirm(){const a=cfAction;cfCancel();if(a)a();}
+function openSlotModal(day){slotDay=day;document.getElementById('sfDay').textContent=WD[day];fillTimeSelects('sf',{h:'5',m:'00',ap:'PM'});document.getElementById('sfCap').value=2;document.getElementById('slotModal').classList.remove('hidden');}
+function closeSlot(){document.getElementById('slotModal').classList.add('hidden');}
+function saveSlot(){const t=readTimeSelects('sf');const c=parseInt(document.getElementById('sfCap').value)||1;DB.schedule[slotDay]=DB.schedule[slotDay]||[];if(DB.schedule[slotDay].some(s=>s.t===t)){toast(t+' is already on '+WD[slotDay]);return;}DB.schedule[slotDay].push({t:t,c:c});DB.schedule[slotDay].sort((a,b)=>timeVal(a.t)-timeVal(b.t));save();closeSlot();renderSetup();toast('Added '+t+' to '+WD[slotDay]);}
+function removeSlot(day,i){DB.schedule[day].splice(i,1);save();renderSetup();toast('Time removed');}
+// ----- Exceptions CRUD -----
+function openExcModal(){document.getElementById('efDate').value='';document.getElementById('efType').value='close';fillTimeSelects('ef',{h:'6',m:'00',ap:'PM'});document.getElementById('efCap').value=1;document.getElementById('efReason').value='';document.getElementById('efDatePrev').textContent='';excTypeChange();document.getElementById('excModal').classList.remove('hidden');}
+function excDatePrev(){const dv=document.getElementById('efDate').value;const el=document.getElementById('efDatePrev');if(!dv){el.textContent='';return;}const pr=dv.split('-');el.textContent='→ '+usDate(new Date(+pr[0],+pr[1]-1,+pr[2]));}
+function closeExc(){document.getElementById('excModal').classList.add('hidden');}
+function excTypeChange(){const t=document.getElementById('efType').value;document.getElementById('efTimeWrap').style.display=(t==='remove'||t==='add')?'block':'none';document.getElementById('efCapWrap').style.display=(t==='add')?'block':'none';}
+function saveException(){const dv=document.getElementById('efDate').value;if(!dv){toast('Pick a date');return;}const pr=dv.split('-');const d=new Date(parseInt(pr[0]),parseInt(pr[1])-1,parseInt(pr[2]));const type=document.getElementById('efType').value;let time='';if(type==='remove'||type==='add'){time=readTimeSelects('ef');}DB.exceptions.push({id:'ex'+Date.now(),dateKey:key(d),dateLabel:usDate(d),type:type,time:time,cap:parseInt(document.getElementById('efCap').value)||1,reason:document.getElementById('efReason').value.trim()});save();closeExc();renderSetup();toast('Exception added');}
+function removeException(id){DB.exceptions=DB.exceptions.filter(e=>e.id!==id);save();renderSetup();toast('Exception removed');}
+// ----- Promo CRUD -----
+let editingPromoId=null;
+function openPromoNew(){editingPromoId=null;fillPromoForm(null);document.getElementById('promoModalTitle').textContent='New promo code';document.getElementById('prDelete').style.display='none';document.getElementById('promoModal').classList.remove('hidden');}
+function openPromoEdit(id){editingPromoId=id;fillPromoForm(DB.promos.find(x=>x.id===id));document.getElementById('promoModalTitle').textContent='Edit promo code';document.getElementById('prDelete').style.display='';document.getElementById('promoModal').classList.remove('hidden');}
+function fillPromoForm(p){document.getElementById('prScope').innerHTML='<option>All programs</option>'+DB.programs.map(x=>`<option>${x.name}</option>`).join('');document.getElementById('prCode').value=p?p.code:'';document.getElementById('prType').value=p?p.type:'percent';document.getElementById('prValue').value=p?(p.type==='amount'?p.value/100:p.value):'';document.getElementById('prScope').value=p?p.scope:'All programs';document.getElementById('prChannel').value=p?(p.channel||''):'';document.getElementById('prMax').value=p&&p.max?p.max:'';document.getElementById('prStatus').value=p?p.status:'Active';promoTypeChange();}
+function promoTypeChange(){const t=document.getElementById('prType').value;document.getElementById('prValueWrap').style.display=(t==='free')?'none':'block';document.getElementById('prValueLabel').textContent=t==='percent'?'Percent off (0–100)':'Amount off ($)';}
+function closePromo(){document.getElementById('promoModal').classList.add('hidden');}
+function savePromo(){const code=document.getElementById('prCode').value.trim().toUpperCase();if(!code){toast('Enter a code');return;}const type=document.getElementById('prType').value;let value=parseFloat(document.getElementById('prValue').value)||0;if(type==='amount')value=Math.round(value*100);const obj={code:code,type:type,value:value,scope:document.getElementById('prScope').value,channel:document.getElementById('prChannel').value.trim(),max:parseInt(document.getElementById('prMax').value)||0,status:document.getElementById('prStatus').value};if(editingPromoId){const i=DB.promos.findIndex(x=>x.id===editingPromoId);DB.promos[i]={...DB.promos[i],...obj};}else{obj.id='pr'+Date.now();obj.used=0;DB.promos.push(obj);}save();closePromo();renderSetup();toast('Promo code saved');}
+function deletePromo(){if(!editingPromoId)return;const id=editingPromoId;askConfirm('Delete this promo code?',function(){DB.promos=DB.promos.filter(x=>x.id!==id);save();closePromo();renderSetup();toast('Promo code deleted');});}
+
+// ----- Program add / edit / delete (persisted; drives the public booking page) -----
+let editingProgId=null, pfMediaList=[], pfIconImg='';
+function renderIconPrev(){const el=document.getElementById('pfIconPrev');if(!el)return;el.innerHTML=pfIconImg?`<img src="${pfIconImg}" style="width:100%;height:100%;object-fit:cover"/>`:(document.getElementById('pfIcon').value||'🥋');}
+function uploadIcon(ev){const f=ev.target.files[0];if(!f)return;resizeImage(f,200,url=>{pfIconImg=url;renderIconPrev();});ev.target.value='';}
+function clearIcon(){pfIconImg='';renderIconPrev();}
+function openProgNew(){editingProgId=null;fillProgForm(null);document.getElementById('progModalTitle').textContent='New program';document.getElementById('pfDelete').style.display='none';document.getElementById('progModal').classList.remove('hidden');}
+function openProgEdit(id){editingProgId=id;fillProgForm(DB.programs.find(x=>x.id===id));document.getElementById('progModalTitle').textContent='Edit program';document.getElementById('pfDelete').style.display='';document.getElementById('progModal').classList.remove('hidden');}
+function fillProgForm(p){document.getElementById('pfIcon').value=p?p.icon:'🥋';document.getElementById('pfName').value=p?p.name:'';document.getElementById('pfTag').value=p?(p.tag||''):'';document.getElementById('pfDesc').value=p?(p.desc||''):'';document.getElementById('pfAbout').value=p?(p.about||''):'';document.getElementById('pfExp').value=p?(p.exp||[]).join('\n'):'';document.getElementById('pfPrice').value=p?(p.price/100):'';document.getElementById('pfCap').value=p?p.cap:2;document.getElementById('pfDur').value=p?p.dur:45;document.getElementById('pfActive').checked=p?p.status!=='archived':true;pfMediaList=p&&p.media?p.media.slice():[];pfIconImg=p&&p.iconImg?p.iconImg:'';renderMediaThumbs();renderIconPrev();}
+function closeProg(){document.getElementById('progModal').classList.add('hidden');}
+// image attach: resize client-side so photos stay small enough to store
+function addPhotos(ev){const files=[...ev.target.files];files.forEach(f=>{if(!f.type.startsWith('image/'))return;resizeImage(f,1000,url=>{pfMediaList.push(url);renderMediaThumbs();});});ev.target.value='';}
+function resizeImage(file,maxDim,cb){const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{let w=img.width,h=img.height;if(w>h){if(w>maxDim){h=Math.round(h*maxDim/w);w=maxDim;}}else{if(h>maxDim){w=Math.round(w*maxDim/h);h=maxDim;}}const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);cb(c.toDataURL('image/jpeg',0.82));};img.src=e.target.result;};r.readAsDataURL(file);}
+function renderMediaThumbs(){document.getElementById('pfMedia').innerHTML=pfMediaList.map((m,i)=>`<div class="mediathumb ${i===0?'cover':''}"><img src="${m}"/><div class="rm" onclick="removePhoto(${i})">✕</div></div>`).join('');}
+function removePhoto(i){pfMediaList.splice(i,1);renderMediaThumbs();}
+function saveProg(){
+  const name=document.getElementById('pfName').value.trim();if(!name){toast('Enter a program name');return;}
+  const obj={icon:document.getElementById('pfIcon').value.trim()||'🥋',iconImg:pfIconImg||'',name:name,tag:document.getElementById('pfTag').value.trim(),desc:document.getElementById('pfDesc').value.trim(),about:document.getElementById('pfAbout').value.trim(),exp:document.getElementById('pfExp').value.split('\n').map(s=>s.trim()).filter(Boolean),media:pfMediaList.slice(),price:Math.round((parseFloat(document.getElementById('pfPrice').value)||0)*100),cap:parseInt(document.getElementById('pfCap').value)||1,dur:parseInt(document.getElementById('pfDur').value)||45,status:document.getElementById('pfActive').checked?'active':'archived'};
+  const prev=editingProgId?JSON.parse(JSON.stringify(DB.programs)):null;
+  if(editingProgId){const i=DB.programs.findIndex(x=>x.id===editingProgId);DB.programs[i]={...DB.programs[i],...obj};}
+  else{obj.id='p'+Date.now();DB.programs.push(obj);}
+  if(!save()&&(pfMediaList.length||pfIconImg)){ if(prev)DB.programs=prev; else DB.programs.pop(); toast('Images are too large to store — use smaller images'); return; }
+  closeProg();renderSetup();toast(editingProgId?'Program updated':'Program added — now on your booking page');
+}
+function deleteProg(){if(!editingProgId)return;doDeleteProg(editingProgId);closeProg();}
+function quickDeleteProg(id){doDeleteProg(id);}
+function doDeleteProg(id){const p=DB.programs.find(x=>x.id===id);if(!p)return;const used=DB.leads.some(l=>l.program===p.name);askConfirm('Delete "'+p.name+'"?'+(used?' Existing intro records keep their history.':''),function(){DB.programs=DB.programs.filter(x=>x.id!==id);save();renderSetup();toast('Program deleted');});}
+
+// ----- Excel download (all records; CSV opens directly in Excel/Sheets) -----
+function exportExcel(){
+  const cols=[['id','ID'],['student','Student'],['age','Age'],['guardian','Guardian'],['email','Email'],['phone','Phone'],['heard','Heard about us'],['program','Program'],['when','Date/Time'],['src','Source'],['paid','Paid'],['status','Status'],['archivedLabel','Archived'],['promo','Promo'],['notes','Notes'],['created','Created']];
+  const esc=v=>{v=(v==null?'':''+v).replace(/<[^>]+>/g,'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const rows=DB.leads.map(l=>Object.assign({},l,{archivedLabel:l.archived?'Yes':'No'}));
+  const csv=[cols.map(c=>c[1]).join(',')].concat(rows.map(l=>cols.map(c=>esc(l[c[0]])).join(','))).join('\r\n');
+  dl(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}),'WCMA-intros.csv');
+  toast('Downloaded '+DB.leads.length+' records incl. archived (opens in Excel)');
+}
+// ---- Dashboard trend data (illustrative sample so YoY / MoM comparisons are meaningful in the prototype) ----
+const SAMPLE_TREND={
+  months:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+  lastYear:[18,22,25,30,28,26,29,27,31,34,29,33],
+  thisYear:[24,28,31,38,35,33,41,44,40,46,42,45],
+  enrLast:[6,8,9,11,10,9,11,10,12,13,11,12],
+  enrThis:[9,11,13,16,15,14,18,19,17,20,18,19]
+};
+let curRange='all';
+function curMonthIdx(){return Math.min(11,new Date().getMonth());}
+function pctDelta(cur,prev){if(prev==null||prev===0)return null;return Math.round((cur-prev)/prev*100);}
+function deltaHTML(cur,prev,label){const d=pctDelta(cur,prev);if(d==null)return '';const up=d>=0;return `<span class="${up?'up':'dn'}">${up?'▲':'▼'} ${Math.abs(d)}%</span> <small>${label}</small>`;}
+function donutHTML(done,goal){
+  const pct=goal?Math.min(100,Math.round(done/goal*100)):0;
+  const r=52,c=2*Math.PI*r,off=c*(1-Math.min(1,goal?done/goal:0));
+  return `<div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap;justify-content:center">
+    <svg width="150" height="150" viewBox="0 0 150 150" style="flex:none">
+      <circle cx="75" cy="75" r="${r}" fill="none" stroke="#eef1f6" stroke-width="17"/>
+      <circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--brand)" stroke-width="17" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 75 75)"/>
+      <text x="75" y="71" text-anchor="middle" font-size="27" font-weight="800" fill="#1e293b">${pct}%</text>
+      <text x="75" y="92" text-anchor="middle" font-size="11" fill="#64748b">of goal</text>
+    </svg>
+    <div style="font-size:13px;line-height:2">
+      <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--brand);margin-right:7px"></span>Enrolled <b>${done}</b></div>
+      <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--ok);margin-right:7px"></span>Remaining <b>${Math.max(0,goal-done)}</b></div>
+      <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#eef1f6;border:1px solid #e5e7eb;margin-right:7px"></span>Goal <b>${goal}</b></div>
+    </div>
+  </div>`;
+}
+function renderYoY(){
+  const el=document.getElementById('yoyChart');if(!el)return;
+  const CUR=curMonthIdx();let start,end;
+  if(curRange==='6m'){start=Math.max(0,CUR-5);end=CUR;}
+  else if(curRange==='12m'){start=0;end=11;}
+  else{start=0;end=CUR;}
+  const idx=[];for(let i=start;i<=end;i++)idx.push(i);
+  let mx=0;idx.forEach(i=>{mx=Math.max(mx,SAMPLE_TREND.lastYear[i],(i<=CUR?SAMPLE_TREND.thisYear[i]:0));});
+  mx=Math.max(10,Math.ceil(mx/10)*10);
+  const barH=180,showNums=idx.length<=8;
+  let grid='';for(let g=0;g<=4;g++){const frac=g/4;grid+=`<div style="position:absolute;left:0;right:0;bottom:${frac*100}%;border-top:1px dashed #edf0f5"></div><div style="position:absolute;left:-32px;bottom:${frac*100}%;transform:translateY(50%);font-size:10px;color:#9aa3b2;width:28px;text-align:right">${Math.round(mx*frac)}</div>`;}
+  let cols='',labels='';
+  idx.forEach(i=>{
+    const ly=SAMPLE_TREND.lastYear[i],ty=(i<=CUR)?SAMPLE_TREND.thisYear[i]:null;
+    const lyH=Math.round(ly/mx*100),tyH=ty==null?0:Math.round(ty/mx*100);
+    const tyBar=ty==null?'':`<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">${showNums?`<div style="font-size:9px;font-weight:700;color:var(--brand);margin-bottom:2px">${ty}</div>`:''}<div title="This year: ${ty}" style="width:11px;height:${tyH}%;min-height:2px;background:var(--brand);border-radius:3px 3px 0 0"></div></div>`;
+    const lyBar=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">${showNums?`<div style="font-size:9px;font-weight:700;color:#93b0f0;margin-bottom:2px">${ly}</div>`:''}<div title="Last year: ${ly}" style="width:11px;height:${lyH}%;min-height:2px;background:#c7d7fb;border-radius:3px 3px 0 0"></div></div>`;
+    cols+=`<div style="flex:1;min-width:0;display:flex;gap:4px;align-items:flex-end;justify-content:center;height:100%">${tyBar}${lyBar}</div>`;
+    labels+=`<div style="flex:1;min-width:0;text-align:center;font-size:10.5px;color:var(--muted)">${SAMPLE_TREND.months[i]}</div>`;
+  });
+  el.innerHTML=`<div style="position:relative;margin-left:32px;height:${barH}px">${grid}<div style="position:absolute;inset:0;display:flex;gap:8px;align-items:flex-end;z-index:1">${cols}</div></div><div style="margin-left:32px;display:flex;gap:8px;margin-top:7px">${labels}</div>`;
+}
+function setRange(r){curRange=r;const seg=document.getElementById('rangeSeg');if(seg)seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.getAttribute('data-r')===r));renderYoY();}
+function saveGoal(){let v=parseInt(document.getElementById('goalInput').value,10);if(!v||v<1)v=1;DB.settings.monthlyGoal=v;save();renderStats();toast('Monthly goal set to '+v);}
+function renderStats(){
+  const L=DB.leads,n=k=>L.filter(l=>l.status===k).length;
+  const booked=L.length,showed=L.filter(l=>['showed','followup','enrolled','lost'].includes(l.status)).length,enrolled=n('enrolled');
+  const CUR=curMonthIdx(),PREV=CUR>0?CUR-1:null,T=SAMPLE_TREND;
+  const introsNow=T.thisYear[CUR],introsPrev=PREV!=null?T.thisYear[PREV]:null,introsLY=T.lastYear[CUR];
+  const enrNow=T.enrThis[CUR],enrPrev=PREV!=null?T.enrThis[PREV]:null,enrLY=T.enrLast[CUR];
+  const rateNow=introsNow?Math.round(enrNow/introsNow*100):0,ratePrev=(PREV!=null&&T.thisYear[PREV])?Math.round(T.enrThis[PREV]/T.thisYear[PREV]*100):null;
+  document.getElementById('ownStats').innerHTML=`
+    <div class="stat"><div class="n">${introsNow}</div><div class="l">Intros this month</div><div class="d">${deltaHTML(introsNow,introsPrev,'vs last mo')}${deltaHTML(introsNow,introsLY,'vs last yr')}</div></div>
+    <div class="stat"><div class="n">${enrNow}</div><div class="l">Enrolled this month</div><div class="d">${deltaHTML(enrNow,enrPrev,'vs last mo')}${deltaHTML(enrNow,enrLY,'vs last yr')}</div></div>
+    <div class="stat"><div class="n">${rateNow}%</div><div class="l">Enroll rate</div><div class="d">${ratePrev!=null?deltaHTML(rateNow,ratePrev,'vs last mo'):''}<small>${enrNow}/${introsNow} enrolled</small></div></div>`;
+  const GOAL=DB.settings.monthlyGoal||20;
+  const gm=document.getElementById('goalMonth');if(gm)gm.textContent=MO[CUR]+' '+new Date().getFullYear();
+  const gi=document.getElementById('goalInput');if(gi)gi.value=GOAL;
+  const gd=document.getElementById('goalDonut');if(gd)gd.innerHTML=donutHTML(enrNow,GOAL);
+  renderYoY();
+  const colChart=(entries,mx,base,h)=>{h=h||160;return `<div style="display:flex;align-items:flex-end;gap:14px;height:${h}px;padding-top:6px">`+entries.map(([k,v])=>{const pct=mx?Math.round(v/mx*100):0;const p=base?Math.round(v/base*100):0;return `<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"><div style="margin-bottom:5px;text-align:center;white-space:nowrap"><b style="font-size:13px">${v}</b> <span style="color:var(--muted);font-size:11px">(${p}%)</span></div><div style="width:100%;max-width:26px;height:${pct}%;min-height:3px;background:var(--brand);border-radius:5px 5px 0 0"></div><div style="font-size:11px;color:var(--muted);margin-top:7px;text-align:center;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%" title="${k}">${k}</div></div>`;}).join('')+`</div>`;};
+  const chan={};L.forEach(l=>{const kk=l.src||l.heard||'Other';chan[kk]=(chan[kk]||0)+1;});
+  const che=Object.entries(chan).sort((a,b)=>b[1]-a[1]);const chMax=che.length?che[0][1]:1;
+  const chEl=document.getElementById('chChannel');if(chEl)chEl.innerHTML=che.length?colChart(che,chMax,booked):'<div class="muted" style="font-size:12.5px">No data yet.</div>';
+  const f=[['Booked',booked],['Showed up',showed],['Enrolled',enrolled]];const max=booked||1;
+  document.getElementById('funnel').innerHTML=colChart(f,max,booked);
+  document.getElementById('pipeCount').textContent=L.filter(l=>!['enrolled','lost'].includes(l.status)&&!l.archived).length;
+  const ac=document.getElementById('archCount');if(ac)ac.textContent=L.filter(l=>l.archived).length;
+  const dm=document.getElementById('dataMeta');if(dm)dm.textContent=`${L.length} intro records saved`+(persist?' on this device':'')+' · download anytime';
+}
+let showArchived=false;
+function toggleShowArch(){showArchived=document.getElementById('showArch').checked;renderBoard();}
+function renderBoard(){const board=document.getElementById('board');board.innerHTML='';const src=DB.leads.filter(l=>showArchived?true:!l.archived);STAGES.forEach(s=>{const items=src.filter(l=>l.status===s.k);const col=document.createElement('div');col.className='col';col.innerHTML=`<div class="ch"><b>${s.label}</b><span class="n">${items.length}</span></div><div class="body"></div>`;board.appendChild(col);const body=col.querySelector('.body');body.ondragover=e=>{e.preventDefault();body.classList.add('dragover');};body.ondragleave=()=>body.classList.remove('dragover');body.ondrop=e=>{e.preventDefault();body.classList.remove('dragover');dropLead(e,s.k);};items.forEach(l=>{const c=document.createElement('div');c.className='lead'+(l.archived?' archived':'');c.draggable=!l.archived;c.ondragstart=e=>{if(l.archived){e.preventDefault();return;}e.dataTransfer.setData('text/plain',String(l.id));e.dataTransfer.effectAllowed='move';c.classList.add('dragging');};c.ondragend=()=>c.classList.remove('dragging');c.onclick=()=>openDrawer(l.id);const flag=l.archived?'<div class="warnflag" style="color:var(--muted2)">🗄 Archived</div>':(l.status==='noshow'?'<div class="warnflag">⚠ Needs follow-up</div>':(l.status==='followup'?'<div class="warnflag">⏳ Awaiting decision</div>':''));c.innerHTML=`<div class="nm">${l.student}</div><div class="mt">${l.program} · ${l.when}</div><div class="foot"><span class="src">via ${l.src}</span><span>${l.paid}</span></div>${flag}`;body.appendChild(c);});if(!items.length)body.innerHTML='<div class="muted droph" style="padding:14px 4px;font-size:12.5px;text-align:center">Drop here</div>';});const ac=document.getElementById('archCount');if(ac)ac.textContent=DB.leads.filter(l=>l.archived).length;}
+function archiveLead(){if(!curLead)return;curLead.archived=true;curLead.activity.push({t:'Archived (removed from active pipeline; kept for reports & export)',tm:'Just now'});save();closeDrawer();renderBoard();renderStats();toast(curLead.student.split(' ')[0]+' archived');}
+function unarchiveLead(){if(!curLead)return;curLead.archived=false;curLead.activity.push({t:'Restored to active pipeline',tm:'Just now'});save();renderDrawer();renderBoard();renderStats();toast(curLead.student.split(' ')[0]+' restored');}
+function dropLead(e,stage){const id=parseInt(e.dataTransfer.getData('text/plain'));const l=DB.leads.find(x=>x.id===id);if(!l||l.status===stage)return;l.status=stage;l.activity.push({t:'Moved to '+stLabel(stage),tm:'Just now'});save();renderBoard();renderStats();toast('Moved '+l.student.split(' ')[0]+' to '+stLabel(stage));}
+// drawer
+let curLead=null,curCh='sms';
+function openDrawer(id){curLead=DB.leads.find(l=>l.id===id);curCh='sms';document.getElementById('dName').textContent=curLead.student;document.getElementById('dCtx').innerHTML=`${curLead.program} · ${curLead.when} &nbsp;<span class="pill st-${curLead.status}">${stLabel(curLead.status)}</span>`;renderDrawer();document.getElementById('drawer').classList.add('on');document.getElementById('drawerBg').classList.add('on');}
+function closeDrawer(){document.getElementById('drawer').classList.remove('on');document.getElementById('drawerBg').classList.remove('on');}
+function renderDrawer(){
+  const l=curLead;
+  const stbtns=STAGES.map(s=>`<button class="sb ${s.k===l.status?'act st-'+s.k:''}" onclick="setStatus('${s.k}')">${s.label}</button>`).join('');
+  const tl=l.activity.slice().reverse().map(e=>`<div class="ev ${e.msg?'msg':(e.sch?'sch':'')}"><div class="dot">${e.msg?'✉':(e.sch?'🔔':'')}</div><div class="tx">${e.t}</div><div class="tm">${e.tm}</div></div>`).join('');
+  document.getElementById('dBody').innerHTML=`
+    <div class="kv"><span class="k">Student</span><span>${l.student}${l.age?' · age '+l.age:''}</span></div>
+    ${l.guardian?`<div class="kv"><span class="k">Guardian</span><span>${l.guardian}</span></div>`:''}
+    <div class="kv"><span class="k">Email</span><a href="mailto:${l.email}">${l.email}</a></div>
+    <div class="kv"><span class="k">Phone</span><a href="tel:${l.phone}">${l.phone}</a></div>
+    <div class="kv"><span class="k">Heard via</span><span>${l.heard||l.src}</span></div>
+    <div class="kv"><span class="k">Paid</span><span>${l.paid}</span></div>
+    <div class="sec-t">Status</div><div class="statusbtns">${stbtns}</div>
+    <div class="sec-t">Follow up</div>
+    <div class="compose">
+      <select id="tmplSel" onchange="loadTemplate()"><option value="">Choose a template…</option>${DB.templates.map(t=>`<option value="${t.id}">${t.name} (${t.ch==='sms'?'text':'email'})</option>`).join('')}</select>
+      <input id="emailSubj" placeholder="Email subject" value="A note from World Class Martial Arts" />
+      <textarea id="msgBody" oninput="updChars()" placeholder="Write to ${l.student}…"></textarea>
+      <div class="charc" id="charc"></div>
+      <div class="quick"><button class="btn btn-ghost btn-sm" onclick="sendChannel('sms')">💬 Text</button><button class="btn btn-ghost btn-sm" onclick="sendChannel('email')">✉️ Email</button><button class="btn btn-primary btn-sm" onclick="sendChannel('both')">Send both</button></div>
+    </div>
+    <div class="sec-t">Activity</div><div class="tl">${tl}</div>
+    <div class="sec-t">Notes</div><textarea class="notes" id="leadNotes" oninput="saveNotes()" placeholder="Private note…">${l.notes||''}</textarea>
+    <div class="sec-t">Archive</div>
+    ${l.archived
+      ? `<div class="muted" style="font-size:12.5px;margin-bottom:8px">🗄 Archived — hidden from the active pipeline, still kept in reports &amp; Excel export.</div><button class="btn btn-ghost btn-sm" onclick="unarchiveLead()">↩ Restore to pipeline</button>`
+      : `<div class="muted" style="font-size:12.5px;margin-bottom:8px">Remove from the active pipeline without deleting. The record stays in reports and Excel exports.</div><button class="btn btn-ghost btn-sm" style="color:var(--warn)" onclick="archiveLead()">🗄 Archive this lead</button>`}`;
+  updChars();
+}
+function setStatus(k){curLead.status=k;curLead.activity.push({t:'Status changed to '+stLabel(k),tm:'Just now'});save();document.getElementById('dCtx').innerHTML=`${curLead.program} · ${curLead.when} &nbsp;<span class="pill st-${k}">${stLabel(k)}</span>`;renderDrawer();renderBoard();renderStats();toast('Moved '+curLead.student.split(' ')[0]+' to '+stLabel(k));}
+function loadTemplate(){const k=document.getElementById('tmplSel').value;if(!k)return;const t=DB.templates.find(x=>x.id===k);if(!t)return;const fill=s=>(s||'').replace(/{name}/g,curLead.student.split(' ')[0]).replace(/{program}/g,curLead.program).replace(/{when}/g,curLead.when);document.getElementById('msgBody').value=fill(t.body);if(t.subject&&document.getElementById('emailSubj'))document.getElementById('emailSubj').value=fill(t.subject);updChars();}
+function updChars(){const ta=document.getElementById('msgBody');if(!ta)return;const n=ta.value.length;document.getElementById('charc').textContent=n+' chars · '+Math.max(1,Math.ceil(n/160))+' SMS segment(s) if texted';}
+function openLink(href){const a=document.createElement('a');a.href=href;a.target='_blank';document.body.appendChild(a);a.click();document.body.removeChild(a);}
+function sendChannel(ch){const l=curLead;const body=document.getElementById('msgBody').value.trim();if(!body){toast('Write a message first');return;}const subjEl=document.getElementById('emailSubj');const subj=subjEl?subjEl.value:'A note from World Class Martial Arts';const doSms=(ch==='sms'||ch==='both'),doEmail=(ch==='email'||ch==='both');const opened=[];const snip='"'+body.slice(0,40)+(body.length>40?'…':'')+'"';
+  if(doSms){if(!l.phone){toast('No phone number on file');}else{openLink('sms:'+l.phone.replace(/[^0-9+]/g,'')+'?&body='+encodeURIComponent(body));l.activity.push({t:'Text sent: '+snip,tm:'Just now',msg:1});opened.push('text');}}
+  if(doEmail){if(!l.email){toast('No email on file');}else{openLink('mailto:'+l.email+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body));l.activity.push({t:'Email sent: '+snip,tm:'Just now',msg:1});opened.push('email');}}
+  if(opened.length){save();document.getElementById('msgBody').value='';document.getElementById('tmplSel').value='';renderDrawer();toast('Sent '+opened.join(' + ')+' to '+l.student.split(' ')[0]);}}
+function saveNotes(){curLead.notes=document.getElementById('leadNotes').value;save();}
+
+// settings
+function loadSettingsUI(){const s=DB.settings;document.getElementById('setEmail').value=s.schoolEmail||'';document.getElementById('setPhone').value=s.schoolPhone||'';document.getElementById('tgEmail').classList.toggle('off',!s.notifyEmail);document.getElementById('tgSms').classList.toggle('off',!s.notifySms);setSaveState('save-notif',false);const sec=document.getElementById('op-notif');if(sec)sec.oninput=()=>markDirty('save-notif');}
+function tg(id){document.getElementById(id).classList.toggle('off');markDirty('save-notif');}
+function saveSettings(){DB.settings.schoolEmail=document.getElementById('setEmail').value.trim();DB.settings.schoolPhone=document.getElementById('setPhone').value.trim();DB.settings.notifyEmail=!document.getElementById('tgEmail').classList.contains('off');DB.settings.notifySms=!document.getElementById('tgSms').classList.contains('off');save();setSaveState('save-notif',false);toast('Notification settings saved ✓');}
+
+// data export/import
+function dl(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);}
+
+function copyLink(){const done=()=>{const b=document.getElementById('copyBtn'),o=b.textContent;b.textContent='✓ Copied';setTimeout(()=>b.textContent=o,1500);toast('Booking link copied');};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(bookingUrl()).then(done).catch(fb);}else fb();function fb(){const ta=document.createElement('textarea');ta.value=bookingUrl();document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){toast('Select the link to copy');}document.body.removeChild(ta);}}
+function downloadQR(){dl(new Blob([QR.svg(bookingUrl())],{type:'image/svg+xml'}),'wcma-intro-qr.svg');toast('QR downloaded');}
+
+function onav(id){document.querySelectorAll('.opage').forEach(p=>p.classList.remove('on'));document.getElementById('op-'+id).classList.add('on');document.querySelectorAll('.onav a').forEach(a=>a.classList.remove('active'));document.getElementById('on-'+id).classList.add('active');window.scrollTo({top:0});}
+
+let toastT=null;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2200);}
+
+showView('manager');
+</script>
+</body>
+</html>

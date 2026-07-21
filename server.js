@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('path');
 const db = require('./lib/db');
 const programs = require('./lib/programs');
-const { createCheckout, mock } = require('./lib/stripe');
+const { createCheckout, getClient } = require('./lib/stripe');
 const { sendSMS, enabled: smsOn } = require('./lib/sms');
 
 const app = express();
@@ -16,7 +16,7 @@ const SCHOOL = {
 
 // --- Stripe webhook needs the RAW body, so mount it BEFORE express.json ---
 app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  const { stripe } = require('./lib/stripe');
+  const { stripe } = await getClient();
   let event = null;
   try {
     if (stripe && process.env.STRIPE_WEBHOOK_SECRET) {
@@ -105,6 +105,60 @@ app.get('/admin', basicAuth, async (req, res) => {
   <table><tr><th>Student</th><th>Program</th><th>When</th><th>Contact</th><th>Source</th><th>Price</th><th>Payment</th><th>Created</th></tr>${rows||'<tr><td colspan=8>No leads yet.</td></tr>'}</table>`);
 });
 
+// --- Full v109 Lead Management console (password-protected), backed by the live DB ---
+app.get('/console', basicAuth, (req, res) => {
+  const fs = require('fs');
+  let html = fs.readFileSync(path.join(__dirname, 'views', 'console.html'), 'utf8');
+  // inject the live-data bridge just before </body>
+  html = html.replace('</body>', '<script src="/console-bridge.js"></script>\n</body>');
+  res.set('Content-Type', 'text/html').send(html);
+});
+
+// JSON list of all leads (for the console)
+app.get('/api/leads', basicAuth, async (req, res) => {
+  res.json(await db.listLeads());
+});
+
+// Console pushes lead changes here: update existing by _sid, insert new manual leads.
+app.post('/api/leads/sync', basicAuth, async (req, res) => {
+  const items = (req.body && req.body.leads) || [];
+  const mapping = [];
+  for (const it of items) {
+    try {
+      if (it._sid) {
+        await db.updateFields(it._sid, {
+          status: it.status, archived: !!it.archived, notes: it.notes || '',
+          student: it.student, phone: it.phone, email: it.email
+        });
+      } else {
+        const doc = await db.createLead({
+          student: it.student || '(no name)', age: it.age ? Number(it.age) : undefined, guardian: it.guardian || '',
+          email: it.email || '', phone: it.phone || '', program: it.program || '', programId: it.programId || '',
+          price: 0, when: it.when || '', source: it.src || 'walk-in',
+          status: it.status || 'booked', payStatus: 'none', archived: !!it.archived, notes: it.notes || ''
+        });
+        mapping.push({ tempId: it.id, _id: doc._id });
+      }
+    } catch (e) { console.error('[sync] item error', e.message); }
+  }
+  // Admin can connect Stripe from the console's Integrations screen: save the key if provided.
+  try {
+    const sk = req.body && req.body.settings && req.body.settings.stripeKey;
+    if (sk && /^sk_/.test(sk)) await db.saveSettings({ stripeSecretKey: sk });
+  } catch (e) { console.error('[sync] settings error', e.message); }
+  res.json({ ok: true, mapping });
+});
+
+// Stripe connection status for the console (never returns the secret key itself)
+app.get('/api/settings', basicAuth, async (req, res) => {
+  const s = await db.getSettings();
+  const key = (s && s.stripeSecretKey) || process.env.STRIPE_SECRET_KEY || '';
+  res.json({
+    stripeConnected: /^sk_/.test(key),
+    stripeMode: /^sk_live_/.test(key) ? 'live' : (/^sk_test_/.test(key) ? 'test' : 'none')
+  });
+});
+
 function badge(s) {
   const map = { paid:['#1cb454','Paid'], failed:['#e63535','Failed'], pending:['#e2a907','Pending'], none:['#64748b','—'] };
   const [c, t] = map[s] || map.none; return `<span class="b" style="background:${c}22;color:${c}">${t}</span>`;
@@ -121,6 +175,6 @@ function basicAuth(req, res, next) {
 const PORT = process.env.PORT || 3000;
 db.init().then(() => {
   app.listen(PORT, () => {
-    console.log(`WCMA lead app on ${BASE_URL}  (Stripe: ${mock ? 'MOCK' : 'LIVE keys'}, SMS: ${smsOn ? 'ON' : 'stubbed'})`);
+    console.log(`WCMA lead app on ${BASE_URL}  (Stripe: key from admin/env or MOCK, SMS: ${smsOn ? 'ON' : 'stubbed'})`);
   });
 }).catch(e => { console.error('startup failed', e); process.exit(1); });
