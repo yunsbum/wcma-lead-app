@@ -47,7 +47,7 @@ app.post('/login', async (req, res) => { if (auth.check((req.body.password || ''
 app.get('/logout', (req, res) => { auth.clearCookie(res); res.redirect('/login'); });
 
 app.get('/', (req, res) => res.redirect('/signup'));
-app.get('/signup', (req, res) => { let html = fs.readFileSync(path.join(__dirname, 'views', 'console.html'), 'utf8'); html = html.replace('</body>', '<script src="/signup-mode.js"></script>\n</body>'); res.set('Content-Type','text/html').send(html); });
+app.get('/signup', (req, res) => { let html = fs.readFileSync(path.join(__dirname, 'views', 'console.html'), 'utf8'); html = html.replace('</body>', '<script src="/signup-mode.js?v=113"></script>\n</body>'); res.set('Cache-Control','no-store').set('Content-Type','text/html').send(html); });
 app.get('/api/programs', async (req, res) => { try { const s = await db.getSettings(); return res.json((s && Array.isArray(s.programs) && s.programs.length) ? s.programs : programs); } catch (e) { return res.json(programs); } });
 
 app.post('/api/book', async (req, res) => {
@@ -64,7 +64,7 @@ app.post('/api/book', async (req, res) => {
 app.get('/success', async (req, res) => { if (req.query.mock && req.query.lead) { try { await db.markPaidById(req.query.lead); } catch {} } res.sendFile(path.join(__dirname, 'public', 'success.html')); });
 
 app.get('/console', auth.requireAuth, (req, res) => res.redirect('/admin'));
-app.get('/admin', auth.requireAuth, (req, res) => { let html = fs.readFileSync(path.join(__dirname, 'views', 'console.html'), 'utf8'); html = html.replace('</body>', '<script src="/console-bridge.js"></script>\n</body>'); res.set('Content-Type', 'text/html').send(html); });
+app.get('/admin', auth.requireAuth, (req, res) => { let html = fs.readFileSync(path.join(__dirname, 'views', 'console.html'), 'utf8'); html = html.replace('</body>', '<script src="/console-bridge.js?v=113"></script>\n</body>'); res.set('Cache-Control','no-store').set('Content-Type', 'text/html').send(html); });
 app.get('/admin/list', auth.requireAuth, async (req, res) => {
   const leads = await db.listLeads(); const esc = v => (v == null ? '' : '' + v).replace(/[<>&]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;' }[c]));
   const rows = leads.map(l => '<tr><td>' + esc(l.student) + '</td><td>' + esc(l.program) + '</td><td>' + esc(l.when) + '</td><td>' + esc(l.email) + '<br>' + esc(l.phone) + '</td><td>' + esc(l.source) + '</td><td>' + esc(l.status) + '</td></tr>').join('');
