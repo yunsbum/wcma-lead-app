@@ -16,7 +16,19 @@
     set('Stripe',s.stripeConnected);set('Email',s.emailConnected);set('Twilio',s.smsConnected);if(s.logo&&typeof DB!=='undefined'&&DB.settings){DB.settings.logo=s.logo;if(typeof renderLogos==='function'){try{renderLogos();}catch(e){}}}
   }).catch(function(){});}
   function loadPrograms(){fetch('/api/programs',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(p){if(Array.isArray(p)&&p.length&&typeof DB!=='undefined'){DB.programs=p;if(typeof renderPrograms==='function'){try{renderPrograms();}catch(e){}}if(typeof renderSetup==='function'){try{renderSetup();}catch(e){}}}}).catch(function(){});}
-  function initPrograms(){fetch('/api/settings',{credentials:'same-origin'}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(s){if(s&&s.programsSaved){loadPrograms();}else if(s&&typeof DB!=='undefined'&&Array.isArray(DB.programs)&&DB.programs.length){pushSync(true);}}).catch(function(){});}
+  function initPrograms(){fetch('/api/settings',{credentials:'same-origin'}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(s){
+    if(!s)return; var hadServer=false;
+    if(s.programsSaved){loadPrograms();hadServer=true;}
+    // adopt the server's promos / schedule so a second device never clobbers newly-created ones
+    if(typeof DB!=='undefined'){
+      if(Array.isArray(s.promos)&&s.promos.length){DB.promos=s.promos;hadServer=true;}
+      if(s.schedule&&Object.keys(s.schedule).length){DB.schedule=s.schedule;hadServer=true;}
+      if(Array.isArray(s.exceptions)&&s.exceptions.length){DB.exceptions=s.exceptions;}
+      if(typeof renderSetup==='function'){try{renderSetup();}catch(e){}}
+    }
+    // first-time setup only (server empty): push local seed up so /signup has data
+    if(!hadServer&&typeof DB!=='undefined'&&Array.isArray(DB.programs)&&DB.programs.length){pushSync(true);}
+  }).catch(function(){});}
   function install(){
     if(typeof window.save==='function'){var _s=window.save;window.save=function(){var r=_s.apply(this,arguments);pushSync();reflectStatus();return r;};}
     window.bookingUrl=function(){return (location.origin||'')+'/signup';};

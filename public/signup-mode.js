@@ -23,6 +23,49 @@
       +'<button class="btn btn-ghost" type="button" style="width:100%" onclick="crAddProgram()">+ Add another program</button>';
     foot.parentNode.insertBefore(div, foot);
   }
+  // ----- Promo code on the program page (always visible) -----
+  function injectPromoBar(){
+    if(document.getElementById('s1PromoWrap'))return;
+    var list=document.getElementById('progList');if(!list)return;
+    var bar=document.createElement('div');bar.id='s1PromoWrap';
+    bar.style.cssText='display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#f1f5ff;border:1px solid #dbe4ff;border-radius:11px;padding:12px 14px;margin:4px 0 16px';
+    bar.innerHTML='<span style="font-size:13.5px;font-weight:700;color:#334155;white-space:nowrap">🏷️ Promo code</span>'
+      +'<input id="s1Promo" placeholder="Enter code (optional)" autocomplete="off" style="flex:1;min-width:150px;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px" onkeydown="if(event.key===\'Enter\'){event.preventDefault();s1Apply();}"/>'
+      +'<button type="button" onclick="s1Apply()" style="padding:9px 16px;border:0;border-radius:8px;background:var(--brand,#3073F1);color:#fff;font-weight:700;cursor:pointer">Apply</button>'
+      +'<span id="s1PromoMsg" style="font-size:12.5px;flex-basis:100%;margin-top:2px"></span>';
+    list.parentNode.insertBefore(bar,list);
+  }
+  window.s1Apply=function(){ var i=document.getElementById('s1Promo'); applyCode(i?i.value:'', document.getElementById('s1PromoMsg')); };
+  function applyCode(code, msgEl){
+    code=(code||'').trim().toUpperCase();
+    if(!code){promoObj=null;if(msgEl)msgEl.textContent='';afterPromoChange();return;}
+    var p=PROMOS.find(function(x){return x.code&&x.code.toUpperCase()===code&&(x.status?x.status==='Active':true);});
+    if(!p){promoObj=null;if(msgEl){msgEl.style.color='var(--red,#e63535)';msgEl.textContent='✕ Invalid or expired code';}afterPromoChange();return;}
+    if(p.max&&(p.used||0)>=p.max){promoObj=null;if(msgEl){msgEl.style.color='var(--red,#e63535)';msgEl.textContent='✕ This code has reached its limit';}afterPromoChange();return;}
+    promoObj=p;if(msgEl){msgEl.style.color='var(--ok,#1cb454)';msgEl.textContent='✓ Applied — the prices below now show your discount';}
+    afterPromoChange();
+  }
+  function afterPromoChange(){
+    if(typeof renderPrograms==='function'){try{renderPrograms();}catch(e){}}
+    var cr=document.getElementById('cartReview');if(cr&&!cr.classList.contains('hidden')){try{renderReview();}catch(e){}}
+    var a=document.getElementById('s1Promo'),b=document.getElementById('crPromo');
+    if(a)a.value=promoObj?promoObj.code:''; if(b)b.value=promoObj?promoObj.code:'';
+  }
+  // Show struck-through original + discounted price on each eligible program card.
+  function decoratePrices(){
+    if(!promoObj)return;
+    var list=(typeof activePrograms==='function')?activePrograms():((typeof DB!=='undefined'&&DB.programs)||[]);
+    var cards=document.querySelectorAll('#progList .prog');
+    cards.forEach(function(card,i){
+      var prog=list[i];if(!prog)return;var amt=card.querySelector('.amt');if(!amt)return;
+      var price=prog.price||0;
+      var elig=!(promoObj.scope&&promoObj.scope!=='All programs'&&String(promoObj.scope).indexOf(prog.name)===-1);
+      var disc=elig?Math.max(0,Math.min(price,computeDisc(promoObj,price))):0;
+      if(disc>0){var np=price-disc;
+        amt.innerHTML='<span style="text-decoration:line-through;color:#e63535;font-weight:600;font-size:12.5px">'+m(price)+'</span><br><span style="color:#1cb454;font-weight:800">'+(np<=0?'FREE':m(np))+'</span>';
+      }
+    });
+  }
 
   function injectReview(){
     if(document.getElementById('cartReview'))return;
@@ -64,12 +107,12 @@
   }
 
   window.crApply=function(){
-    var code=val('crPromo').toUpperCase();var msg=document.getElementById('crPromoMsg');
-    if(!code){promoObj=null;msg.textContent='';renderReview();return;}
-    var p=PROMOS.find(function(x){return x.code&&x.code.toUpperCase()===code&&(x.status?x.status==='Active':true);});
-    if(!p){promoObj=null;msg.style.color='var(--red,#e63535)';msg.textContent='✕ Invalid or expired code';renderReview();return;}
-    if(p.max&&(p.used||0)>=p.max){promoObj=null;msg.style.color='var(--red,#e63535)';msg.textContent='✕ This code has reached its limit';renderReview();return;}
-    promoObj=p;msg.style.color='var(--ok,#1cb454)';msg.textContent='✓ Applied to all '+cart.length+' participant'+(cart.length>1?'s':'')+' — you save '+m(orderDiscount(p));renderReview();
+    applyCode(val('crPromo'), null);
+    var msg=document.getElementById('crPromoMsg');
+    if(promoObj){ msg.style.color='var(--ok,#1cb454)';msg.textContent='✓ Applied to all '+cart.length+' participant'+(cart.length>1?'s':'')+' — you save '+m(orderDiscount(promoObj)); }
+    else if(val('crPromo')){ msg.style.color='var(--red,#e63535)';msg.textContent='✕ Invalid or expired code'; }
+    else { msg.textContent=''; }
+    renderReview();
   };
 
   function captureEntry(){
@@ -146,6 +189,10 @@
     try{var fp=document.getElementById('fPromo');if(fp){var row=fp.closest('.promo-row');if(row){row.style.display='none';var lbl=row.previousElementSibling;if(lbl&&lbl.tagName==='LABEL')lbl.style.display='none';}}var pm=document.getElementById('promoMsg');if(pm)pm.style.display='none';document.querySelectorAll('#s3 .note').forEach(function(n){n.style.display='none';});}catch(e){}
     injectReview();
     injectAddButtons();
+    injectPromoBar();
+    // re-inject the promo bar and re-apply discounted-price styling every time the program list re-renders
+    if(typeof window.renderPrograms==='function'){ var _rp=window.renderPrograms; window.renderPrograms=function(){ var r=_rp.apply(this,arguments); try{injectPromoBar();decoratePrices();}catch(e){} return r; }; }
+    if(typeof renderPrograms==='function'){try{renderPrograms();}catch(e){}}
     if(typeof window.toPayStep==='function'){ window.toPayStep=function(){ if(typeof validDetails==='function'&&!validDetails())return; if(!captureEntry())return; showReview(); }; }
     if(typeof renderLogos==='function'){try{renderLogos();}catch(e){}}
     var q=new URLSearchParams(location.search);if(q.get('canceled')&&q.get('order'))showRetry(q.get('order'));
