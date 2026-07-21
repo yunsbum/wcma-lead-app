@@ -63,7 +63,7 @@ app.post('/api/book', async (req, res) => {
     if (!b.student || !b.email || !b.phone) return res.status(400).json({ error: 'Missing required fields' });
     const lead = await db.createLead({ student: b.student, age: b.age ? Number(b.age) : undefined, guardian: b.guardian || '', email: b.email, phone: b.phone, program: program.name, programId: program.id, price: program.price, when: b.when || '', source: b.source || 'direct', status: 'booked', payStatus: program.price > 0 ? 'pending' : 'none' });
     email.onBooking(lead).catch(() => {});
-    if (program.price > 0) { const session = await createCheckout({ lead, program, baseUrl: BASE_URL }); await db.setSession(lead._id, session.id); return res.json({ ok: true, pay: true, checkoutUrl: session.url }); }
+    if (program.price > 0) { const base = (req.headers['x-forwarded-proto'] || 'https') + '://' + req.headers.host; const session = await createCheckout({ lead, program, baseUrl: base }); await db.setSession(lead._id, session.id); return res.json({ ok: true, pay: true, checkoutUrl: session.url }); }
     return res.json({ ok: true, pay: false, message: 'Booked!' });
   } catch (e) { console.error('[book]', e); res.status(500).json({ error: 'Something went wrong. Please try again.' }); }
 });

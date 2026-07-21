@@ -15,8 +15,8 @@
     function set(label,on){var cards=document.querySelectorAll('.intcard');cards.forEach(function(card){if((card.textContent||'').indexOf(label)>-1){var b=card.querySelector('.stat');if(b){b.textContent=on?'Connected':'Not connected';b.style.background=on?'#1cb45420':'';b.style.color=on?'#1cb454':'';}}});}
     set('Stripe',s.stripeConnected);set('Email',s.emailConnected);set('Twilio',s.smsConnected);if(s.logo&&typeof DB!=='undefined'&&DB.settings){DB.settings.logo=s.logo;if(typeof renderLogos==='function'){try{renderLogos();}catch(e){}}}
   }).catch(function(){});}
-  function loadPrograms(){fetch('/api/programs',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(p){if(Array.isArray(p)&&p.length&&typeof DB!=='undefined'){DB.programs=p;if(typeof renderPrograms==='function'){try{renderPrograms();}catch(e){}}}}).catch(function(){});}
-  function initPrograms(){fetch('/api/settings',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(s){if(s&&s.programsSaved){loadPrograms();}else if(typeof DB!=='undefined'&&Array.isArray(DB.programs)&&DB.programs.length){pushSync(true);}}).catch(function(){});}
+  function loadPrograms(){fetch('/api/programs',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(p){if(Array.isArray(p)&&p.length&&typeof DB!=='undefined'){DB.programs=p;if(typeof renderPrograms==='function'){try{renderPrograms();}catch(e){}}if(typeof renderSetup==='function'){try{renderSetup();}catch(e){}}}}).catch(function(){});}
+  function initPrograms(){fetch('/api/settings',{credentials:'same-origin'}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(s){if(s&&s.programsSaved){loadPrograms();}else if(s&&typeof DB!=='undefined'&&Array.isArray(DB.programs)&&DB.programs.length){pushSync(true);}}).catch(function(){});}
   function install(){
     if(typeof window.save==='function'){var _s=window.save;window.save=function(){var r=_s.apply(this,arguments);pushSync();reflectStatus();return r;};}
     window.bookingUrl=function(){return (location.origin||'')+'/signup';};
