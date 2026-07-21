@@ -55,15 +55,35 @@ app.get('/signup', (req, res) => {
 });
 app.get('/api/programs', async (req, res) => { try { const s = await db.getSettings(); return res.json((s && Array.isArray(s.programs) && s.programs.length) ? s.programs : programs); } catch (e) { return res.json(programs); } });
 app.get('/api/branding', async (req, res) => { try { const s = await db.getSettings(); res.json({ logo: s.logo || '', brandColor: s.brandColor || '', bgColor: s.bgColor || '', logoBg: s.logoBg || '' }); } catch (e) { res.json({}); } });
+// Public: the booking page validates codes against the SAME promos the server charges with, so the preview matches the real charge.
+app.get('/api/promos', async (req, res) => { try { const s = await db.getSettings(); const list = (s && Array.isArray(s.promos)) ? s.promos : []; res.json(list.filter(p => p && (p.status ? p.status === 'Active' : true))); } catch (e) { res.json([]); } });
 
+// Re-validate a promo code on the server and return the discount (in cents).
+// Never trust a client-supplied amount — the discount is computed from the school's own saved promos.
+function validatePromo(promos, code, program) {
+  if (!code || !Array.isArray(promos)) return { code: '', discount: 0 };
+  const p = promos.find(x => x && x.code && String(x.code).toUpperCase() === String(code).toUpperCase() && (x.status ? x.status === 'Active' : true));
+  if (!p) return { code: '', discount: 0 };
+  if (p.max && (p.used || 0) >= p.max) return { code: '', discount: 0 };
+  if (p.scope && p.scope !== 'All programs' && program && String(p.scope).indexOf(program.name) === -1) return { code: '', discount: 0 };
+  const price = program.price || 0; let disc = 0;
+  if (p.type === 'percent') disc = Math.round(price * (p.value || 0) / 100);
+  else if (p.type === 'amount') disc = Math.min(price, p.value || 0);
+  else if (p.type === 'free') disc = price;
+  disc = Math.max(0, Math.min(price, disc));
+  return { code: p.code, discount: disc };
+}
 app.post('/api/book', async (req, res) => {
   try {
     const b = req.body || {}; const _st = await db.getSettings(); const _list = (_st && Array.isArray(_st.programs) && _st.programs.length) ? _st.programs : programs; const program = _list.find(p => p.id === b.programId);
     if (!program) return res.status(400).json({ error: 'Invalid program' });
     if (!b.student || !b.email || !b.phone) return res.status(400).json({ error: 'Missing required fields' });
-    const lead = await db.createLead({ student: b.student, age: b.age ? Number(b.age) : undefined, guardian: b.guardian || '', email: b.email, phone: b.phone, program: program.name, programId: program.id, price: program.price, when: b.when || '', source: b.source || 'direct', status: 'booked', payStatus: program.price > 0 ? 'pending' : 'none' });
+    const _promos = (_st && Array.isArray(_st.promos)) ? _st.promos : [];
+    const applied = validatePromo(_promos, b.promoCode, program);
+    const finalPrice = Math.max(0, (program.price || 0) - applied.discount);
+    const lead = await db.createLead({ student: b.student, age: b.age ? Number(b.age) : undefined, guardian: b.guardian || '', email: b.email, phone: b.phone, program: program.name, programId: program.id, price: finalPrice, promo: applied.code, discount: applied.discount, when: b.when || '', source: b.source || 'direct', status: 'booked', payStatus: finalPrice > 0 ? 'pending' : 'none' });
     email.onBooking(lead).catch(() => {});
-    if (program.price > 0) { const base = (req.headers['x-forwarded-proto'] || 'https') + '://' + req.headers.host; const session = await createCheckout({ lead, program, baseUrl: base }); await db.setSession(lead._id, session.id); return res.json({ ok: true, pay: true, checkoutUrl: session.url }); }
+    if (finalPrice > 0) { const base = (req.headers['x-forwarded-proto'] || 'https') + '://' + req.headers.host; const session = await createCheckout({ lead, program, baseUrl: base, amount: finalPrice }); await db.setSession(lead._id, session.id); return res.json({ ok: true, pay: true, checkoutUrl: session.url }); }
     return res.json({ ok: true, pay: false, message: 'Booked!' });
   } catch (e) { console.error('[book]', e); res.status(500).json({ error: 'Something went wrong. Please try again.' }); }
 });
@@ -86,8 +106,8 @@ app.get('/api/leads', auth.requireAuth, async (req, res) => res.json(await db.li
 app.post('/api/leads/sync', auth.requireAuth, async (req, res) => {
   const items = (req.body && req.body.leads) || []; const mapping = [];
   for (const it of items) { try {
-    if (it._sid) await db.updateFields(it._sid, { status: it.status, archived: !!it.archived, notes: it.notes || '', student: it.student, phone: it.phone, email: it.email });
-    else { const doc = await db.createLead({ student: it.student || '(no name)', age: it.age ? Number(it.age) : undefined, guardian: it.guardian || '', email: it.email || '', phone: it.phone || '', program: it.program || '', programId: it.programId || '', price: 0, when: it.when || '', source: it.src || 'walk-in', status: it.status || 'booked', payStatus: 'none', archived: !!it.archived, notes: it.notes || '' }); mapping.push({ tempId: it.id, _id: doc._id }); }
+    if (it._sid) await db.updateFields(it._sid, { status: it.status, archived: !!it.archived, deleted: !!it.deleted, notes: it.notes || '', student: it.student, phone: it.phone, email: it.email });
+    else { const doc = await db.createLead({ student: it.student || '(no name)', age: it.age ? Number(it.age) : undefined, guardian: it.guardian || '', email: it.email || '', phone: it.phone || '', program: it.program || '', programId: it.programId || '', price: 0, when: it.when || '', source: it.src || 'walk-in', status: it.status || 'booked', payStatus: 'none', archived: !!it.archived, deleted: !!it.deleted, notes: it.notes || '' }); mapping.push({ tempId: it.id, _id: doc._id }); }
   } catch (e) { console.error('[sync] item', e.message); } }
   try { const s = (req.body && req.body.settings) || {}; const patch = {};
     if (/^sk_/.test(s.stripeKey || '')) patch.stripeKey = s.stripeKey;
@@ -99,6 +119,7 @@ app.post('/api/leads/sync', auth.requireAuth, async (req, res) => {
     if (typeof s.notifySms !== 'undefined') patch.notifySms = !!s.notifySms;
     if (s.twilioSid) patch.twilioSid = s.twilioSid; if (s.twilioToken) patch.twilioToken = s.twilioToken; if (s.twilioFrom) patch.twilioFrom = s.twilioFrom;
     if (Array.isArray(s.programs)) patch.programs = s.programs;
+    if (Array.isArray(s.promos)) patch.promos = s.promos;
     ['logo','brandColor','bgColor','logoBg','schoolSlug'].forEach(function(k){ if (typeof s[k] === 'string') patch[k] = s[k]; });
     if (typeof s.monthlyGoal !== 'undefined' && s.monthlyGoal !== null) patch.monthlyGoal = s.monthlyGoal;
     if (Object.keys(patch).length) await db.saveSettings(patch);

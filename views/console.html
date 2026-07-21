@@ -377,7 +377,7 @@
             <input class="fi" placeholder="MM / YY" style="border:none;padding:8px 4px" /><input class="fi" placeholder="CVC" style="border:none;padding:8px 4px" /></div></div>
       </div>
       <div class="foot"><button class="btn btn-primary" style="width:100%" id="payBtn" onclick="pay()">Pay &amp; confirm booking</button></div>
-      <div class="lock">🔒 Prototype — no real charge.</div>
+      <div class="lock">🔒 Secure payment powered by Stripe.</div>
     </div>
   </section>
 
@@ -994,17 +994,17 @@ function doDeleteProg(id){const p=DB.programs.find(x=>x.id===id);if(!p)return;co
 
 // ----- Excel download (all records; CSV opens directly in Excel/Sheets) -----
 function exportExcel(){
-  const cols=[['id','ID'],['student','Student'],['age','Age'],['guardian','Guardian'],['email','Email'],['phone','Phone'],['heard','Heard about us'],['program','Program'],['when','Date/Time'],['src','Source'],['paid','Paid'],['status','Status'],['archivedLabel','Archived'],['promo','Promo'],['notes','Notes'],['created','Created']];
+  const cols=[['id','ID'],['student','Student'],['age','Age'],['guardian','Guardian'],['email','Email'],['phone','Phone'],['heard','Heard about us'],['program','Program'],['when','Date/Time'],['src','Source'],['paid','Paid'],['status','Status'],['archivedLabel','Archived'],['deletedLabel','Deleted'],['promo','Promo'],['notes','Notes'],['created','Created']];
   const esc=v=>{v=(v==null?'':''+v).replace(/<[^>]+>/g,'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
-  const rows=DB.leads.map(l=>Object.assign({},l,{archivedLabel:l.archived?'Yes':'No'}));
+  const rows=DB.leads.map(l=>Object.assign({},l,{archivedLabel:l.archived?'Yes':'No',deletedLabel:l.deleted?'Yes':'No'}));
   const csv=[cols.map(c=>c[1]).join(',')].concat(rows.map(l=>cols.map(c=>esc(l[c[0]])).join(','))).join('\r\n');
   dl(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}),'WCMA-intros.csv');
-  toast('Downloaded '+DB.leads.length+' records incl. archived (opens in Excel)');
+  toast('Downloaded '+DB.leads.length+' records incl. archived & deleted (opens in Excel)');
 }
 // ---- Dashboard trend data (illustrative sample so YoY / MoM comparisons are meaningful in the prototype) ----
 const MONTHS3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function leadMonth(l){var d=l.createdAt?new Date(l.createdAt):(l.created?new Date(l.created):null);return (d&&!isNaN(d))?d:null;}
-function monthlyCounts(){var yr=new Date().getFullYear(),intros=new Array(12).fill(0),enr=new Array(12).fill(0);(DB.leads||[]).forEach(function(l){if(l.archived)return;var d=leadMonth(l);if(!d||d.getFullYear()!==yr)return;var m=d.getMonth();intros[m]++;if(l.status==='enrolled')enr[m]++;});return {intros:intros,enr:enr};}
+function monthlyCounts(){var yr=new Date().getFullYear(),intros=new Array(12).fill(0),enr=new Array(12).fill(0);(DB.leads||[]).forEach(function(l){if(l.archived||l.deleted)return;var d=leadMonth(l);if(!d||d.getFullYear()!==yr)return;var m=d.getMonth();intros[m]++;if(l.status==='enrolled')enr[m]++;});return {intros:intros,enr:enr};}
 let curRange='all';
 function curMonthIdx(){return Math.min(11,new Date().getMonth());}
 function pctDelta(cur,prev){if(prev==null||prev===0)return null;return Math.round((cur-prev)/prev*100);}
@@ -1053,7 +1053,7 @@ function setRange(r){curRange=r;const seg=document.getElementById('rangeSeg');if
 function saveGoal(){let v=parseInt(document.getElementById('goalInput').value,10);if(!v||v<1)v=1;DB.settings.monthlyGoal=v;save();renderStats();toast('Monthly goal set to '+v);}
 function renderStats(){
   const L=DB.leads,n=k=>L.filter(l=>l.status===k).length;
-  const A=L.filter(l=>!l.archived),booked=A.length,showed=A.filter(l=>['showed','followup','enrolled','lost'].includes(l.status)).length,enrolled=A.filter(l=>l.status==='enrolled').length;
+  const A=L.filter(l=>!l.archived&&!l.deleted),booked=A.length,showed=A.filter(l=>['showed','followup','enrolled','lost'].includes(l.status)).length,enrolled=A.filter(l=>l.status==='enrolled').length;
   const CUR=curMonthIdx(),PREV=CUR>0?CUR-1:null,mc=monthlyCounts();
   const introsNow=mc.intros[CUR],introsPrev=PREV!=null?mc.intros[PREV]:null;
   const enrNow=mc.enr[CUR],enrPrev=PREV!=null?mc.enr[PREV]:null;
@@ -1073,15 +1073,16 @@ function renderStats(){
   const chEl=document.getElementById('chChannel');if(chEl)chEl.innerHTML=che.length?colChart(che,chMax,booked):'<div class="muted" style="font-size:12.5px">No data yet.</div>';
   const f=[['Booked',booked],['Showed up',showed],['Enrolled',enrolled]];const max=booked||1;
   document.getElementById('funnel').innerHTML=colChart(f,max,booked);
-  document.getElementById('pipeCount').textContent=L.filter(l=>!['enrolled','lost'].includes(l.status)&&!l.archived).length;
+  document.getElementById('pipeCount').textContent=L.filter(l=>!['enrolled','lost'].includes(l.status)&&!l.archived&&!l.deleted).length;
   const ac=document.getElementById('archCount');if(ac)ac.textContent=L.filter(l=>l.archived).length;
   const dm=document.getElementById('dataMeta');if(dm)dm.textContent=`${L.length} intro records saved`+(persist?' on this device':'')+' · download anytime';
 }
 let showArchived=false;
 function toggleShowArch(){showArchived=document.getElementById('showArch').checked;renderBoard();}
-function renderBoard(){const board=document.getElementById('board');board.innerHTML='';const src=DB.leads.filter(l=>showArchived?true:!l.archived);STAGES.forEach(s=>{const items=src.filter(l=>l.status===s.k);const col=document.createElement('div');col.className='col';col.innerHTML=`<div class="ch"><b>${s.label}</b><span class="n">${items.length}</span></div><div class="body"></div>`;board.appendChild(col);const body=col.querySelector('.body');body.ondragover=e=>{e.preventDefault();body.classList.add('dragover');};body.ondragleave=()=>body.classList.remove('dragover');body.ondrop=e=>{e.preventDefault();body.classList.remove('dragover');dropLead(e,s.k);};items.forEach(l=>{const c=document.createElement('div');c.className='lead'+(l.archived?' archived':'');c.draggable=!l.archived;c.ondragstart=e=>{if(l.archived){e.preventDefault();return;}e.dataTransfer.setData('text/plain',String(l.id));e.dataTransfer.effectAllowed='move';c.classList.add('dragging');};c.ondragend=()=>c.classList.remove('dragging');c.onclick=()=>openDrawer(l.id);const flag=l.archived?'<div class="warnflag" style="color:var(--muted2)">🗄 Archived</div>':(l.status==='noshow'?'<div class="warnflag">⚠ Needs follow-up</div>':(l.status==='followup'?'<div class="warnflag">⏳ Awaiting decision</div>':''));c.innerHTML=`<div class="nm">${l.student}</div><div class="mt">${l.program} · ${l.when}</div><div class="foot"><span class="src">via ${l.src}</span><span>${l.paid}</span></div>${flag}`;body.appendChild(c);});if(!items.length)body.innerHTML='<div class="muted droph" style="padding:14px 4px;font-size:12.5px;text-align:center">Drop here</div>';});const ac=document.getElementById('archCount');if(ac)ac.textContent=DB.leads.filter(l=>l.archived).length;}
+function renderBoard(){const board=document.getElementById('board');board.innerHTML='';const src=DB.leads.filter(l=>!l.deleted&&(showArchived?true:!l.archived));STAGES.forEach(s=>{const items=src.filter(l=>l.status===s.k);const col=document.createElement('div');col.className='col';col.innerHTML=`<div class="ch"><b>${s.label}</b><span class="n">${items.length}</span></div><div class="body"></div>`;board.appendChild(col);const body=col.querySelector('.body');body.ondragover=e=>{e.preventDefault();body.classList.add('dragover');};body.ondragleave=()=>body.classList.remove('dragover');body.ondrop=e=>{e.preventDefault();body.classList.remove('dragover');dropLead(e,s.k);};items.forEach(l=>{const c=document.createElement('div');c.className='lead'+(l.archived?' archived':'');c.draggable=!l.archived;c.ondragstart=e=>{if(l.archived){e.preventDefault();return;}e.dataTransfer.setData('text/plain',String(l.id));e.dataTransfer.effectAllowed='move';c.classList.add('dragging');};c.ondragend=()=>c.classList.remove('dragging');c.onclick=()=>openDrawer(l.id);const flag=l.archived?'<div class="warnflag" style="color:var(--muted2)">🗄 Archived</div>':(l.status==='noshow'?'<div class="warnflag">⚠ Needs follow-up</div>':(l.status==='followup'?'<div class="warnflag">⏳ Awaiting decision</div>':''));c.innerHTML=`<div class="nm">${l.student}</div><div class="mt">${l.program} · ${l.when}</div><div class="foot"><span class="src">via ${l.src}</span><span>${l.paid}</span></div>${flag}`;body.appendChild(c);});if(!items.length)body.innerHTML='<div class="muted droph" style="padding:14px 4px;font-size:12.5px;text-align:center">Drop here</div>';});const ac=document.getElementById('archCount');if(ac)ac.textContent=DB.leads.filter(l=>l.archived).length;}
 function archiveLead(){if(!curLead)return;curLead.archived=true;curLead.activity.push({t:'Archived (removed from active pipeline; kept for reports & export)',tm:'Just now'});save();closeDrawer();renderBoard();renderStats();toast(curLead.student.split(' ')[0]+' archived');}
 function unarchiveLead(){if(!curLead)return;curLead.archived=false;curLead.activity.push({t:'Restored to active pipeline',tm:'Just now'});save();renderDrawer();renderBoard();renderStats();toast(curLead.student.split(' ')[0]+' restored');}
+function deleteLead(){if(!curLead)return;var l=curLead,nm=(l.student||'Lead').split(' ')[0];askConfirm('Permanently delete '+nm+'? They will be removed from the pipeline and every report, but will still appear in Excel downloads (marked Deleted).',function(){l.deleted=true;l.activity.push({t:'Deleted — removed from pipeline & all reports; kept in Excel export',tm:'Just now'});save();closeDrawer();renderBoard();renderStats();toast(nm+' deleted');});}
 function dropLead(e,stage){const id=parseInt(e.dataTransfer.getData('text/plain'));const l=DB.leads.find(x=>x.id===id);if(!l||l.status===stage)return;l.status=stage;l.activity.push({t:'Moved to '+stLabel(stage),tm:'Just now'});save();renderBoard();renderStats();toast('Moved '+l.student.split(' ')[0]+' to '+stLabel(stage));}
 // drawer
 let curLead=null,curCh='sms';
@@ -1112,7 +1113,10 @@ function renderDrawer(){
     <div class="sec-t">Archive</div>
     ${l.archived
       ? `<div class="muted" style="font-size:12.5px;margin-bottom:8px">🗄 Archived — hidden from the active pipeline, still kept in reports &amp; Excel export.</div><button class="btn btn-ghost btn-sm" onclick="unarchiveLead()">↩ Restore to pipeline</button>`
-      : `<div class="muted" style="font-size:12.5px;margin-bottom:8px">Remove from the active pipeline without deleting. The record stays in reports and Excel exports.</div><button class="btn btn-ghost btn-sm" style="color:var(--warn)" onclick="archiveLead()">🗄 Archive this lead</button>`}`;
+      : `<div class="muted" style="font-size:12.5px;margin-bottom:8px">Remove from the active pipeline without deleting. The record stays in reports and Excel exports.</div><button class="btn btn-ghost btn-sm" style="color:var(--warn)" onclick="archiveLead()">🗄 Archive this lead</button>`}
+    <div class="sec-t" style="color:var(--red);margin-top:14px">Delete</div>
+    <div class="muted" style="font-size:12.5px;margin-bottom:8px">Permanently remove from the pipeline and every report (Monthly Goal, Intros, Sources, Funnel). The record still appears in Excel downloads, marked <b>Deleted</b>.</div>
+    <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteLead()">🗑 Delete permanently</button>`;
   updChars();
 }
 function setStatus(k){curLead.status=k;curLead.activity.push({t:'Status changed to '+stLabel(k),tm:'Just now'});save();document.getElementById('dCtx').innerHTML=`${curLead.program} · ${curLead.when} &nbsp;<span class="pill st-${k}">${stLabel(k)}</span>`;renderDrawer();renderBoard();renderStats();toast('Moved '+curLead.student.split(' ')[0]+' to '+stLabel(k));}
