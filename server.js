@@ -47,7 +47,7 @@ app.post('/login', (req, res) => { if (auth.check((req.body.password || '').trim
 app.get('/logout', (req, res) => { auth.clearCookie(res); res.redirect('/login'); });
 
 app.get('/', (req, res) => res.redirect('/signup'));
-app.get('/signup', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/signup', (req, res) => { let html = fs.readFileSync(path.join(__dirname, 'views', 'console.html'), 'utf8'); html = html.replace('</body>', '<script src="/signup-mode.js"></script>\n</body>'); res.set('Content-Type','text/html').send(html); });
 app.get('/api/programs', (req, res) => res.json(programs));
 
 app.post('/api/book', async (req, res) => {

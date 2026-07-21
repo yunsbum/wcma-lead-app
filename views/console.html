@@ -818,7 +818,7 @@ function openPreview(){custFrom='manager';resetCustomer();showView('cust');}
 function openPublic(){custFrom='login';resetCustomer();showView('cust');}
 function backFromCustomer(){showView('manager');}
 function resetCustomer(){cs={program:null,date:null,time:null,price:0,discount:0,promo:null,view:new Date(today),wlSlot:null};renderPrograms();cgo(1);}
-const APP_VERSION='v110';
+const APP_VERSION='v111';
 document.getElementById('persistNote').textContent = (persist
   ? 'Prototype · Your entries are saved on this device. Download them anytime from the Pipeline (Download Excel).'
   : '⚠ Preview mode — data won\'t persist here. Download this file and open it in your browser to save data permanently.') + '  ·  ' + APP_VERSION;
