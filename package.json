@@ -1,0 +1,17 @@
+{
+  "name": "wcma-lead-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Standalone intro-booking + lead capture for World Class Martial Arts (interim, pre-DOJOApp integration).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.6.0",
+    "stripe": "^16.8.0"
+  }
+}
