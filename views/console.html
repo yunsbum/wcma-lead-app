@@ -417,7 +417,7 @@
   </aside>
   <main class="omain">
     <section class="opage on" id="op-dash">
-      <div class="h"><div><h1>Overview</h1><p>Intro performance — compared to last month and last year.</p></div><span class="pill" style="background:#eef2ff;color:#4f5bd5">Trend figures are sample data</span></div>
+      <div class="h"><div><h1>Overview</h1><p>Intro performance — compared to last month and last year.</p></div><span class="pill" style="background:#eef2ff;color:#4f5bd5">Live data — records from your first booking</span></div>
       <div class="stats" id="ownStats"></div>
       <div class="dashgrid">
         <div class="card pad">
@@ -494,8 +494,8 @@
     <section class="opage" id="op-notif">
       <div class="h"><div><h1>School Notifications</h1><p>Get alerted the moment a new intro comes in.</p></div><button class="btn-sm savebtn clean" id="save-notif" onclick="saveSettings()">Saved ✓</button></div>
       <div class="card pad">
-        <div class="field"><label>School email (receives new-intro alerts)</label><input id="setEmail" placeholder="frontdesk@worldclassmartialarts.com" /></div>
-        <div class="field"><label>School phone (receives new-intro text)</label><input id="setPhone" placeholder="(555) 010-2020" /></div>
+        <div class="field"><label>School email (receives new-intro alerts)</label><input id="setEmail" placeholder="e.g. frontdesk@yourschool.com" /></div>
+        <div class="field"><label>School phone (receives new-intro text)</label><input id="setPhone" placeholder="e.g. (555) 010-2020" /></div>
         <div class="setrow"><div class="toggle" id="tgEmail" onclick="tg('tgEmail')"></div><div class="txt"><b>Email the school on every new intro</b><p>Sends student name, age, program, time, and where they heard about you.</p></div></div>
         <div class="setrow"><div class="toggle" id="tgSms" onclick="tg('tgSms')"></div><div class="txt"><b>Text the school phone on every new intro</b><p>A short SMS to the front-desk line so nobody misses a booking.</p></div></div>
       </div>
@@ -744,7 +744,7 @@ var QR=(function(){
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+vb+' '+vb+'" shape-rendering="crispEdges"><rect width="'+vb+'" height="'+vb+'" fill="#fff"/><g transform="translate('+quiet+','+quiet+')" fill="'+dark+'">'+rects.join('')+'</g></svg>';}
   return {svg:svg,modules:modules};
 })();
-function bookingUrl(){var s=(DB.settings.schoolSlug||'worldclass').toLowerCase().replace(/[^a-z0-9-]/g,'');return 'https://thedojoapp.com/lead/'+s;}
+function bookingUrl(){return (location.origin||'')+'/signup';}
 const LOGO_SVG='<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><circle cx="100" cy="100" r="100" fill="#000"/><circle cx="100" cy="100" r="69" fill="#fff"/><text fill="#fff" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="27" letter-spacing="1.5"><textPath href="#wcTop" startOffset="50%" text-anchor="middle">WORLD CLASS</textPath></text><text fill="#fff" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="23" letter-spacing="1"><textPath href="#wcBot" startOffset="50%" text-anchor="middle">Martial Arts</textPath></text><polygon points="24.0,91.0 26.2,97.0 32.6,97.2 27.5,101.1 29.3,107.3 24.0,103.7 18.7,107.3 20.5,101.1 15.4,97.2 21.8,97.0" fill="#fff"/><polygon points="176.0,91.0 178.2,97.0 184.6,97.2 179.5,101.1 181.3,107.3 176.0,103.7 170.7,107.3 172.5,101.1 167.4,97.2 173.8,97.0" fill="#fff"/><g stroke="#fff" stroke-width="2.5" stroke-linejoin="round"><path d="M100,50 L90,90 L56,100 L90,110 L100,150 Z" fill="#E4032E"/><path d="M100,50 L110,90 L144,100 L110,110 L100,150 Z" fill="#2E4EA6"/></g><circle cx="114" cy="78" r="6.5" fill="#000"/><path d="M74,122 Q104,92 132,84" stroke="#000" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M96,150 Q100,120 120,104" stroke="#000" stroke-width="6" fill="none" stroke-linecap="round"/></svg>';
 function brandMark(){return DB.settings.logo?('<img src="'+DB.settings.logo+'" alt="logo"/>'):'<span class="logotext">LOGO</span>';}
 function renderLogos(){var bg=DB.settings.logoBg||'#ffffff';var clear=(bg==='transparent'||bg==='none');var hasLogo=!!DB.settings.logo;var els=document.querySelectorAll('.brandmark');for(var i=0;i<els.length;i++){var el=els[i];el.innerHTML=brandMark();var w=parseInt(el.style.width)||el.getBoundingClientRect().width||36;el.style.background=clear?'transparent':bg;el.style.borderRadius='22%';el.style.padding=clear?'0':Math.max(3,Math.round(w*0.14))+'px';el.style.boxShadow=clear?'':'0 1px 3px rgba(16,24,40,.12)';if(!hasLogo){var sp=el.querySelector('.logotext');if(sp){sp.style.fontSize=Math.max(8,Math.round(w*0.24))+'px';sp.style.fontWeight='800';sp.style.letterSpacing='.5px';sp.style.color='#9aa0a8';sp.style.fontFamily='-apple-system,Arial,sans-serif';}}}}
@@ -777,7 +777,7 @@ function seedTemplates(){return [{id:'t1',name:'Reminder',ch:'sms',subject:'',bo
 function pad2(n){return (n<10?'0':'')+n;}
 function usDate(d){return pad2(d.getMonth()+1)+'/'+pad2(d.getDate())+'/'+d.getFullYear();}
 function seedDB(){
-  return {version:5,settings:{schoolEmail:'frontdesk@worldclassmartialarts.com',schoolPhone:'(555) 010-2020',notifyEmail:true,notifySms:true,schoolSlug:'worldclass',monthlyGoal:20,domain:'worldclassmartialarts.com',stripeKey:'',twilioSid:'',twilioToken:'',twilioFrom:'',sendgridKey:'',fromEmail:'',logo:'',brandColor:'#3073F1',bgColor:'#f5f5f5',logoBg:'#ffffff',timezone:localTz(),googleConnected:false,googleAccount:'',automations:{confirmation:true,reminders:true,noshow:true,enroll:true,waitlist:false}},
+  return {version:5,settings:{schoolEmail:'',schoolPhone:'',notifyEmail:false,notifySms:false,schoolSlug:'worldclass',monthlyGoal:20,domain:'worldclassmartialarts.com',stripeKey:'',twilioSid:'',twilioToken:'',twilioFrom:'',sendgridKey:'',fromEmail:'',logo:'',brandColor:'#3073F1',bgColor:'#f5f5f5',logoBg:'#ffffff',timezone:localTz(),googleConnected:false,googleAccount:'',automations:{confirmation:true,reminders:true,noshow:true,enroll:true,waitlist:false}},
    schedule:seedSchedule(),exceptions:seedExceptions(),promos:seedPromos(),templates:seedTemplates(),
    programs:defaultPrograms(),
    leads:[
@@ -795,7 +795,7 @@ function seedDB(){
      activity:[{t:'Booking created',tm:'Jul 9, 7:45 PM'},{t:'Showed up',tm:'Aug 6, 5:55 PM'},{t:'Enrolled — 12-month agreement',tm:'Aug 6, 6:40 PM'}]},
    ]};
 }
-function load(){let d=null;if(persist){try{const raw=localStorage.getItem(LS_KEY);if(raw)d=JSON.parse(raw);}catch(e){}}if(!d)d=seedDB();if(!d.programs)d.programs=defaultPrograms();if(!d.schedule)d.schedule=seedSchedule();if(!d.exceptions)d.exceptions=seedExceptions();if(!d.promos)d.promos=seedPromos();if(!d.templates)d.templates=seedTemplates();(d.exceptions||[]).forEach(function(e){if(e.dateKey){var pr=e.dateKey.split('-');e.dateLabel=usDate(new Date(+pr[0],+pr[1]-1,+pr[2]));}});d.settings=Object.assign({schoolEmail:'frontdesk@worldclassmartialarts.com',schoolPhone:'(555) 010-2020',notifyEmail:true,notifySms:true,schoolSlug:'worldclass',monthlyGoal:20,domain:'worldclassmartialarts.com',stripeKey:'',twilioSid:'',twilioToken:'',twilioFrom:'',sendgridKey:'',fromEmail:'',logo:'',brandColor:'#3073F1',bgColor:'#f5f5f5',logoBg:'#ffffff',timezone:localTz(),googleConnected:false,googleAccount:'',automations:{confirmation:true,reminders:true,noshow:true,enroll:true,waitlist:false}},d.settings||{});if(persist)try{localStorage.setItem(LS_KEY,JSON.stringify(d));}catch(e){}return d;}
+function load(){let d=null;if(persist){try{const raw=localStorage.getItem(LS_KEY);if(raw)d=JSON.parse(raw);}catch(e){}}if(!d)d=seedDB();if(!d.programs)d.programs=defaultPrograms();if(!d.schedule)d.schedule=seedSchedule();if(!d.exceptions)d.exceptions=seedExceptions();if(!d.promos)d.promos=seedPromos();if(!d.templates)d.templates=seedTemplates();(d.exceptions||[]).forEach(function(e){if(e.dateKey){var pr=e.dateKey.split('-');e.dateLabel=usDate(new Date(+pr[0],+pr[1]-1,+pr[2]));}});d.settings=Object.assign({schoolEmail:'',schoolPhone:'',notifyEmail:false,notifySms:false,schoolSlug:'worldclass',monthlyGoal:20,domain:'worldclassmartialarts.com',stripeKey:'',twilioSid:'',twilioToken:'',twilioFrom:'',sendgridKey:'',fromEmail:'',logo:'',brandColor:'#3073F1',bgColor:'#f5f5f5',logoBg:'#ffffff',timezone:localTz(),googleConnected:false,googleAccount:'',automations:{confirmation:true,reminders:true,noshow:true,enroll:true,waitlist:false}},d.settings||{});if(persist)try{localStorage.setItem(LS_KEY,JSON.stringify(d));}catch(e){}return d;}
 function save(){if(persist){try{localStorage.setItem(LS_KEY,JSON.stringify(DB));return true;}catch(e){return false;}}return true;}
 function nextId(){return DB.leads.reduce((m,l)=>Math.max(m,l.id),1000)+1;}
 
@@ -818,7 +818,7 @@ function openPreview(){custFrom='manager';resetCustomer();showView('cust');}
 function openPublic(){custFrom='login';resetCustomer();showView('cust');}
 function backFromCustomer(){showView('manager');}
 function resetCustomer(){cs={program:null,date:null,time:null,price:0,discount:0,promo:null,view:new Date(today),wlSlot:null};renderPrograms();cgo(1);}
-const APP_VERSION='v109';
+const APP_VERSION='v110';
 document.getElementById('persistNote').textContent = (persist
   ? 'Prototype · Your entries are saved on this device. Download them anytime from the Pipeline (Download Excel).'
   : '⚠ Preview mode — data won\'t persist here. Download this file and open it in your browser to save data permanently.') + '  ·  ' + APP_VERSION;
@@ -1002,13 +1002,9 @@ function exportExcel(){
   toast('Downloaded '+DB.leads.length+' records incl. archived (opens in Excel)');
 }
 // ---- Dashboard trend data (illustrative sample so YoY / MoM comparisons are meaningful in the prototype) ----
-const SAMPLE_TREND={
-  months:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
-  lastYear:[18,22,25,30,28,26,29,27,31,34,29,33],
-  thisYear:[24,28,31,38,35,33,41,44,40,46,42,45],
-  enrLast:[6,8,9,11,10,9,11,10,12,13,11,12],
-  enrThis:[9,11,13,16,15,14,18,19,17,20,18,19]
-};
+const MONTHS3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function leadMonth(l){var d=l.createdAt?new Date(l.createdAt):(l.created?new Date(l.created):null);return (d&&!isNaN(d))?d:null;}
+function monthlyCounts(){var yr=new Date().getFullYear(),intros=new Array(12).fill(0),enr=new Array(12).fill(0);(DB.leads||[]).forEach(function(l){if(l.archived)return;var d=leadMonth(l);if(!d||d.getFullYear()!==yr)return;var m=d.getMonth();intros[m]++;if(l.status==='enrolled')enr[m]++;});return {intros:intros,enr:enr};}
 let curRange='all';
 function curMonthIdx(){return Math.min(11,new Date().getMonth());}
 function pctDelta(cur,prev){if(prev==null||prev===0)return null;return Math.round((cur-prev)/prev*100);}
@@ -1036,19 +1032,20 @@ function renderYoY(){
   if(curRange==='6m'){start=Math.max(0,CUR-5);end=CUR;}
   else if(curRange==='12m'){start=0;end=11;}
   else{start=0;end=CUR;}
+  const mc=monthlyCounts(),thisYear=mc.intros,lastYear=new Array(12).fill(0);
   const idx=[];for(let i=start;i<=end;i++)idx.push(i);
-  let mx=0;idx.forEach(i=>{mx=Math.max(mx,SAMPLE_TREND.lastYear[i],(i<=CUR?SAMPLE_TREND.thisYear[i]:0));});
-  mx=Math.max(10,Math.ceil(mx/10)*10);
+  let mx=0;idx.forEach(i=>{mx=Math.max(mx,lastYear[i],(i<=CUR?thisYear[i]:0));});
+  mx=Math.max(5,Math.ceil(mx/5)*5);
   const barH=180,showNums=idx.length<=8;
   let grid='';for(let g=0;g<=4;g++){const frac=g/4;grid+=`<div style="position:absolute;left:0;right:0;bottom:${frac*100}%;border-top:1px dashed #edf0f5"></div><div style="position:absolute;left:-32px;bottom:${frac*100}%;transform:translateY(50%);font-size:10px;color:#9aa3b2;width:28px;text-align:right">${Math.round(mx*frac)}</div>`;}
   let cols='',labels='';
   idx.forEach(i=>{
-    const ly=SAMPLE_TREND.lastYear[i],ty=(i<=CUR)?SAMPLE_TREND.thisYear[i]:null;
+    const ly=lastYear[i],ty=(i<=CUR)?thisYear[i]:null;
     const lyH=Math.round(ly/mx*100),tyH=ty==null?0:Math.round(ty/mx*100);
     const tyBar=ty==null?'':`<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">${showNums?`<div style="font-size:9px;font-weight:700;color:var(--brand);margin-bottom:2px">${ty}</div>`:''}<div title="This year: ${ty}" style="width:11px;height:${tyH}%;min-height:2px;background:var(--brand);border-radius:3px 3px 0 0"></div></div>`;
     const lyBar=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">${showNums?`<div style="font-size:9px;font-weight:700;color:#93b0f0;margin-bottom:2px">${ly}</div>`:''}<div title="Last year: ${ly}" style="width:11px;height:${lyH}%;min-height:2px;background:#c7d7fb;border-radius:3px 3px 0 0"></div></div>`;
     cols+=`<div style="flex:1;min-width:0;display:flex;gap:4px;align-items:flex-end;justify-content:center;height:100%">${tyBar}${lyBar}</div>`;
-    labels+=`<div style="flex:1;min-width:0;text-align:center;font-size:10.5px;color:var(--muted)">${SAMPLE_TREND.months[i]}</div>`;
+    labels+=`<div style="flex:1;min-width:0;text-align:center;font-size:10.5px;color:var(--muted)">${MONTHS3[i]}</div>`;
   });
   el.innerHTML=`<div style="position:relative;margin-left:32px;height:${barH}px">${grid}<div style="position:absolute;inset:0;display:flex;gap:8px;align-items:flex-end;z-index:1">${cols}</div></div><div style="margin-left:32px;display:flex;gap:8px;margin-top:7px">${labels}</div>`;
 }
@@ -1056,14 +1053,14 @@ function setRange(r){curRange=r;const seg=document.getElementById('rangeSeg');if
 function saveGoal(){let v=parseInt(document.getElementById('goalInput').value,10);if(!v||v<1)v=1;DB.settings.monthlyGoal=v;save();renderStats();toast('Monthly goal set to '+v);}
 function renderStats(){
   const L=DB.leads,n=k=>L.filter(l=>l.status===k).length;
-  const booked=L.length,showed=L.filter(l=>['showed','followup','enrolled','lost'].includes(l.status)).length,enrolled=n('enrolled');
-  const CUR=curMonthIdx(),PREV=CUR>0?CUR-1:null,T=SAMPLE_TREND;
-  const introsNow=T.thisYear[CUR],introsPrev=PREV!=null?T.thisYear[PREV]:null,introsLY=T.lastYear[CUR];
-  const enrNow=T.enrThis[CUR],enrPrev=PREV!=null?T.enrThis[PREV]:null,enrLY=T.enrLast[CUR];
-  const rateNow=introsNow?Math.round(enrNow/introsNow*100):0,ratePrev=(PREV!=null&&T.thisYear[PREV])?Math.round(T.enrThis[PREV]/T.thisYear[PREV]*100):null;
+  const A=L.filter(l=>!l.archived),booked=A.length,showed=A.filter(l=>['showed','followup','enrolled','lost'].includes(l.status)).length,enrolled=A.filter(l=>l.status==='enrolled').length;
+  const CUR=curMonthIdx(),PREV=CUR>0?CUR-1:null,mc=monthlyCounts();
+  const introsNow=mc.intros[CUR],introsPrev=PREV!=null?mc.intros[PREV]:null;
+  const enrNow=mc.enr[CUR],enrPrev=PREV!=null?mc.enr[PREV]:null;
+  const rateNow=introsNow?Math.round(enrNow/introsNow*100):0,ratePrev=(PREV!=null&&mc.intros[PREV])?Math.round(mc.enr[PREV]/mc.intros[PREV]*100):null;
   document.getElementById('ownStats').innerHTML=`
-    <div class="stat"><div class="n">${introsNow}</div><div class="l">Intros this month</div><div class="d">${deltaHTML(introsNow,introsPrev,'vs last mo')}${deltaHTML(introsNow,introsLY,'vs last yr')}</div></div>
-    <div class="stat"><div class="n">${enrNow}</div><div class="l">Enrolled this month</div><div class="d">${deltaHTML(enrNow,enrPrev,'vs last mo')}${deltaHTML(enrNow,enrLY,'vs last yr')}</div></div>
+    <div class="stat"><div class="n">${introsNow}</div><div class="l">Intros this month</div><div class="d">${deltaHTML(introsNow,introsPrev,'vs last mo')}</div></div>
+    <div class="stat"><div class="n">${enrNow}</div><div class="l">Enrolled this month</div><div class="d">${deltaHTML(enrNow,enrPrev,'vs last mo')}</div></div>
     <div class="stat"><div class="n">${rateNow}%</div><div class="l">Enroll rate</div><div class="d">${ratePrev!=null?deltaHTML(rateNow,ratePrev,'vs last mo'):''}<small>${enrNow}/${introsNow} enrolled</small></div></div>`;
   const GOAL=DB.settings.monthlyGoal||20;
   const gm=document.getElementById('goalMonth');if(gm)gm.textContent=MO[CUR]+' '+new Date().getFullYear();
@@ -1071,7 +1068,7 @@ function renderStats(){
   const gd=document.getElementById('goalDonut');if(gd)gd.innerHTML=donutHTML(enrNow,GOAL);
   renderYoY();
   const colChart=(entries,mx,base,h)=>{h=h||160;return `<div style="display:flex;align-items:flex-end;gap:14px;height:${h}px;padding-top:6px">`+entries.map(([k,v])=>{const pct=mx?Math.round(v/mx*100):0;const p=base?Math.round(v/base*100):0;return `<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"><div style="margin-bottom:5px;text-align:center;white-space:nowrap"><b style="font-size:13px">${v}</b> <span style="color:var(--muted);font-size:11px">(${p}%)</span></div><div style="width:100%;max-width:26px;height:${pct}%;min-height:3px;background:var(--brand);border-radius:5px 5px 0 0"></div><div style="font-size:11px;color:var(--muted);margin-top:7px;text-align:center;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%" title="${k}">${k}</div></div>`;}).join('')+`</div>`;};
-  const chan={};L.forEach(l=>{const kk=l.src||l.heard||'Other';chan[kk]=(chan[kk]||0)+1;});
+  const chan={};A.forEach(l=>{const kk=l.src||l.heard||'Other';chan[kk]=(chan[kk]||0)+1;});
   const che=Object.entries(chan).sort((a,b)=>b[1]-a[1]);const chMax=che.length?che[0][1]:1;
   const chEl=document.getElementById('chChannel');if(chEl)chEl.innerHTML=che.length?colChart(che,chMax,booked):'<div class="muted" style="font-size:12.5px">No data yet.</div>';
   const f=[['Booked',booked],['Showed up',showed],['Enrolled',enrolled]];const max=booked||1;
