@@ -8,7 +8,7 @@
   function pushSync(force){if(LOADING&&!force)return;try{
     var payload={leads:DB.leads.map(function(l){return {_sid:l._sid||window.__idmap[l.id]||null,id:l.id,student:l.student,age:l.age,guardian:l.guardian,email:l.email,phone:l.phone,program:l.program,programId:l.programId,src:l.src,when:l.when,status:l.status,archived:!!l.archived,deleted:!!l.deleted,notes:l.notes||''};})};
     var st=(typeof DB!=='undefined'&&DB.settings)?DB.settings:{};
-    payload.settings={stripeKey:st.stripeKey||'',sendgridKey:st.sendgridKey||'',fromEmail:st.fromEmail||'',smtpHost:st.smtpHost||'',smtpPort:st.smtpPort||'',smtpUser:st.smtpUser||'',smtpPass:st.smtpPass||'',smtpSecure:!!st.smtpSecure,notifyEmail:!!st.notifyEmail,notifySms:!!st.notifySms,schoolEmail:st.schoolEmail||'',schoolPhone:st.schoolPhone||'',twilioSid:st.twilioSid||'',twilioToken:st.twilioToken||'',twilioFrom:st.twilioFrom||'',logo:st.logo||'',brandColor:st.brandColor||'',bgColor:st.bgColor||'',logoBg:st.logoBg||'',schoolSlug:st.schoolSlug||'',monthlyGoal:st.monthlyGoal,programs:(typeof DB!=='undefined'&&Array.isArray(DB.programs))?DB.programs:undefined,promos:(typeof DB!=='undefined'&&Array.isArray(DB.promos))?DB.promos:undefined,schedule:(typeof DB!=='undefined'&&DB.schedule&&typeof DB.schedule==='object')?DB.schedule:undefined,exceptions:(typeof DB!=='undefined'&&Array.isArray(DB.exceptions))?DB.exceptions:undefined};
+    payload.settings={stripeKey:st.stripeKey||'',sendgridKey:st.sendgridKey||'',fromEmail:st.fromEmail||'',smtpHost:st.smtpHost||'',smtpPort:st.smtpPort||'',smtpUser:st.smtpUser||'',smtpPass:st.smtpPass||'',smtpSecure:!!st.smtpSecure,confirmSubject:st.confirmSubject||'',confirmMessage:st.confirmMessage||'',notifyEmail:!!st.notifyEmail,notifySms:!!st.notifySms,schoolEmail:st.schoolEmail||'',schoolPhone:st.schoolPhone||'',twilioSid:st.twilioSid||'',twilioToken:st.twilioToken||'',twilioFrom:st.twilioFrom||'',logo:st.logo||'',brandColor:st.brandColor||'',bgColor:st.bgColor||'',logoBg:st.logoBg||'',schoolSlug:st.schoolSlug||'',monthlyGoal:st.monthlyGoal,programs:(typeof DB!=='undefined'&&Array.isArray(DB.programs))?DB.programs:undefined,promos:(typeof DB!=='undefined'&&Array.isArray(DB.promos))?DB.promos:undefined,schedule:(typeof DB!=='undefined'&&DB.schedule&&typeof DB.schedule==='object')?DB.schedule:undefined,exceptions:(typeof DB!=='undefined'&&Array.isArray(DB.exceptions))?DB.exceptions:undefined};
     fetch('/api/leads/sync',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();}).then(function(res){if(res&&res.mapping)res.mapping.forEach(function(m){window.__idmap[m.tempId]=m._id;var ld=DB.leads.find(function(x){return x.id===m.tempId;});if(ld)ld._sid=m._id;});}).catch(function(){});
   }catch(e){}}
   function reflectStatus(){fetch('/api/settings',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(s){
@@ -24,6 +24,9 @@
       if(Array.isArray(s.promos)&&s.promos.length){DB.promos=s.promos;hadServer=true;}
       if(s.schedule&&Object.keys(s.schedule).length){DB.schedule=s.schedule;hadServer=true;}
       if(Array.isArray(s.exceptions)&&s.exceptions.length){DB.exceptions=s.exceptions;}
+      if(typeof s.confirmSubject==='string'&&s.confirmSubject)DB.settings.confirmSubject=s.confirmSubject;
+      if(typeof s.confirmMessage==='string'&&s.confirmMessage)DB.settings.confirmMessage=s.confirmMessage;
+      if(typeof loadConfirmEmail==='function'){try{loadConfirmEmail();}catch(e){}}
       if(typeof renderSetup==='function'){try{renderSetup();}catch(e){}}
     }
     // first-time setup only (server empty): push local seed up so /signup has data

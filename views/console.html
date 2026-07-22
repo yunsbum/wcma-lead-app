@@ -483,13 +483,27 @@
     </section>
 
     <section class="opage" id="op-msg">
-      <div class="h"><div><h1>Messages &amp; Automations</h1><p>Templates you can send from any lead, plus the follow-ups that send themselves.</p></div></div>
+      <div class="h"><div><h1>Messages &amp; Automations</h1><p>The confirmation email is live now. Automated follow-ups and text messaging are coming soon.</p></div></div>
       <div class="card pad" style="margin-bottom:18px">
-        <b style="font-size:14px">Automated follow-ups</b>
-        <div style="margin-top:8px" id="autoList"></div>
+        <b style="font-size:14px">✉️ Confirmation email <span class="pill st-confirmed">Live</span></b>
+        <p class="muted" style="font-size:12.5px;margin:6px 0 12px">Sent automatically to each student when they sign up (once your email is connected under Integrations). The booking details &amp; amount are inserted where you place <code>{summary}</code>.</p>
+        <div class="field"><label>Subject</label><input id="setConfSubject" placeholder="You're in! See you at {school}" /></div>
+        <div class="field"><label>Message</label><textarea id="setConfMsg" style="width:100%;min-height:230px;font-family:inherit;font-size:14px;padding:11px;border:1px solid var(--line);border-radius:9px;line-height:1.5"></textarea></div>
+        <p class="muted" style="font-size:12px;margin:4px 0 12px">Variables you can use: <code>{student}</code> <code>{buyer}</code> <code>{program}</code> <code>{when}</code> <code>{amount}</code> <code>{school}</code> <code>{confirmation}</code> <code>{summary}</code></p>
+        <div style="display:flex;justify-content:space-between;gap:8px"><button class="btn btn-ghost btn-sm" onclick="resetConfirmEmail()">Reset to default</button><button class="btn btn-primary btn-sm" onclick="saveConfirmEmail()">Save confirmation email</button></div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between"><b style="font-size:14px">Message templates</b><button class="btn btn-primary btn-sm" onclick="openTmplNew()">+ New template</button></div>
-      <div id="tmplList" style="margin-top:10px"></div>
+
+      <div class="card pad" style="margin-bottom:18px;opacity:.5">
+        <b style="font-size:14px">Automated follow-ups <span class="pill st-lost">Coming soon</span></b>
+        <p class="muted" style="font-size:12px;margin:4px 0 8px">Reminders, no-show recovery, enroll offers, and wait-list alerts — in development. These are <b>not sending yet</b>.</p>
+        <div style="margin-top:8px;pointer-events:none" id="autoList"></div>
+      </div>
+
+      <div style="opacity:.5;pointer-events:none">
+        <div style="display:flex;align-items:center;justify-content:space-between"><b style="font-size:14px">Message templates <span class="pill st-lost">Coming soon</span></b></div>
+        <p class="muted" style="font-size:12px;margin:4px 0 8px">Reusable text/email snippets you'll be able to send from any lead — in development.</p>
+        <div id="tmplList" style="margin-top:10px"></div>
+      </div>
     </section>
 
     <section class="opage" id="op-notif">
@@ -1142,9 +1156,14 @@ function sendChannel(ch){const l=curLead;const body=document.getElementById('msg
 function saveNotes(){curLead.notes=document.getElementById('leadNotes').value;save();}
 
 // settings
-function loadSettingsUI(){const s=DB.settings;document.getElementById('setEmail').value=s.schoolEmail||'';document.getElementById('setPhone').value=s.schoolPhone||'';document.getElementById('tgEmail').classList.toggle('off',!s.notifyEmail);document.getElementById('tgSms').classList.toggle('off',!s.notifySms);setSaveState('save-notif',false);const sec=document.getElementById('op-notif');if(sec)sec.oninput=()=>markDirty('save-notif');}
+function loadSettingsUI(){const s=DB.settings;document.getElementById('setEmail').value=s.schoolEmail||'';document.getElementById('setPhone').value=s.schoolPhone||'';document.getElementById('tgEmail').classList.toggle('off',!s.notifyEmail);document.getElementById('tgSms').classList.toggle('off',!s.notifySms);loadConfirmEmail();setSaveState('save-notif',false);const sec=document.getElementById('op-notif');if(sec)sec.oninput=()=>markDirty('save-notif');}
 function tg(id){document.getElementById(id).classList.toggle('off');markDirty('save-notif');}
 function saveSettings(){DB.settings.schoolEmail=document.getElementById('setEmail').value.trim();DB.settings.schoolPhone=document.getElementById('setPhone').value.trim();DB.settings.notifyEmail=!document.getElementById('tgEmail').classList.contains('off');DB.settings.notifySms=!document.getElementById('tgSms').classList.contains('off');save();setSaveState('save-notif',false);toast('Notification settings saved ✓');}
+const DEF_CONF_SUBJECT="You're in! See you at {school} 🥋";
+const DEF_CONF_MSG="Hi {student},\n\nThank you for signing up — we're genuinely excited to meet you! Taking the first step is the hardest part, and you just did it. 👏\n\nOur team can't wait to welcome you on the mat and help you build confidence, focus, and strength from day one. Come as you are — no experience needed, just bring a great attitude.\n\n{summary}\n\nPlease arrive 10 minutes early in comfortable clothes. If you have any questions, just reply to this email.\n\nSee you soon,\nThe {school} Team";
+function loadConfirmEmail(){var a=document.getElementById('setConfSubject'),b=document.getElementById('setConfMsg');if(a)a.value=DB.settings.confirmSubject||DEF_CONF_SUBJECT;if(b)b.value=DB.settings.confirmMessage||DEF_CONF_MSG;}
+function saveConfirmEmail(){DB.settings.confirmSubject=document.getElementById('setConfSubject').value;DB.settings.confirmMessage=document.getElementById('setConfMsg').value;save();toast('Confirmation email saved ✓');}
+function resetConfirmEmail(){document.getElementById('setConfSubject').value=DEF_CONF_SUBJECT;document.getElementById('setConfMsg').value=DEF_CONF_MSG;DB.settings.confirmSubject=DEF_CONF_SUBJECT;DB.settings.confirmMessage=DEF_CONF_MSG;save();toast('Reset to the default confirmation email');}
 
 // data export/import
 function dl(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);}
