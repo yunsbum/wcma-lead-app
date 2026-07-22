@@ -6,6 +6,7 @@ const db = require('./lib/db');
 const programs = require('./lib/programs');
 const { createCheckout, createOrderCheckout, getClient } = require('./lib/stripe');
 const email = require('./lib/email');
+const gcal = require('./lib/gcal');
 const { sendSMS } = require('./lib/sms');
 const auth = require('./lib/auth');
 const app = express();
@@ -22,8 +23,15 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
     const obj = event.data && event.data.object ? event.data.object : {};
     const orderId = obj.metadata && obj.metadata.order_id ? obj.metadata.order_id : null;
     if (event.type === 'checkout.session.completed') {
-      if (orderId) { await db.updateOrder(orderId, { status: 'paid', paidAt: new Date().toISOString() }); await db.updateLeadsByOrder(orderId, { payStatus: 'paid', status: 'confirmed' }); }
-      else await db.updateBySession(obj.id, { payStatus: 'paid', status: 'confirmed' });
+      if (orderId) {
+        const ord = await db.getOrder(orderId);
+        if (ord && ord.status !== 'paid') {
+          await db.updateOrder(orderId, { status: 'paid', paidAt: new Date().toISOString() });
+          await db.updateLeadsByOrder(orderId, { payStatus: 'paid', status: 'confirmed' });
+          const parts = (await db.listLeads()).filter(l => l.orderId === orderId);
+          email.onOrder(ord, parts).catch(() => {}); email.sendCalendarInvites(ord, parts).catch(() => {});
+        }
+      } else await db.updateBySession(obj.id, { payStatus: 'paid', status: 'confirmed' });
     } else if (event.type === 'checkout.session.async_payment_failed') {
       if (orderId) { await db.updateOrder(orderId, { status: 'failed' }); await db.updateLeadsByOrder(orderId, { payStatus: 'failed' }); }
       else await db.updateBySession(obj.id, { payStatus: 'failed' });
@@ -69,7 +77,8 @@ app.get('/api/schedule', async (req, res) => {
     const exceptions = (s && Array.isArray(s.exceptions)) ? s.exceptions : [];
     const leads = await db.listLeads(); const booked = {};
     leads.forEach(l => { if (l.deleted) return; if (l.slotDate && l.slotTime && ['booked','confirmed','showed','enrolled','followup'].indexOf(l.status) > -1) { const k = (l.programId || '') + '|' + l.slotDate + '|' + l.slotTime; booked[k] = (booked[k] || 0) + 1; } });
-    res.json({ schedule, exceptions, booked });
+    const busyDays = await gcal.getBusyDays(s && s.googleIcalUrl).catch(() => []);
+    res.json({ schedule, exceptions, booked, busyDays });
   } catch (e) { res.json({ schedule: {}, exceptions: [], booked: {} }); }
 });
 app.get('/api/branding', async (req, res) => { try { const s = await db.getSettings(); res.json({ logo: s.logo || '', brandColor: s.brandColor || '', bgColor: s.bgColor || '', logoBg: s.logoBg || '' }); } catch (e) { res.json({}); } });
@@ -185,6 +194,8 @@ app.post('/api/order', async (req, res) => {
       const cap = slotCapacity(schedule, exceptions, progId, sd, stime);
       if (cap != null && (bookedMap[k] || 0) + demand[k] > cap) return res.status(409).json({ error: 'The ' + stime + ' time is full. Please pick another time.', slotFull: k });
     }
+    // Google Calendar busy days (all-day events) block that whole date
+    try { const busyDays = await gcal.getBusyDays(_st && _st.googleIcalUrl); if (busyDays && busyDays.length) { const bset = {}; busyDays.forEach(x => bset[x] = 1); for (const it of items) { if (it.p.slotDate && bset[it.p.slotDate]) return res.status(409).json({ error: 'That date is not available. Please pick another day.', slotFull: it.p.slotDate }); } } } catch (e) {}
     const _promos = (_st && Array.isArray(_st.promos)) ? _st.promos : [];
     const promoRec = findActivePromo(_promos, b.promoCode);
     let discount = 0;
@@ -209,7 +220,9 @@ app.post('/api/order', async (req, res) => {
     }
     await db.updateOrder(order._id, { status: 'paid' });
     await db.updateLeadsByOrder(order._id, { status: 'confirmed' });
-    email.onOrder(order, items.map(it => ({ student: it.name, program: it.prog.name, when: it.when }))).catch(() => {});
+    const freeParts = items.map(it => ({ student: it.name, program: it.prog.name, when: it.when, slotDate: it.p.slotDate, slotTime: it.p.slotTime, dur: it.prog.dur }));
+    email.onOrder(order, freeParts).catch(() => {});
+    email.sendCalendarInvites(order, freeParts).catch(() => {});
     return res.json({ ok: true, pay: false, orderId: order._id, total: 0 });
   } catch (e) { console.error('[order]', e); res.status(500).json({ error: 'Something went wrong creating your registration. Please try again.' }); }
 });
@@ -236,7 +249,7 @@ app.get('/success', async (req, res) => {
       if (order && order.status !== 'paid') {
         let paid = !!req.query.mock;
         if (!paid && req.query.session_id) { try { const { stripe } = await getClient(); if (stripe) { const sess = await stripe.checkout.sessions.retrieve(req.query.session_id); paid = sess && sess.payment_status === 'paid'; } } catch (e) {} }
-        if (paid) { await db.updateOrder(order._id, { status: 'paid', paidAt: new Date().toISOString() }); await db.updateLeadsByOrder(order._id, { payStatus: 'paid', status: 'confirmed' }); const parts = (await db.listLeads()).filter(l => l.orderId === order._id); email.onOrder(order, parts).catch(() => {}); }
+        if (paid) { await db.updateOrder(order._id, { status: 'paid', paidAt: new Date().toISOString() }); await db.updateLeadsByOrder(order._id, { payStatus: 'paid', status: 'confirmed' }); const parts = (await db.listLeads()).filter(l => l.orderId === order._id); email.onOrder(order, parts).catch(() => {}); email.sendCalendarInvites(order, parts).catch(() => {}); }
       }
     } else if (req.query.mock && req.query.lead) { try { await db.markPaidById(req.query.lead); } catch {} }
   } catch (e) { console.error('[success]', e.message); }
@@ -274,6 +287,9 @@ app.post('/api/leads/sync', auth.requireAuth, async (req, res) => {
     if (typeof s.smtpSecure !== 'undefined') patch.smtpSecure = !!s.smtpSecure;
     if (typeof s.confirmSubject === 'string') patch.confirmSubject = s.confirmSubject;
     if (typeof s.confirmMessage === 'string') patch.confirmMessage = s.confirmMessage;
+    if (typeof s.googleAccount === 'string') patch.googleAccount = s.googleAccount;
+    if (typeof s.googleIcalUrl === 'string') patch.googleIcalUrl = s.googleIcalUrl;
+    if (typeof s.googleConnected !== 'undefined') patch.googleConnected = !!s.googleConnected;
     if (typeof s.schoolEmail === 'string') patch.schoolEmail = s.schoolEmail;
     if (typeof s.schoolPhone === 'string') patch.schoolPhone = s.schoolPhone;
     if (typeof s.notifyEmail !== 'undefined') patch.notifyEmail = !!s.notifyEmail;
@@ -312,7 +328,7 @@ app.post('/api/test-email', auth.requireAuth, async (req, res) => {
 });
 app.get('/api/settings', auth.requireAuth, async (req, res) => {
   const s = await db.getSettings(); const sk = s.stripeKey || process.env.STRIPE_SECRET_KEY || '';
-  res.json({ stripeConnected: /^sk_/.test(sk), stripeMode: /^sk_live_/.test(sk) ? 'live' : (/^sk_test_/.test(sk) ? 'test' : 'none'), emailConnected: !!((s.smtpHost && s.smtpUser && s.smtpPass) || process.env.SMTP_HOST || ((s.sendgridKey || process.env.SENDGRID_KEY) && (s.fromEmail || process.env.FROM_EMAIL))), smsConnected: !!(s.twilioSid && s.twilioToken && s.twilioFrom), logo: s.logo || '', programsSaved: (Array.isArray(s.programs) && s.programs.length > 0), promos: Array.isArray(s.promos) ? s.promos : [], schedule: (s.schedule && typeof s.schedule === 'object') ? s.schedule : {}, exceptions: Array.isArray(s.exceptions) ? s.exceptions : [], confirmSubject: s.confirmSubject || '', confirmMessage: s.confirmMessage || '' });
+  res.json({ stripeConnected: /^sk_/.test(sk), stripeMode: /^sk_live_/.test(sk) ? 'live' : (/^sk_test_/.test(sk) ? 'test' : 'none'), emailConnected: !!((s.smtpHost && s.smtpUser && s.smtpPass) || process.env.SMTP_HOST || ((s.sendgridKey || process.env.SENDGRID_KEY) && (s.fromEmail || process.env.FROM_EMAIL))), smsConnected: !!(s.twilioSid && s.twilioToken && s.twilioFrom), logo: s.logo || '', programsSaved: (Array.isArray(s.programs) && s.programs.length > 0), promos: Array.isArray(s.promos) ? s.promos : [], schedule: (s.schedule && typeof s.schedule === 'object') ? s.schedule : {}, exceptions: Array.isArray(s.exceptions) ? s.exceptions : [], confirmSubject: s.confirmSubject || '', confirmMessage: s.confirmMessage || '', googleAccount: s.googleAccount || '', googleIcalUrl: s.googleIcalUrl || '', googleConnected: !!s.googleConnected });
 });
 
 const PORT = process.env.PORT || 3000;

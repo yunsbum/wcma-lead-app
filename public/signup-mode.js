@@ -211,7 +211,7 @@
     fetch('/api/programs',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(p){ if(Array.isArray(p)&&p.length&&typeof DB!=='undefined'){ DB.programs=p; if(typeof renderPrograms==='function'){try{renderPrograms();}catch(e){}} } }).catch(function(){});
     fetch('/api/branding',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(b){ if(b&&typeof DB!=='undefined'&&DB.settings){ if(b.logo)DB.settings.logo=b.logo; if(b.logoBg)DB.settings.logoBg=b.logoBg; if(b.bgColor)DB.settings.bgColor=b.bgColor; if(typeof renderLogos==='function'){try{renderLogos();}catch(e){}} } }).catch(function(){});
     fetch('/api/promos',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(p){ if(Array.isArray(p)) PROMOS=p; }).catch(function(){});
-    fetch('/api/schedule',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(s){ if(s&&typeof DB!=='undefined'){ if(s.schedule&&Object.keys(s.schedule).length) DB.schedule=s.schedule; if(Array.isArray(s.exceptions)) DB.exceptions=s.exceptions; } }).catch(function(){});
+    fetch('/api/schedule',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(s){ if(s&&typeof DB!=='undefined'){ if(s.schedule&&Object.keys(s.schedule).length) DB.schedule=s.schedule; if(Array.isArray(s.exceptions)) DB.exceptions=s.exceptions; if(Array.isArray(s.busyDays)){window.GBUSY={};s.busyDays.forEach(function(dd){window.GBUSY[dd]=1;});} } }).catch(function(){});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
