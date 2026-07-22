@@ -67,7 +67,7 @@
     });
   }
   // ----- Required-field validation with a clear red highlight -----
-  var REQ=['fStudent','fAge','fEmail','fPhone','fHeard'];
+  var REQ=['fFirst','fAge','fEmail','fPhone','fHeard'];
   function clearFieldMark(e){if(e){e.style.borderColor='';e.style.boxShadow='';}}
   function markFields(){var firstEmpty=null;REQ.forEach(function(id){var e=document.getElementById(id);if(!e)return;var empty=!String(e.value||'').trim();if(empty){e.style.borderColor='#e63535';e.style.boxShadow='0 0 0 3px rgba(230,53,53,.22)';if(!firstEmpty)firstEmpty=e;}else{clearFieldMark(e);}});if(firstEmpty){try{firstEmpty.scrollIntoView({behavior:'smooth',block:'center'});firstEmpty.focus({preventScroll:true});}catch(e){}}return firstEmpty===null;}
   function validateUI(){var ok=markFields();var vd=(typeof validDetails==='function')?validDetails():true;return ok&&vd;}
@@ -124,7 +124,7 @@
   function captureEntry(){
     if(typeof cs==='undefined'||!cs||!cs.program||!cs.date||!cs.time)return false;
     cart.push({programId:cs.program.id,program:cs.program.name,price:cs.program.price,
-      student:val('fStudent'),age:val('fAge'),guardian:val('fGuardian'),email:val('fEmail'),phone:val('fPhone'),heard:val('fHeard'),
+      first:val('fFirst'),last:val('fLast'),student:(val('fFirst')+' '+val('fLast')).trim(),age:val('fAge'),guardian:val('fGuardian'),email:val('fEmail'),phone:val('fPhone'),heard:val('fHeard'),
       slotDate:key(cs.date),slotTime:cs.time,when:(WD[cs.date.getDay()]+' '+usDate(cs.date)+' · '+cs.time)});
     return true;
   }
@@ -134,7 +134,7 @@
     if(!validateUI())return;
     if(!captureEntry())return;
     var cr=document.getElementById('cartReview');if(cr)cr.classList.add('hidden');
-    setVal('fStudent','');setVal('fAge','');setVal('fGuardian','');
+    setVal('fFirst','');setVal('fLast','');setVal('fAge','');setVal('fGuardian','');
     if(typeof renderCSummary==='function'){try{renderCSummary();}catch(e){}}
     if(typeof cgo==='function')cgo(3);
     toastMsg('Added — enter the next student, or Continue to payment');
@@ -145,7 +145,7 @@
     if(!captureEntry())return;
     var cr=document.getElementById('cartReview');if(cr)cr.classList.add('hidden');
     var b=cart[0]||{};
-    setVal('fStudent','');setVal('fAge','');setVal('fGuardian','');
+    setVal('fFirst','');setVal('fLast','');setVal('fAge','');setVal('fGuardian','');
     if(b.email)setVal('fEmail',b.email);if(b.phone)setVal('fPhone',b.phone);if(b.heard)setVal('fHeard',b.heard);
     if(typeof resetCustomer==='function')resetCustomer();else if(typeof cgo==='function')cgo(1);
     toastMsg('Saved — now choose the next program');
@@ -154,7 +154,7 @@
   window.crBackToAdd=function(){
     var cr=document.getElementById('cartReview');if(cr)cr.classList.add('hidden');
     var b=cart[0]||{};
-    setVal('fStudent','');setVal('fAge','');setVal('fGuardian','');
+    setVal('fFirst','');setVal('fLast','');setVal('fAge','');setVal('fGuardian','');
     if(b.email)setVal('fEmail',b.email);if(b.phone)setVal('fPhone',b.phone);if(b.heard)setVal('fHeard',b.heard);
     if(typeof resetCustomer==='function')resetCustomer();else if(typeof cgo==='function')cgo(1);
   };
@@ -163,9 +163,11 @@
     var btn=document.getElementById('crPay');var err=document.getElementById('crErr');err.textContent='';
     if(!cart.length){err.textContent='Add at least one participant.';return;}
     btn.disabled=true;var old=btn.textContent;btn.textContent='Processing…';
-    var first=cart[0];var bn=(first.guardian||first.student||'').trim();var parts=bn.split(/\s+/);
-    var buyer={first:parts[0]||bn||'Customer',last:parts.slice(1).join(' ')||(parts[0]||'-'),email:first.email,phone:first.phone,source:first.heard||'signup'};
-    var participants=cart.map(function(it){var np=(it.student||'').trim().split(/\s+/);return {programId:it.programId,first:np[0]||it.student||'Student',last:np.slice(1).join(' ')||(np[0]||'-'),age:it.age,slotDate:it.slotDate,slotTime:it.slotTime,when:it.when,medicalNotes:''};});
+    var first=cart[0];var buyer;
+    var g=(first.guardian||'').trim();
+    if(g){var gp=g.split(/\s+/);buyer={first:gp[0]||g,last:gp.slice(1).join(' '),email:first.email,phone:first.phone,source:first.heard||'signup'};}
+    else{buyer={first:first.first||first.student||'Customer',last:first.last||'',email:first.email,phone:first.phone,source:first.heard||'signup'};}
+    var participants=cart.map(function(it){return {programId:it.programId,first:it.first||it.student||'Student',last:it.last||'',age:it.age,slotDate:it.slotDate,slotTime:it.slotTime,when:it.when,medicalNotes:''};});
     var payload={buyer:buyer,participants:participants,promoCode:promoObj?promoObj.code:''};
     fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
       .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})

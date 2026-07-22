@@ -342,9 +342,10 @@
     <div class="card pad">
       <h2 class="title">Student &amp; contact details</h2><p class="sub" id="s3sub"></p>
       <div class="row2">
-        <div><label class="fl">Student name</label><input class="fi" id="fStudent" placeholder="Student's full name" /></div>
-        <div><label class="fl">Student age</label><input class="fi" id="fAge" type="number" min="2" max="99" placeholder="e.g. 8" /></div>
+        <div><label class="fl">Student first name</label><input class="fi" id="fFirst" placeholder="First name" /></div>
+        <div><label class="fl">Student last name</label><input class="fi" id="fLast" placeholder="Last name" /></div>
       </div>
+      <label class="fl">Student age</label><input class="fi" id="fAge" type="number" min="2" max="99" placeholder="e.g. 8" />
       <label class="fl">Parent / guardian name <span class="muted" style="font-weight:400">(if student is under 18)</span></label>
       <input class="fi" id="fGuardian" placeholder="Optional" />
       <div class="row2">
@@ -864,14 +865,14 @@ function closeWL(){document.getElementById('wlModal').classList.add('hidden');}
 function joinWaitlist(){closeWL();toast("Added to wait list — we'll text if a spot opens");}
 function applyPromo(){const code=document.getElementById('fPromo').value.trim().toUpperCase();const msg=document.getElementById('promoMsg');if(!code){msg.textContent='';cs.promo=null;cs.discount=0;renderCSummary();return;}const p=DB.promos.find(x=>x.code.toUpperCase()===code&&x.status==='Active');if(!p){msg.style.color='var(--closed)';msg.textContent='✕ Invalid or expired code';cs.promo=null;cs.discount=0;renderCSummary();return;}if(p.max&&(p.used||0)>=p.max){msg.style.color='var(--closed)';msg.textContent='✕ This code has reached its usage limit';cs.promo=null;cs.discount=0;renderCSummary();return;}if(p.scope&&p.scope!=='All programs'&&cs.program&&p.scope.indexOf(cs.program.name)===-1){msg.style.color='var(--closed)';msg.textContent='✕ Not valid for '+cs.program.name;cs.promo=null;cs.discount=0;renderCSummary();return;}let disc=0,label='';if(p.type==='percent'){disc=Math.round(cs.price*p.value/100);label=p.value+'% off';}else if(p.type==='amount'){disc=Math.min(cs.price,p.value);label=money(p.value)+' off';}else if(p.type==='free'){disc=cs.price;label='Free intro';}cs.discount=disc;cs.promo=code;msg.style.color='var(--ok)';msg.textContent='✓ '+label+' applied';renderCSummary();}
 function renderCSummary(){const total=Math.max(0,cs.price-cs.discount);const r=[`<div class="srow"><span>${cs.program.name}</span><span>${money(cs.price)}</span></div>`];if(cs.discount>0)r.push(`<div class="srow"><span class="disc">Promo ${cs.promo?'('+cs.promo+')':''}</span><span class="disc">−${money(cs.discount)}</span></div>`);r.push(`<div class="srow total"><span>Total due today</span><span>${money(total)}</span></div>`);document.getElementById('summary').innerHTML=r.join('');document.getElementById('toPay').textContent=total===0?'Confirm free booking':'Continue to payment';}
-function validDetails(){const s=document.getElementById('fStudent').value.trim();const a=document.getElementById('fAge').value.trim();const e=document.getElementById('fEmail').value.trim();const p=document.getElementById('fPhone').value.trim();const h=document.getElementById('fHeard').value;if(!s){toast('Enter the student name');return false;}if(!a){toast('Enter the student age');return false;}if(!e||!p){toast('Enter email and phone');return false;}if(!h){toast('Select how you heard about us');return false;}return true;}
+function validDetails(){const s=document.getElementById('fFirst').value.trim();const a=document.getElementById('fAge').value.trim();const e=document.getElementById('fEmail').value.trim();const p=document.getElementById('fPhone').value.trim();const h=document.getElementById('fHeard').value;if(!s){toast('Enter the student first name');return false;}if(!a){toast('Enter the student age');return false;}if(!e||!p){toast('Enter email and phone');return false;}if(!h){toast('Select how you heard about us');return false;}return true;}
 function toPayStep(){if(!validDetails())return;cgo(4);}
 function renderPay(){const total=Math.max(0,cs.price-cs.discount);const r=[`<div class="srow"><span>${cs.program.name}</span><span>${money(cs.price)}</span></div>`];if(cs.discount>0)r.push(`<div class="srow"><span class="disc">Promo (${cs.promo})</span><span class="disc">−${money(cs.discount)}</span></div>`);r.push(`<div class="srow total"><span>Total</span><span>${money(total)}</span></div>`);document.getElementById('paySummary').innerHTML=r.join('');const free=total===0;document.getElementById('payFields').style.display=free?'none':'block';document.getElementById('payBtn').textContent=free?'Confirm free booking':('Pay '+money(total)+' & confirm');}
 function pay(){const b=document.getElementById('payBtn');b.textContent='Processing…';b.disabled=true;setTimeout(()=>{b.disabled=false;confirmBooking();},800);}
 function confirmBooking(){
   const total=Math.max(0,cs.price-cs.discount),d=cs.date;
   const heard=document.getElementById('fHeard').value;
-  const lead={id:nextId(),student:document.getElementById('fStudent').value.trim(),age:parseInt(document.getElementById('fAge').value)||'',guardian:document.getElementById('fGuardian').value.trim(),
+  const lead={id:nextId(),student:(document.getElementById('fFirst').value.trim()+' '+document.getElementById('fLast').value.trim()).trim(),age:parseInt(document.getElementById('fAge').value)||'',guardian:document.getElementById('fGuardian').value.trim(),
     email:document.getElementById('fEmail').value.trim(),phone:document.getElementById('fPhone').value.trim(),heard:heard,
     program:cs.program.name,when:`${WD[d.getDay()]} ${usDate(d)} · ${cs.time}`,_d:key(d),_t:cs.time,
     src:heard,paid:money(total),status:'confirmed',promo:cs.promo||'',notes:'',created:'Just now',
@@ -896,7 +897,7 @@ function confirmBooking(){
   cgo(5);
 }
 function cgo(step){for(let i=1;i<=5;i++)document.getElementById('s'+i).classList.add('hidden');document.getElementById('s'+step).classList.remove('hidden');document.querySelectorAll('#steps .dot').forEach((d,i)=>d.classList.toggle('on',i<Math.min(step,4)));if(step===3)renderCSummary();if(step===4)renderPay();window.scrollTo({top:0,behavior:'smooth'});}
-function crestart(){cs={program:null,date:null,time:null,price:0,discount:0,promo:null,view:new Date(today),wlSlot:null};['fStudent','fAge','fGuardian','fEmail','fPhone','fPromo'].forEach(id=>document.getElementById(id).value='');document.getElementById('fHeard').value='';renderPrograms();cgo(1);}
+function crestart(){cs={program:null,date:null,time:null,price:0,discount:0,promo:null,view:new Date(today),wlSlot:null};['fFirst','fLast','fAge','fGuardian','fEmail','fPhone','fPromo'].forEach(id=>document.getElementById(id).value='');document.getElementById('fHeard').value='';renderPrograms();cgo(1);}
 
 // ================= OWNER =================
 function renderOwner(){renderStats();renderBoard();renderSetup();loadSettingsUI();loadIntegrations();renderLinkQR();loadBranding();loadGeneral();}

@@ -168,7 +168,7 @@ function slotCapacity(schedule, exceptions, programId, slotDate, slotTime) {
 app.post('/api/order', async (req, res) => {
   try {
     const b = req.body || {}; const buyer = b.buyer || {};
-    if (!buyer.first || !buyer.last || !buyer.email || !buyer.phone) return res.status(400).json({ error: 'Please complete your name, email, and phone.' });
+    if (!buyer.first || !buyer.email || !buyer.phone) return res.status(400).json({ error: 'Please complete your name, email, and phone.' });
     const parts = Array.isArray(b.participants) ? b.participants : [];
     if (!parts.length) return res.status(400).json({ error: 'Please add at least one participant.' });
     const _st = await db.getSettings();
@@ -179,7 +179,7 @@ app.post('/api/order', async (req, res) => {
     for (const p of parts) {
       const prog = plist.find(x => x.id === p.programId);
       if (!prog) return res.status(400).json({ error: 'One participant has an invalid program.' });
-      if (!p.first || !p.last) return res.status(400).json({ error: 'Each participant needs a first and last name.' });
+      if (!p.first) return res.status(400).json({ error: 'Each participant needs a first name.' });
       const price = prog.price || 0; subtotal += price;
       const name = (p.first + ' ' + p.last).trim();
       const when = p.when || (p.slotDate && p.slotTime ? (p.slotDate + ' · ' + p.slotTime) : '');
