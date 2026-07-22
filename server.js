@@ -269,6 +269,8 @@ app.post('/api/leads/sync', auth.requireAuth, async (req, res) => {
     if (typeof s.smtpUser === 'string') patch.smtpUser = s.smtpUser;
     if (typeof s.smtpPass === 'string' && s.smtpPass) patch.smtpPass = s.smtpPass;
     if (typeof s.smtpSecure !== 'undefined') patch.smtpSecure = !!s.smtpSecure;
+    if (typeof s.confirmSubject === 'string') patch.confirmSubject = s.confirmSubject;
+    if (typeof s.confirmMessage === 'string') patch.confirmMessage = s.confirmMessage;
     if (typeof s.schoolEmail === 'string') patch.schoolEmail = s.schoolEmail;
     if (typeof s.schoolPhone === 'string') patch.schoolPhone = s.schoolPhone;
     if (typeof s.notifyEmail !== 'undefined') patch.notifyEmail = !!s.notifyEmail;
@@ -307,7 +309,7 @@ app.post('/api/test-email', auth.requireAuth, async (req, res) => {
 });
 app.get('/api/settings', auth.requireAuth, async (req, res) => {
   const s = await db.getSettings(); const sk = s.stripeKey || process.env.STRIPE_SECRET_KEY || '';
-  res.json({ stripeConnected: /^sk_/.test(sk), stripeMode: /^sk_live_/.test(sk) ? 'live' : (/^sk_test_/.test(sk) ? 'test' : 'none'), emailConnected: !!((s.smtpHost && s.smtpUser && s.smtpPass) || process.env.SMTP_HOST || ((s.sendgridKey || process.env.SENDGRID_KEY) && (s.fromEmail || process.env.FROM_EMAIL))), smsConnected: !!(s.twilioSid && s.twilioToken && s.twilioFrom), logo: s.logo || '', programsSaved: (Array.isArray(s.programs) && s.programs.length > 0), promos: Array.isArray(s.promos) ? s.promos : [], schedule: (s.schedule && typeof s.schedule === 'object') ? s.schedule : {}, exceptions: Array.isArray(s.exceptions) ? s.exceptions : [] });
+  res.json({ stripeConnected: /^sk_/.test(sk), stripeMode: /^sk_live_/.test(sk) ? 'live' : (/^sk_test_/.test(sk) ? 'test' : 'none'), emailConnected: !!((s.smtpHost && s.smtpUser && s.smtpPass) || process.env.SMTP_HOST || ((s.sendgridKey || process.env.SENDGRID_KEY) && (s.fromEmail || process.env.FROM_EMAIL))), smsConnected: !!(s.twilioSid && s.twilioToken && s.twilioFrom), logo: s.logo || '', programsSaved: (Array.isArray(s.programs) && s.programs.length > 0), promos: Array.isArray(s.promos) ? s.promos : [], schedule: (s.schedule && typeof s.schedule === 'object') ? s.schedule : {}, exceptions: Array.isArray(s.exceptions) ? s.exceptions : [], confirmSubject: s.confirmSubject || '', confirmMessage: s.confirmMessage || '' });
 });
 
 const PORT = process.env.PORT || 3000;
