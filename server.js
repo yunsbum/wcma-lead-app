@@ -68,7 +68,7 @@ app.get('/api/schedule', async (req, res) => {
     const schedule = (s && s.schedule) ? s.schedule : {};
     const exceptions = (s && Array.isArray(s.exceptions)) ? s.exceptions : [];
     const leads = await db.listLeads(); const booked = {};
-    leads.forEach(l => { if (l.deleted) return; if (l.slotDate && l.slotTime && ['booked','confirmed','showed','enrolled','followup'].indexOf(l.status) > -1) { const k = l.slotDate + '|' + l.slotTime; booked[k] = (booked[k] || 0) + 1; } });
+    leads.forEach(l => { if (l.deleted) return; if (l.slotDate && l.slotTime && ['booked','confirmed','showed','enrolled','followup'].indexOf(l.status) > -1) { const k = (l.programId || '') + '|' + l.slotDate + '|' + l.slotTime; booked[k] = (booked[k] || 0) + 1; } });
     res.json({ schedule, exceptions, booked });
   } catch (e) { res.json({ schedule: {}, exceptions: [], booked: {} }); }
 });
@@ -141,13 +141,16 @@ app.post('/api/book', async (req, res) => {
     return res.json({ ok: true, pay: false, message: 'Booked!' });
   } catch (e) { console.error('[book]', e); res.status(500).json({ error: 'Something went wrong. Please try again.' }); }
 });
-// Capacity of a given schedule slot (null = slot not published for that day).
-function slotCapacity(schedule, exceptions, slotDate, slotTime) {
+// Capacity of a given program's schedule slot (null = slot not published for that day).
+function slotCapacity(schedule, exceptions, programId, slotDate, slotTime) {
   const parts = String(slotDate).split('-'); if (parts.length < 3) return null;
   const d = new Date(+parts[0], +parts[1] - 1, +parts[2]);
   const exs = (exceptions || []).filter(e => e.dateKey === slotDate);
   if (exs.some(e => e.type === 'close')) return 0;
-  let slots = ((schedule && schedule[d.getDay()]) || []).map(s => ({ t: s.t, c: s.c }));
+  let base = [];
+  if (schedule && schedule[programId] && typeof schedule[programId] === 'object' && !Array.isArray(schedule[programId])) base = schedule[programId][d.getDay()] || [];
+  else if (schedule && Array.isArray(schedule[d.getDay()])) base = schedule[d.getDay()]; // legacy flat (shared)
+  let slots = base.map(s => ({ t: s.t, c: s.c }));
   exs.forEach(e => { if (e.type === 'remove') slots = slots.filter(s => s.t !== e.time); else if (e.type === 'add') slots.push({ t: e.time, c: e.cap || 1 }); });
   const slot = slots.find(s => s.t === slotTime);
   return slot ? slot.c : null;
@@ -172,14 +175,14 @@ app.post('/api/order', async (req, res) => {
       const name = (p.first + ' ' + p.last).trim();
       const when = p.when || (p.slotDate && p.slotTime ? (p.slotDate + ' · ' + p.slotTime) : '');
       items.push({ prog, price, name, p, when });
-      if (p.slotDate && p.slotTime) { const k = p.slotDate + '|' + p.slotTime; demand[k] = (demand[k] || 0) + 1; }
+      if (p.slotDate && p.slotTime) { const k = prog.id + '|' + p.slotDate + '|' + p.slotTime; demand[k] = (demand[k] || 0) + 1; }
     }
-    // capacity re-check against real bookings (server is the source of truth)
+    // capacity re-check against real bookings (per program · date · time; server is the source of truth)
     const allLeads = await db.listLeads(); const bookedMap = {};
-    allLeads.forEach(l => { if (l.deleted) return; if (l.slotDate && l.slotTime && ['booked','confirmed','showed','enrolled','followup'].indexOf(l.status) > -1) { const k = l.slotDate + '|' + l.slotTime; bookedMap[k] = (bookedMap[k] || 0) + 1; } });
+    allLeads.forEach(l => { if (l.deleted) return; if (l.slotDate && l.slotTime && ['booked','confirmed','showed','enrolled','followup'].indexOf(l.status) > -1) { const k = (l.programId || '') + '|' + l.slotDate + '|' + l.slotTime; bookedMap[k] = (bookedMap[k] || 0) + 1; } });
     for (const k of Object.keys(demand)) {
-      const idx = k.lastIndexOf('|'); const sd = k.slice(0, idx), stime = k.slice(idx + 1);
-      const cap = slotCapacity(schedule, exceptions, sd, stime);
+      const seg = k.split('|'); const progId = seg[0], sd = seg[1], stime = seg.slice(2).join('|');
+      const cap = slotCapacity(schedule, exceptions, progId, sd, stime);
       if (cap != null && (bookedMap[k] || 0) + demand[k] > cap) return res.status(409).json({ error: 'The ' + stime + ' time is full. Please pick another time.', slotFull: k });
     }
     const _promos = (_st && Array.isArray(_st.promos)) ? _st.promos : [];

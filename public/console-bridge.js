@@ -33,6 +33,7 @@
     if(!hadServer&&typeof DB!=='undefined'&&Array.isArray(DB.programs)&&DB.programs.length){pushSync(true);}
   }).catch(function(){});}
   function install(){
+    window.forceSync=function(){try{pushSync(true);}catch(e){}};
     if(typeof window.save==='function'){var _s=window.save;window.save=function(){var r=_s.apply(this,arguments);pushSync();reflectStatus();return r;};}
     window.bookingUrl=function(){return (location.origin||'')+'/signup';};
     document.querySelectorAll('a,button').forEach(function(el){if((el.textContent||'').toLowerCase().indexOf('booking page')>-1){el.setAttribute('target','_blank');el.onclick=function(e){e.preventDefault();window.open('/signup','_blank');};if(el.tagName==='A')el.href='/signup';}});
