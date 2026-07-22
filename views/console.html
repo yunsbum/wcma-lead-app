@@ -281,7 +281,14 @@
   .introcard .banner.hasimg{background-size:cover;background-position:center}
   .gal{display:flex;gap:6px;margin-top:12px}
   .gal img{width:100%;height:56px;object-fit:cover;border-radius:8px;flex:1;min-width:0}
-  @media(max-width:720px){.book2{grid-template-columns:1fr}.introcard{position:static}.slots{grid-template-columns:repeat(2,1fr)}.row2{grid-template-columns:1fr}.oside{display:none}}
+  .menuToggle{display:none;background:none;border:0;font-size:24px;line-height:1;cursor:pointer;color:var(--ink);padding:2px 8px 2px 0;margin-right:2px}
+  .osideBackdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:44}
+  .osideBackdrop.on{display:block}
+  @media(max-width:720px){.book2{grid-template-columns:1fr}.introcard{position:static}.slots{grid-template-columns:repeat(2,1fr)}.row2{grid-template-columns:1fr}
+    .oside{position:fixed;left:0;top:0;height:100vh;width:250px;z-index:50;transform:translateX(-100%);transition:transform .22s ease;box-shadow:2px 0 18px rgba(0,0,0,.18);padding-top:14px}
+    .oside.open{transform:translateX(0)}
+    body.ownerview .menuToggle{display:inline-flex;align-items:center}
+  }
 </style>
 </head>
 <body>
@@ -290,9 +297,10 @@
 <path id="wcBot" d="M100,100 m-80,0 a80,80 0 0 0 160,0"/>
 </defs></svg>
 <div class="modebar">
-  <div class="brand"><span class="brandmark" style="width:36px;height:36px"></span><b id="topTitle">World Class Martial Arts</b></div>
+  <div class="brand"><button class="menuToggle" id="menuToggle" onclick="toggleMenu()" aria-label="Menu">☰</button><span class="brandmark" style="width:36px;height:36px"></span><b id="topTitle">World Class Martial Arts</b></div>
   <div id="topRight"></div>
 </div>
+<div class="osideBackdrop" id="osideBackdrop" onclick="closeMenu()"></div>
 <div class="persistnote hidden" id="persistNote"></div>
 
 <!-- ================= LOGIN ================= -->
@@ -839,6 +847,8 @@ function nextId(){return DB.leads.reduce((m,l)=>Math.max(m,l.id),1000)+1;}
 let loggedIn=false, custFrom='login';
 function showView(v){
   renderLogos();applyTheme();
+  document.body.classList.toggle('ownerview',v==='manager');
+  if(v!=='manager')closeMenu();
   document.getElementById('viewLogin').classList.toggle('hidden',v!=='login');
   document.getElementById('viewCust').classList.toggle('hidden',v!=='cust');
   document.getElementById('viewOwn').classList.toggle('hidden',v!=='manager');
@@ -1196,7 +1206,9 @@ function dl(blob,name){const u=URL.createObjectURL(blob);const a=document.create
 function copyLink(){const done=()=>{const b=document.getElementById('copyBtn'),o=b.textContent;b.textContent='✓ Copied';setTimeout(()=>b.textContent=o,1500);toast('Booking link copied');};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(bookingUrl()).then(done).catch(fb);}else fb();function fb(){const ta=document.createElement('textarea');ta.value=bookingUrl();document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){toast('Select the link to copy');}document.body.removeChild(ta);}}
 function downloadQR(){dl(new Blob([QR.svg(bookingUrl())],{type:'image/svg+xml'}),'wcma-intro-qr.svg');toast('QR downloaded');}
 
-function onav(id){document.querySelectorAll('.opage').forEach(p=>p.classList.remove('on'));document.getElementById('op-'+id).classList.add('on');document.querySelectorAll('.onav a').forEach(a=>a.classList.remove('active'));document.getElementById('on-'+id).classList.add('active');window.scrollTo({top:0});if(id==='help'&&typeof renderHelp==='function'){var hs=document.getElementById('helpSearch');renderHelp(hs?hs.value:'');}}
+function toggleMenu(){var s=document.querySelector('.oside'),b=document.getElementById('osideBackdrop');if(!s)return;var open=s.classList.toggle('open');if(b)b.classList.toggle('on',open);}
+function closeMenu(){var s=document.querySelector('.oside'),b=document.getElementById('osideBackdrop');if(s)s.classList.remove('open');if(b)b.classList.remove('on');}
+function onav(id){document.querySelectorAll('.opage').forEach(p=>p.classList.remove('on'));document.getElementById('op-'+id).classList.add('on');document.querySelectorAll('.onav a').forEach(a=>a.classList.remove('active'));document.getElementById('on-'+id).classList.add('active');closeMenu();window.scrollTo({top:0});if(id==='help'&&typeof renderHelp==='function'){var hs=document.getElementById('helpSearch');renderHelp(hs?hs.value:'');}}
 // ===== Help & Guide (bilingual: 한국어로 물어보면 한국어, English query → English) =====
 var HELP_SEC={dash:'Overview',pipe:'Lead Follow-Up',prog:'Intro Programs',sched:'Schedule',exc:'Exceptions',promo:'Promo Codes',msg:'Messages & Automations',general:'General',notif:'Notifications',link:'Link & QR',integrations:'Integrations',branding:'Branding'};
 var HELP_TOPICS=[
