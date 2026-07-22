@@ -66,6 +66,12 @@
       }
     });
   }
+  // ----- Required-field validation with a clear red highlight -----
+  var REQ=['fStudent','fAge','fEmail','fPhone','fHeard'];
+  function clearFieldMark(e){if(e){e.style.borderColor='';e.style.boxShadow='';}}
+  function markFields(){var firstEmpty=null;REQ.forEach(function(id){var e=document.getElementById(id);if(!e)return;var empty=!String(e.value||'').trim();if(empty){e.style.borderColor='#e63535';e.style.boxShadow='0 0 0 3px rgba(230,53,53,.22)';if(!firstEmpty)firstEmpty=e;}else{clearFieldMark(e);}});if(firstEmpty){try{firstEmpty.scrollIntoView({behavior:'smooth',block:'center'});firstEmpty.focus({preventScroll:true});}catch(e){}}return firstEmpty===null;}
+  function validateUI(){var ok=markFields();var vd=(typeof validDetails==='function')?validDetails():true;return ok&&vd;}
+  function bindFieldClearing(){REQ.forEach(function(id){var e=document.getElementById(id);if(!e||e._mk)return;e._mk=1;e.addEventListener('input',function(){clearFieldMark(e);});e.addEventListener('change',function(){clearFieldMark(e);});});}
 
   function injectReview(){
     if(document.getElementById('cartReview'))return;
@@ -125,7 +131,7 @@
 
   // Add another student -> save this one, keep SAME program & time, enter the next student.
   window.crAddStudent=function(){
-    if(typeof validDetails==='function'&&!validDetails())return;
+    if(!validateUI())return;
     if(!captureEntry())return;
     var cr=document.getElementById('cartReview');if(cr)cr.classList.add('hidden');
     setVal('fStudent','');setVal('fAge','');setVal('fGuardian','');
@@ -135,7 +141,7 @@
   };
   // Add another program -> save this one, then start again from program selection.
   window.crAddProgram=function(){
-    if(typeof validDetails==='function'&&!validDetails())return;
+    if(!validateUI())return;
     if(!captureEntry())return;
     var cr=document.getElementById('cartReview');if(cr)cr.classList.add('hidden');
     var b=cart[0]||{};
@@ -184,7 +190,7 @@
     try{ if(typeof openPublic==='function')openPublic(); else if(typeof showView==='function')showView('cust'); }catch(e){}
     // remove any control that returns to the management console
     document.querySelectorAll('[onclick*="backFromCustomer"]').forEach(function(el){el.style.display='none';});
-    var stl=document.createElement('style');stl.textContent='#payFields{display:none!important}';document.head.appendChild(stl);
+    var stl=document.createElement('style');stl.textContent='#payFields{display:none!important}.back{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #cbd5e1;color:#334155;border-radius:9px;padding:9px 15px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px}.back:hover{background:#f1f5f9;border-color:#94a3b8}';document.head.appendChild(stl);
     // per-booking promo is replaced by one promo field on the summary page
     try{var fp=document.getElementById('fPromo');if(fp){var row=fp.closest('.promo-row');if(row){row.style.display='none';var lbl=row.previousElementSibling;if(lbl&&lbl.tagName==='LABEL')lbl.style.display='none';}}var pm=document.getElementById('promoMsg');if(pm)pm.style.display='none';document.querySelectorAll('#s3 .note').forEach(function(n){n.style.display='none';});}catch(e){}
     injectReview();
@@ -193,7 +199,10 @@
     // re-inject the promo bar and re-apply discounted-price styling every time the program list re-renders
     if(typeof window.renderPrograms==='function'){ var _rp=window.renderPrograms; window.renderPrograms=function(){ var r=_rp.apply(this,arguments); try{injectPromoBar();decoratePrices();}catch(e){} return r; }; }
     if(typeof renderPrograms==='function'){try{renderPrograms();}catch(e){}}
-    if(typeof window.toPayStep==='function'){ window.toPayStep=function(){ if(typeof validDetails==='function'&&!validDetails())return; if(!captureEntry())return; showReview(); }; }
+    // reflect the promo discount on the details-step summary (s3) too
+    if(typeof window.renderCSummary==='function'){ var _rcs=window.renderCSummary; window.renderCSummary=function(){ try{ if(typeof cs!=='undefined'&&cs&&cs.program){ if(promoObj){ var price=cs.program.price||0; var elig=!(promoObj.scope&&promoObj.scope!=='All programs'&&String(promoObj.scope).indexOf(cs.program.name)===-1); cs.discount=elig?Math.max(0,Math.min(price,computeDisc(promoObj,price))):0; cs.promo=(elig&&cs.discount>0)?promoObj.code:''; } else { cs.discount=0; cs.promo=''; } } }catch(e){} return _rcs.apply(this,arguments); }; }
+    bindFieldClearing();
+    if(typeof window.toPayStep==='function'){ window.toPayStep=function(){ if(!validateUI())return; if(!captureEntry())return; showReview(); }; }
     if(typeof renderLogos==='function'){try{renderLogos();}catch(e){}}
     var q=new URLSearchParams(location.search);if(q.get('canceled')&&q.get('order'))showRetry(q.get('order'));
   }

@@ -91,6 +91,24 @@ function validatePromo(promos, code, program) {
   disc = Math.max(0, Math.min(price, disc));
   return { code: p.code, discount: disc };
 }
+// Find a usable promo (active + within its usage limit), or null.
+function findActivePromo(promos, code) {
+  if (!code || !Array.isArray(promos)) return null;
+  const p = promos.find(x => x && x.code && String(x.code).toUpperCase() === String(code).toUpperCase() && (x.status ? x.status === 'Active' : true));
+  if (!p) return null;
+  if (p.max && (p.used || 0) >= p.max) return null;
+  return p;
+}
+// Discount (in cents) this promo gives ONE participant of a given program.
+function itemDiscount(p, prog, price) {
+  if (!p) return 0;
+  if (p.scope && p.scope !== 'All programs' && String(p.scope).indexOf((prog && prog.name) || '') === -1) return 0;
+  let d = 0;
+  if (p.type === 'percent') d = Math.round(price * (p.value || 0) / 100);
+  else if (p.type === 'amount') d = Math.min(price, p.value || 0);
+  else if (p.type === 'free') d = price;
+  return Math.max(0, Math.min(price, d));
+}
 // Order-level promo that applies to EVERY eligible participant (per-person), summed.
 function computeOrderDiscount(promos, code, items) {
   if (!code || !Array.isArray(promos)) return { code: '', discount: 0 };
@@ -165,21 +183,24 @@ app.post('/api/order', async (req, res) => {
       if (cap != null && (bookedMap[k] || 0) + demand[k] > cap) return res.status(409).json({ error: 'The ' + stime + ' time is full. Please pick another time.', slotFull: k });
     }
     const _promos = (_st && Array.isArray(_st.promos)) ? _st.promos : [];
-    const applied = computeOrderDiscount(_promos, b.promoCode, items);
-    const discount = Math.min(subtotal, applied.discount);
+    const promoRec = findActivePromo(_promos, b.promoCode);
+    let discount = 0;
+    items.forEach(it => { it.disc = itemDiscount(promoRec, it.prog, it.price); it.final = Math.max(0, it.price - it.disc); discount += it.disc; });
     const total = Math.max(0, subtotal - discount);
+    const appliedCode = (promoRec && discount > 0) ? promoRec.code : '';
     const buyerId = 'buyer_' + Date.now() + Math.floor(Math.random() * 1000);
-    const order = await db.createOrder({ schoolId: 'wcma', buyer: { first: buyer.first, last: buyer.last, email: buyer.email, phone: buyer.phone, address: buyer.address || '', contact: buyer.contact || '', source: buyer.source || 'signup' }, buyerId, status: 'pending', subtotal, discount, total, promo: applied.code, participantCount: items.length, attempt: 1 });
+    const order = await db.createOrder({ schoolId: 'wcma', buyer: { first: buyer.first, last: buyer.last, email: buyer.email, phone: buyer.phone, address: buyer.address || '', contact: buyer.contact || '', source: buyer.source || 'signup' }, buyerId, status: 'pending', subtotal, discount, total, promo: appliedCode, participantCount: items.length, attempt: 1 });
     const leadIds = [];
     for (const it of items) {
-      const lead = await db.createLead({ schoolId: 'wcma', orderId: order._id, buyerId, student: it.name, first: it.p.first, last: it.p.last, age: it.p.age ? Number(it.p.age) : undefined, dob: it.p.dob || '', gender: it.p.gender || '', guardian: (buyer.first + ' ' + buyer.last).trim(), email: buyer.email, phone: buyer.phone, program: it.prog.name, programId: it.prog.id, price: it.price, when: it.when, slotDate: it.p.slotDate || '', slotTime: it.p.slotTime || '', medicalNotes: it.p.medicalNotes || '', source: buyer.source || 'signup', heard: buyer.source || '', status: 'booked', payStatus: total > 0 ? 'pending' : 'none', promo: applied.code });
+      // store the ACTUAL price this participant pays (after promo) so the admin sees the right amount / Free
+      const lead = await db.createLead({ schoolId: 'wcma', orderId: order._id, buyerId, student: it.name, first: it.p.first, last: it.p.last, age: it.p.age ? Number(it.p.age) : undefined, dob: it.p.dob || '', gender: it.p.gender || '', guardian: (buyer.first + ' ' + buyer.last).trim(), email: buyer.email, phone: buyer.phone, program: it.prog.name, programId: it.prog.id, price: it.final, discount: it.disc, when: it.when, slotDate: it.p.slotDate || '', slotTime: it.p.slotTime || '', medicalNotes: it.p.medicalNotes || '', source: buyer.source || 'signup', heard: buyer.source || '', status: 'booked', payStatus: it.final > 0 ? 'pending' : 'none', promo: appliedCode });
       leadIds.push(lead._id);
     }
     await db.updateOrder(order._id, { leadIds });
     if (total > 0) {
       const base = (req.headers['x-forwarded-proto'] || 'https') + '://' + req.headers.host;
-      const lineItems = items.map(it => ({ name: it.prog.name + ' — ' + it.name, amount: it.price }));
-      const session = await createOrderCheckout({ order, items: lineItems, baseUrl: base, discount, idempotencyKey: order._id + ':1' });
+      const lineItems = items.filter(it => it.final > 0).map(it => ({ name: it.prog.name + ' — ' + it.name, amount: it.final }));
+      const session = await createOrderCheckout({ order, items: lineItems, baseUrl: base, discount: 0, idempotencyKey: order._id + ':1' });
       await db.updateOrder(order._id, { stripeSessionId: session.id });
       return res.json({ ok: true, pay: true, checkoutUrl: session.url, orderId: order._id, total });
     }
@@ -199,8 +220,8 @@ app.post('/api/order/:id/retry', async (req, res) => {
     if (!parts.length) return res.status(400).json({ error: 'No participants on this order.' });
     const attempt = (order.attempt || 1) + 1; await db.updateOrder(order._id, { attempt });
     const base = (req.headers['x-forwarded-proto'] || 'https') + '://' + req.headers.host;
-    const lineItems = parts.map(p => ({ name: p.program + ' — ' + p.student, amount: p.price }));
-    const session = await createOrderCheckout({ order, items: lineItems, baseUrl: base, discount: order.discount || 0, idempotencyKey: order._id + ':' + attempt });
+    const lineItems = parts.filter(p => (p.price || 0) > 0).map(p => ({ name: p.program + ' — ' + p.student, amount: p.price }));
+    const session = await createOrderCheckout({ order, items: lineItems, baseUrl: base, discount: 0, idempotencyKey: order._id + ':' + attempt });
     await db.updateOrder(order._id, { stripeSessionId: session.id });
     return res.json({ ok: true, pay: true, checkoutUrl: session.url });
   } catch (e) { console.error('[retry]', e); res.status(500).json({ error: 'Could not restart payment. Please try again.' }); }
