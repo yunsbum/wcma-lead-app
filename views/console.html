@@ -1204,7 +1204,22 @@ function resetConfirmEmail(){document.getElementById('setConfSubject').value=DEF
 function dl(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);}
 
 function copyLink(){const done=()=>{const b=document.getElementById('copyBtn'),o=b.textContent;b.textContent='✓ Copied';setTimeout(()=>b.textContent=o,1500);toast('Booking link copied');};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(bookingUrl()).then(done).catch(fb);}else fb();function fb(){const ta=document.createElement('textarea');ta.value=bookingUrl();document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){toast('Select the link to copy');}document.body.removeChild(ta);}}
-function downloadQR(){dl(new Blob([QR.svg(bookingUrl())],{type:'image/svg+xml'}),'wcma-intro-qr.svg');toast('QR downloaded');}
+function downloadQR(){
+  var px=1024;
+  var svg=QR.svg(bookingUrl()).replace('<svg ','<svg width="'+px+'" height="'+px+'" ');
+  var img=new Image();
+  img.onload=function(){
+    try{
+      var cv=document.createElement('canvas');cv.width=px;cv.height=px;
+      var ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,px,px);ctx.drawImage(img,0,0,px,px);
+      if(cv.toBlob){cv.toBlob(function(b){if(b){dl(b,'wcma-intro-qr.png');toast('QR downloaded');}else fallbackSVG();},'image/png');}
+      else{var url=cv.toDataURL('image/png'),a=document.createElement('a');a.href=url;a.download='wcma-intro-qr.png';document.body.appendChild(a);a.click();document.body.removeChild(a);toast('QR downloaded');}
+    }catch(e){fallbackSVG();}
+  };
+  img.onerror=fallbackSVG;
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+  function fallbackSVG(){dl(new Blob([QR.svg(bookingUrl())],{type:'image/svg+xml'}),'wcma-intro-qr.svg');toast('QR downloaded (SVG)');}
+}
 
 function toggleMenu(){var s=document.querySelector('.oside'),b=document.getElementById('osideBackdrop');if(!s)return;var open=s.classList.toggle('open');if(b)b.classList.toggle('on',open);}
 function closeMenu(){var s=document.querySelector('.oside'),b=document.getElementById('osideBackdrop');if(s)s.classList.remove('open');if(b)b.classList.remove('on');}
