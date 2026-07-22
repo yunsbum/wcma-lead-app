@@ -284,6 +284,27 @@ app.post('/api/leads/sync', auth.requireAuth, async (req, res) => {
   } catch (e) { console.error('[sync] settings', e.message); }
   res.json({ ok: true, mapping });
 });
+app.post('/api/test-email', auth.requireAuth, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const c = Object.assign({}, await email.cfg());
+    if (b.smtpHost) c.smtpHost = String(b.smtpHost).trim();
+    if (b.smtpUser) c.smtpUser = String(b.smtpUser).trim();
+    if (b.smtpPass) c.smtpPass = b.smtpPass;
+    if (b.smtpPort) { c.smtpPort = Number(b.smtpPort); c.smtpSecure = Number(b.smtpPort) === 465; }
+    if (b.fromEmail) c.from = String(b.fromEmail).trim();
+    if (b.sendgridKey) c.sgKey = String(b.sendgridKey).trim();
+    const to = String(b.to || c.from || c.smtpUser || '').trim();
+    if (!to) return res.status(400).json({ error: 'Enter a From email first.' });
+    if (!((c.smtpHost && c.smtpUser && c.smtpPass) || c.sgKey)) return res.status(400).json({ error: 'Enter your SMTP details (host, email, password) first.' });
+    const subject = "✅ WCMA email test — you're connected";
+    const html = '<div style="font-family:Arial,sans-serif;font-size:15px;color:#1e293b"><h2>✅ Email is connected</h2><p>If you can read this, your email is set up correctly.</p><p>From now on, <b>student confirmation emails</b> and <b>new-signup alerts</b> will be sent from this address automatically.</p><p style="color:#64748b">&mdash; World Class Martial Arts · Lead System</p></div>';
+    const r = await email.sendWith(c, to, subject, html);
+    if (r && r.ok) return res.json({ ok: true, to });
+    if (r && r.stub) return res.status(400).json({ error: 'Email is not configured yet.' });
+    return res.status(400).json({ error: (r && r.error) || 'Send failed — check host, port, and password.', to });
+  } catch (e) { console.error('[test-email]', e); res.status(500).json({ error: e.message || 'Send failed.' }); }
+});
 app.get('/api/settings', auth.requireAuth, async (req, res) => {
   const s = await db.getSettings(); const sk = s.stripeKey || process.env.STRIPE_SECRET_KEY || '';
   res.json({ stripeConnected: /^sk_/.test(sk), stripeMode: /^sk_live_/.test(sk) ? 'live' : (/^sk_test_/.test(sk) ? 'test' : 'none'), emailConnected: !!((s.smtpHost && s.smtpUser && s.smtpPass) || process.env.SMTP_HOST || ((s.sendgridKey || process.env.SENDGRID_KEY) && (s.fromEmail || process.env.FROM_EMAIL))), smsConnected: !!(s.twilioSid && s.twilioToken && s.twilioFrom), logo: s.logo || '', programsSaved: (Array.isArray(s.programs) && s.programs.length > 0), promos: Array.isArray(s.promos) ? s.promos : [], schedule: (s.schedule && typeof s.schedule === 'object') ? s.schedule : {}, exceptions: Array.isArray(s.exceptions) ? s.exceptions : [] });
