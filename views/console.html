@@ -618,7 +618,7 @@
     <section class="opage" id="op-help">
       <div class="h"><div><h1>Help &amp; Guide</h1><p>Search a topic below. Click a result to open that screen, or read the how-to right here.</p></div></div>
       <div class="card pad">
-        <input id="helpSearch" placeholder="Search…  e.g. schedule, promo, stripe, email, 좌석, 이메일, 스케줄" autocomplete="off" style="width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:15px;box-sizing:border-box" oninput="renderHelp(this.value)" />
+        <input id="helpSearch" placeholder="Search…  e.g. schedule, program, promo, stripe, email, calendar" autocomplete="off" style="width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:15px;box-sizing:border-box" oninput="renderHelp(this.value)" />
         <div id="helpResults" style="margin-top:14px"></div>
       </div>
     </section>
@@ -1224,13 +1224,13 @@ function helpLinkify(s){s=String(s);Object.keys(HELP_SEC).forEach(function(key){
 function renderHelp(q){
   var box=document.getElementById('helpResults');if(!box)return;
   q=(q||'').trim();
-  if(!q){box.innerHTML='<div class="muted" style="padding:10px 2px;font-size:13.5px;line-height:1.7">Type a keyword to search — e.g. <b>schedule</b>, <b>promo</b>, <b>stripe</b>, <b>email</b>, <b>google calendar</b>.<br>한국어로 물어보면 한국어로 답합니다.</div>';return;}
+  if(!q){box.innerHTML='<div class="muted" style="padding:10px 2px;font-size:13.5px;line-height:1.7">Type a keyword to search — e.g. <b>schedule</b>, <b>promo</b>, <b>stripe</b>, <b>email</b>, <b>google calendar</b>.</div>';return;}
   var lang=helpLang(q);var ql=q.toLowerCase();var words=ql.split(/\s+/).filter(Boolean);
   function hay(t){return (t.k+' '+t.ko.t+' '+t.ko.b+' '+t.en.t+' '+t.en.b).toLowerCase();}
   var list=HELP_TOPICS.filter(function(t){var h=hay(t);return words.every(function(w){return h.indexOf(w)>-1;});});
   if(!list.length)list=HELP_TOPICS.filter(function(t){var h=hay(t);return words.some(function(w){return h.indexOf(w)>-1;});});
-  if(!list.length){box.innerHTML='<div class="muted" style="padding:8px 0;font-size:13.5px">'+(lang==='ko'?'검색 결과가 없습니다. 다른 단어로 검색해 보세요.':'No results. Try another keyword (e.g. stripe, email, schedule, promo).')+'</div>';return;}
-  box.innerHTML='<div class="muted" style="font-size:12.5px;margin-bottom:8px">'+list.length+(lang==='ko'?'개 결과':' result(s)')+'</div>'+list.map(function(t){var c=t[lang]||t.en;return '<div style="border:1px solid var(--line);border-radius:11px;padding:15px;margin-bottom:11px"><h4 style="margin:0 0 6px;font-size:15px">'+c.t+'</h4><div style="font-size:13.5px;line-height:1.6;color:#475569">'+helpLinkify(c.b)+'</div></div>';}).join('');
+  if(!list.length){box.innerHTML='<div class="muted" style="padding:8px 0;font-size:13.5px">No results. Try another keyword (e.g. stripe, email, schedule, promo).</div>';return;}
+  box.innerHTML='<div class="muted" style="font-size:12.5px;margin-bottom:8px">'+list.length+' result(s)</div>'+list.map(function(t){var c=t[lang]||t.en;return '<div style="border:1px solid var(--line);border-radius:11px;padding:15px;margin-bottom:11px"><h4 style="margin:0 0 6px;font-size:15px">'+c.t+'</h4><div style="font-size:13.5px;line-height:1.6;color:#475569">'+helpLinkify(c.b)+'</div></div>';}).join('');
 }
 
 let toastT=null;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2200);}
