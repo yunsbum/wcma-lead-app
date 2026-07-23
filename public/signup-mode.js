@@ -42,6 +42,7 @@
     var p=PROMOS.find(function(x){return x.code&&x.code.toUpperCase()===code&&(x.status?x.status==='Active':true);});
     if(!p){promoObj=null;if(msgEl){msgEl.style.color='var(--red,#e63535)';msgEl.textContent='✕ Invalid or expired code';}afterPromoChange();return;}
     if(p.max&&(p.used||0)>=p.max){promoObj=null;if(msgEl){msgEl.style.color='var(--red,#e63535)';msgEl.textContent='✕ This code has reached its limit';}afterPromoChange();return;}
+    if(p.expires&&new Date(p.expires+'T23:59:59')<new Date()){promoObj=null;if(msgEl){msgEl.style.color='var(--red,#e63535)';msgEl.textContent='✕ This code has expired';}afterPromoChange();return;}
     promoObj=p;if(msgEl){msgEl.style.color='var(--ok,#1cb454)';msgEl.textContent='✓ Applied — the prices below now show your discount';}
     afterPromoChange();
   }
@@ -68,10 +69,12 @@
   }
   // ----- Required-field validation with a clear red highlight -----
   var REQ=['fFirst','fAge','fEmail','fPhone','fHeard'];
+  // Parent/guardian name is required only when the student is under 18.
+  function reqList(){var r=REQ.slice();var a=parseInt(val('fAge'),10);if(!isNaN(a)&&a<18)r.push('fGuardian');return r;}
   function clearFieldMark(e){if(e){e.style.borderColor='';e.style.boxShadow='';}}
-  function markFields(){var firstEmpty=null;REQ.forEach(function(id){var e=document.getElementById(id);if(!e)return;var empty=!String(e.value||'').trim();if(empty){e.style.borderColor='#e63535';e.style.boxShadow='0 0 0 3px rgba(230,53,53,.22)';if(!firstEmpty)firstEmpty=e;}else{clearFieldMark(e);}});if(firstEmpty){try{firstEmpty.scrollIntoView({behavior:'smooth',block:'center'});firstEmpty.focus({preventScroll:true});}catch(e){}}return firstEmpty===null;}
+  function markFields(){var firstEmpty=null;reqList().forEach(function(id){var e=document.getElementById(id);if(!e)return;var empty=!String(e.value||'').trim();if(empty){e.style.borderColor='#e63535';e.style.boxShadow='0 0 0 3px rgba(230,53,53,.22)';if(!firstEmpty)firstEmpty=e;}else{clearFieldMark(e);}});if(firstEmpty){try{firstEmpty.scrollIntoView({behavior:'smooth',block:'center'});firstEmpty.focus({preventScroll:true});if(firstEmpty.id==='fGuardian'&&typeof toast==='function')toast('Parent / guardian name is required for students under 18.');}catch(e){}}return firstEmpty===null;}
   function validateUI(){var ok=markFields();var vd=(typeof validDetails==='function')?validDetails():true;return ok&&vd;}
-  function bindFieldClearing(){REQ.forEach(function(id){var e=document.getElementById(id);if(!e||e._mk)return;e._mk=1;e.addEventListener('input',function(){clearFieldMark(e);});e.addEventListener('change',function(){clearFieldMark(e);});});}
+  function bindFieldClearing(){REQ.concat(['fGuardian']).forEach(function(id){var e=document.getElementById(id);if(!e||e._mk)return;e._mk=1;e.addEventListener('input',function(){clearFieldMark(e);});e.addEventListener('change',function(){clearFieldMark(e);});});}
 
   function injectReview(){
     if(document.getElementById('cartReview'))return;

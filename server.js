@@ -87,11 +87,14 @@ app.get('/api/promos', async (req, res) => { try { const s = await db.getSetting
 
 // Re-validate a promo code on the server and return the discount (in cents).
 // Never trust a client-supplied amount — the discount is computed from the school's own saved promos.
+// A promo is expired the day AFTER its expiration date (valid through end of that date).
+function promoExpired(p) { if (!p || !p.expires) return false; const d = new Date(p.expires + 'T23:59:59'); return !isNaN(d.getTime()) && d.getTime() < Date.now(); }
 function validatePromo(promos, code, program) {
   if (!code || !Array.isArray(promos)) return { code: '', discount: 0 };
   const p = promos.find(x => x && x.code && String(x.code).toUpperCase() === String(code).toUpperCase() && (x.status ? x.status === 'Active' : true));
   if (!p) return { code: '', discount: 0 };
   if (p.max && (p.used || 0) >= p.max) return { code: '', discount: 0 };
+  if (promoExpired(p)) return { code: '', discount: 0 };
   if (p.scope && p.scope !== 'All programs' && program && String(p.scope).indexOf(program.name) === -1) return { code: '', discount: 0 };
   const price = program.price || 0; let disc = 0;
   if (p.type === 'percent') disc = Math.round(price * (p.value || 0) / 100);
@@ -106,6 +109,7 @@ function findActivePromo(promos, code) {
   const p = promos.find(x => x && x.code && String(x.code).toUpperCase() === String(code).toUpperCase() && (x.status ? x.status === 'Active' : true));
   if (!p) return null;
   if (p.max && (p.used || 0) >= p.max) return null;
+  if (promoExpired(p)) return null;
   return p;
 }
 // Discount (in cents) this promo gives ONE participant of a given program.
@@ -124,6 +128,7 @@ function computeOrderDiscount(promos, code, items) {
   const p = promos.find(x => x && x.code && String(x.code).toUpperCase() === String(code).toUpperCase() && (x.status ? x.status === 'Active' : true));
   if (!p) return { code: '', discount: 0 };
   if (p.max && (p.used || 0) >= p.max) return { code: '', discount: 0 };
+  if (promoExpired(p)) return { code: '', discount: 0 };
   let total = 0;
   (items || []).forEach(it => {
     const prog = it.prog || {}; const price = it.price || 0;
