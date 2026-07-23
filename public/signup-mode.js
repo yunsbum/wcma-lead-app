@@ -84,9 +84,22 @@
   }
   function afterPromoChange(){
     if(typeof renderPrograms==='function'){try{renderPrograms();}catch(e){}}
+    try{decorateIntro();}catch(e){}
     var cr=document.getElementById('cartReview');if(cr&&!cr.classList.contains('hidden')){try{renderReview();}catch(e){}}
     var a=document.getElementById('s1Promo'),b=document.getElementById('crPromo');
     if(a)a.value=promoObj?promoObj.code:''; if(b)b.value=promoObj?promoObj.code:'';
+  }
+  // Apply the promo discount to the intro card price on the date/time page (step 2).
+  function decorateIntro(){
+    if(!promoObj)return;
+    if(typeof cs==='undefined'||!cs||!cs.program)return;
+    var prog=cs.program,price=prog.price||0;
+    var elig=!(promoObj.scope&&promoObj.scope!=='All programs'&&String(promoObj.scope).indexOf(prog.name)===-1);
+    var disc=elig?Math.max(0,Math.min(price,computeDisc(promoObj,price))):0;
+    if(disc<=0)return;
+    var big=document.querySelector('#introCard .pricebar .big');if(!big)return;
+    var np=price-disc;
+    big.innerHTML='<span style="text-decoration:line-through;color:#e63535;font-weight:600;font-size:15px">'+m(price)+'</span> <span style="color:#1cb454">'+m(np)+'</span>';
   }
   // Show struck-through original + discounted price on each eligible program card.
   function decoratePrices(){
@@ -257,6 +270,8 @@
     injectPromoBar();
     // re-inject the promo bar and re-apply discounted-price styling every time the program list re-renders
     if(typeof window.renderPrograms==='function'){ var _rp=window.renderPrograms; window.renderPrograms=function(){ var r=_rp.apply(this,arguments); try{injectPromoBar();decoratePrices();}catch(e){} return r; }; }
+    // discounted price on the intro (date/time) card too
+    if(typeof window.renderIntro==='function'){ var _ri=window.renderIntro; window.renderIntro=function(){ var r=_ri.apply(this,arguments); try{decorateIntro();}catch(e){} return r; }; }
     if(typeof renderPrograms==='function'){try{renderPrograms();}catch(e){}}
     // reflect the promo discount on the details-step summary (s3) too
     if(typeof window.renderCSummary==='function'){ var _rcs=window.renderCSummary; window.renderCSummary=function(){ try{ if(typeof cs!=='undefined'&&cs&&cs.program){ if(promoObj){ var price=cs.program.price||0; var elig=!(promoObj.scope&&promoObj.scope!=='All programs'&&String(promoObj.scope).indexOf(cs.program.name)===-1); cs.discount=elig?Math.max(0,Math.min(price,computeDisc(promoObj,price))):0; cs.promo=(elig&&cs.discount>0)?promoObj.code:''; } else { cs.discount=0; cs.promo=''; } } }catch(e){} return _rcs.apply(this,arguments); }; }
