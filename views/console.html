@@ -493,8 +493,8 @@
     <section class="opage" id="op-promo">
       <div class="h"><div><h1>Promo Codes</h1><p>Discounts you can tie to a program or an ad channel.</p></div><button class="btn btn-primary btn-sm" onclick="openPromoNew()">+ New code</button></div>
       <div class="card pad" style="margin-bottom:14px">
-        <b style="font-size:14px">🔐 Manager approval PIN</b>
-        <p class="muted" style="font-size:12.5px;margin:4px 0 10px">Set a 4-digit staff PIN. Any promo marked <b>"Requires manager approval"</b> will ask for this PIN during sign-up before the discount applies — so cash / high-value codes can only be redeemed with staff present.</p>
+        <b style="font-size:14px">🔐 Cash payment PIN</b>
+        <p class="muted" style="font-size:12.5px;margin:4px 0 10px">Set a 4-digit staff PIN. When a customer chooses <b>"Pay cash at the desk"</b> during sign-up, a manager enters this PIN to confirm the cash was collected before the registration completes.</p>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <input class="minput" id="setStaffPin" inputmode="numeric" maxlength="4" placeholder="••••" style="max-width:120px;letter-spacing:4px;text-align:center" />
           <button class="btn btn-primary btn-sm" onclick="saveStaffPin()">Save PIN</button>
@@ -720,8 +720,6 @@
   <div class="mrow2"><div><label class="mlabel">Applies to</label><select class="minput" id="prScope"></select></div><div><label class="mlabel">Channel (optional)</label><input class="minput" id="prChannel" placeholder="Facebook" /></div></div>
   <div class="mrow2"><div><label class="mlabel">Max uses (blank = unlimited)</label><input class="minput" id="prMax" type="number" min="0" /></div><div><label class="mlabel">Status</label><select class="minput" id="prStatus"><option>Active</option><option>Disabled</option></select></div></div>
   <div class="mrow2"><div><label class="mlabel">Expiration date (blank = never expires)</label><input class="minput" id="prExp" type="date" /></div><div></div></div>
-  <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer;margin:4px 0 2px"><input type="checkbox" id="prRequirePin" /> Requires manager approval (staff PIN at sign-up)</label>
-  <p class="muted" style="font-size:11.5px;margin:0 0 4px">Use for cash / high-value codes. Set the shared PIN above in "Manager approval PIN."</p>
   <div class="foot" style="justify-content:space-between"><button class="btn btn-ghost btn-sm" id="prDelete" onclick="deletePromo()" style="color:var(--red)">Delete</button><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" onclick="closePromo()">Cancel</button><button class="btn btn-primary btn-sm" onclick="savePromo()">Save code</button></div></div>
 </div></div>
 <div class="modal-bg hidden" id="tmplModal"><div class="modal">
@@ -882,7 +880,7 @@ function openPreview(){custFrom='manager';resetCustomer();showView('cust');}
 function openPublic(){custFrom='login';resetCustomer();showView('cust');}
 function backFromCustomer(){showView('manager');}
 function resetCustomer(){cs={program:null,date:null,time:null,price:0,discount:0,promo:null,view:new Date(today),wlSlot:null};renderPrograms();cgo(1);}
-const APP_VERSION='v117';
+const APP_VERSION='v118';
 document.getElementById('persistNote').textContent = (persist
   ? 'Prototype · Your entries are saved on this device. Download them anytime from the Pipeline (Download Excel).'
   : '⚠ Preview mode — data won\'t persist here. Download this file and open it in your browser to save data permanently.') + '  ·  ' + APP_VERSION;
@@ -986,7 +984,7 @@ function renderSetup(){
       <div class="pactions"><button onclick="openProgEdit('${p.id}')">Edit</button><button class="del" onclick="quickDeleteProg('${p.id}')">Delete</button></div></div>`).join('');
   populateSchedProg();renderWeek();
   document.getElementById('excList').innerHTML=DB.exceptions.length? DB.exceptions.map(e=>{const b={close:['close','Closed'],remove:['remove','Slot removed'],add:['add','Slot added']}[e.type];return `<div class="exrow"><div class="exdate">${e.dateLabel}</div><div class="extype"><span class="badge ${b[0]}">${b[1]}${e.time?' '+e.time:''}</span> &nbsp;<span class="muted">${e.reason||''}</span></div><span class="rowact" onclick="removeException('${e.id}')">Remove</span></div>`;}).join('') : '<div class="muted" style="padding:6px 0">No exceptions. Your weekly schedule applies every week.</div>';
-  document.getElementById('promoTable').innerHTML=`<thead><tr><th>Code</th><th>Discount</th><th>Applies to</th><th>Channel</th><th>Redemptions</th><th>Expires</th><th>Status</th><th></th></tr></thead><tbody>${DB.promos.map(p=>`<tr><td><b>${p.code}</b>${p.requirePin?' 🔐':''}</td><td>${promoLabel(p)}</td><td>${p.scope}</td><td>${p.channel||'—'}</td><td>${p.used||0} / ${p.max?p.max:'∞'}</td><td>${p.expires?(promoExpired(p)?`<span style="color:var(--red)">${p.expires} (expired)</span>`:p.expires):'—'}</td><td><span class="pill ${p.status==='Active'?'st-confirmed':'st-lost'}">${p.status}</span></td><td><span class="rowact" onclick="openPromoEdit('${p.id}')">Edit</span></td></tr>`).join('')}</tbody>`;
+  document.getElementById('promoTable').innerHTML=`<thead><tr><th>Code</th><th>Discount</th><th>Applies to</th><th>Channel</th><th>Redemptions</th><th>Expires</th><th>Status</th><th></th></tr></thead><tbody>${DB.promos.map(p=>`<tr><td><b>${p.code}</b></td><td>${promoLabel(p)}</td><td>${p.scope}</td><td>${p.channel||'—'}</td><td>${p.used||0} / ${p.max?p.max:'∞'}</td><td>${p.expires?(promoExpired(p)?`<span style="color:var(--red)">${p.expires} (expired)</span>`:p.expires):'—'}</td><td><span class="pill ${p.status==='Active'?'st-confirmed':'st-lost'}">${p.status}</span></td><td><span class="rowact" onclick="openPromoEdit('${p.id}')">Edit</span></td></tr>`).join('')}</tbody>`;
   document.getElementById('tmplList').innerHTML=DB.templates.map(t=>`<div class="tmpl"><div class="tt"><h4>${t.name} <span class="pill ${t.ch==='sms'?'st-booked':'st-showed'}">${t.ch==='sms'?'Text':'Email'}</span></h4><span class="rowact" onclick="openTmplEdit('${t.id}')">Edit</span></div><div class="tbd">${t.body}</div></div>`).join('');
   loadStaffPin();
   renderAutomations();
@@ -1042,10 +1040,10 @@ function removeException(id){DB.exceptions=DB.exceptions.filter(e=>e.id!==id);sa
 let editingPromoId=null;
 function openPromoNew(){editingPromoId=null;fillPromoForm(null);document.getElementById('promoModalTitle').textContent='New promo code';document.getElementById('prDelete').style.display='none';document.getElementById('promoModal').classList.remove('hidden');}
 function openPromoEdit(id){editingPromoId=id;fillPromoForm(DB.promos.find(x=>x.id===id));document.getElementById('promoModalTitle').textContent='Edit promo code';document.getElementById('prDelete').style.display='';document.getElementById('promoModal').classList.remove('hidden');}
-function fillPromoForm(p){document.getElementById('prScope').innerHTML='<option>All programs</option>'+DB.programs.map(x=>`<option>${x.name}</option>`).join('');document.getElementById('prCode').value=p?p.code:'';document.getElementById('prType').value=p?p.type:'percent';document.getElementById('prValue').value=p?(p.type==='amount'?p.value/100:p.value):'';document.getElementById('prScope').value=p?p.scope:'All programs';document.getElementById('prChannel').value=p?(p.channel||''):'';document.getElementById('prMax').value=p&&p.max?p.max:'';document.getElementById('prStatus').value=p?p.status:'Active';document.getElementById('prExp').value=(p&&p.expires)?p.expires:'';document.getElementById('prRequirePin').checked=!!(p&&p.requirePin);promoTypeChange();}
+function fillPromoForm(p){document.getElementById('prScope').innerHTML='<option>All programs</option>'+DB.programs.map(x=>`<option>${x.name}</option>`).join('');document.getElementById('prCode').value=p?p.code:'';document.getElementById('prType').value=p?p.type:'percent';document.getElementById('prValue').value=p?(p.type==='amount'?p.value/100:p.value):'';document.getElementById('prScope').value=p?p.scope:'All programs';document.getElementById('prChannel').value=p?(p.channel||''):'';document.getElementById('prMax').value=p&&p.max?p.max:'';document.getElementById('prStatus').value=p?p.status:'Active';document.getElementById('prExp').value=(p&&p.expires)?p.expires:'';promoTypeChange();}
 function promoTypeChange(){const t=document.getElementById('prType').value;document.getElementById('prValueWrap').style.display=(t==='free')?'none':'block';document.getElementById('prValueLabel').textContent=t==='percent'?'Percent off (0–100)':'Amount off ($)';}
 function closePromo(){document.getElementById('promoModal').classList.add('hidden');}
-function savePromo(){const code=document.getElementById('prCode').value.trim().toUpperCase();if(!code){toast('Enter a code');return;}const type=document.getElementById('prType').value;let value=parseFloat(document.getElementById('prValue').value)||0;if(type==='amount')value=Math.round(value*100);const obj={code:code,type:type,value:value,scope:document.getElementById('prScope').value,channel:document.getElementById('prChannel').value.trim(),max:parseInt(document.getElementById('prMax').value)||0,status:document.getElementById('prStatus').value,expires:document.getElementById('prExp').value||'',requirePin:document.getElementById('prRequirePin').checked};if(editingPromoId){const i=DB.promos.findIndex(x=>x.id===editingPromoId);DB.promos[i]={...DB.promos[i],...obj};}else{obj.id='pr'+Date.now();obj.used=0;DB.promos.push(obj);}save();closePromo();renderSetup();toast('Promo code saved');}
+function savePromo(){const code=document.getElementById('prCode').value.trim().toUpperCase();if(!code){toast('Enter a code');return;}const type=document.getElementById('prType').value;let value=parseFloat(document.getElementById('prValue').value)||0;if(type==='amount')value=Math.round(value*100);const obj={code:code,type:type,value:value,scope:document.getElementById('prScope').value,channel:document.getElementById('prChannel').value.trim(),max:parseInt(document.getElementById('prMax').value)||0,status:document.getElementById('prStatus').value,expires:document.getElementById('prExp').value||''};if(editingPromoId){const i=DB.promos.findIndex(x=>x.id===editingPromoId);DB.promos[i]={...DB.promos[i],...obj};}else{obj.id='pr'+Date.now();obj.used=0;DB.promos.push(obj);}save();closePromo();renderSetup();toast('Promo code saved');}
 function deletePromo(){if(!editingPromoId)return;const id=editingPromoId;askConfirm('Delete this promo code?',function(){DB.promos=DB.promos.filter(x=>x.id!==id);save();closePromo();renderSetup();toast('Promo code deleted');});}
 function saveStaffPin(){const el=document.getElementById('setStaffPin');const v=(el.value||'').trim();if(!/^\d{4}$/.test(v)){toast('Enter a 4-digit PIN');return;}DB.settings.staffPin=v;save();el.value='';toast('Manager PIN saved ✓');setTimeout(loadStaffPin,400);}
 function loadStaffPin(){const st=document.getElementById('staffPinStat');if(!st)return;fetch('/api/settings',{credentials:'same-origin'}).then(r=>r.json()).then(s=>{st.textContent=s&&s.staffPinSet?'✓ PIN is set — enter a new one to change it.':'No PIN set yet.';st.style.color=s&&s.staffPinSet?'var(--ok)':'var(--muted)';}).catch(()=>{});}
@@ -1079,7 +1077,7 @@ function doDeleteProg(id){const p=DB.programs.find(x=>x.id===id);if(!p)return;co
 
 // ----- Excel download (all records; CSV opens directly in Excel/Sheets) -----
 function exportExcel(){
-  const cols=[['id','ID'],['student','Student'],['age','Age'],['guardian','Guardian'],['email','Email'],['phone','Phone'],['heard','Heard about us'],['program','Program'],['when','Date/Time'],['src','Source'],['paid','Paid'],['status','Status'],['archivedLabel','Archived'],['deletedLabel','Deleted'],['promo','Promo'],['promoApprovedAt','Promo approved'],['notes','Notes'],['created','Created']];
+  const cols=[['id','ID'],['student','Student'],['age','Age'],['guardian','Guardian'],['email','Email'],['phone','Phone'],['heard','Heard about us'],['program','Program'],['when','Date/Time'],['src','Source'],['paid','Paid'],['status','Status'],['archivedLabel','Archived'],['deletedLabel','Deleted'],['promo','Promo'],['paymentMethod','Payment method'],['cashApprovedAt','Cash approved'],['notes','Notes'],['created','Created']];
   const esc=v=>{v=(v==null?'':''+v).replace(/<[^>]+>/g,'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
   const rows=DB.leads.map(l=>Object.assign({},l,{archivedLabel:l.archived?'Yes':'No',deletedLabel:l.deleted?'Yes':'No'}));
   const csv=[cols.map(c=>c[1]).join(',')].concat(rows.map(l=>cols.map(c=>esc(l[c[0]])).join(','))).join('\r\n');
@@ -1184,7 +1182,8 @@ function renderDrawer(){
     <div class="kv"><span class="k">Phone</span><a href="tel:${l.phone}">${l.phone}</a></div>
     <div class="kv"><span class="k">Heard via</span><span>${l.heard||l.src}</span></div>
     <div class="kv"><span class="k">Paid</span><span>${l.paid}</span></div>
-    ${l.promo?`<div class="kv"><span class="k">Promo code</span><span>${l.promo}${l.promoApprovedAt?` <span class="muted">· approved ${fmtApproved(l.promoApprovedAt)}</span>`:''}</span></div>`:''}
+    ${l.promo?`<div class="kv"><span class="k">Promo code</span><span>${l.promo}</span></div>`:''}
+    ${l.paymentMethod?`<div class="kv"><span class="k">Payment</span><span>${l.paymentMethod==='cash'?'💵 Cash'+(l.cashApprovedAt?` · approved ${fmtApproved(l.cashApprovedAt)}`:''):(l.paymentMethod==='card'?'💳 Card':l.paymentMethod)}</span></div>`:''}
     <div class="sec-t">Status</div><div class="statusbtns">${stbtns}</div>
     <div class="sec-t">Follow up</div>
     <div class="compose">

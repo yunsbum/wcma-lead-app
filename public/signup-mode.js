@@ -5,7 +5,7 @@
    - Add student  = same program & same time, enter only the new student's info.
    - Add program  = start again from program selection. */
 (function () {
-  var cart = [], PROMOS = [], promoObj = null, approvedPin = '';
+  var cart = [], PROMOS = [], promoObj = null;
   function val(id){var e=document.getElementById(id);return e?String(e.value||'').trim():'';}
   function setVal(id,v){var e=document.getElementById(id);if(e)e.value=(v==null?'':v);}
   function m(c){return '$'+((c||0)/100).toFixed(2);}
@@ -38,44 +38,44 @@
   window.s1Apply=function(){ var i=document.getElementById('s1Promo'); applyCode(i?i.value:'', document.getElementById('s1PromoMsg')); };
   function applyCode(code, msgEl){
     code=(code||'').trim().toUpperCase();
-    if(!code){promoObj=null;approvedPin='';if(msgEl)msgEl.textContent='';afterPromoChange();return;}
+    if(!code){promoObj=null;if(msgEl)msgEl.textContent='';afterPromoChange();return;}
     var p=PROMOS.find(function(x){return x.code&&x.code.toUpperCase()===code&&(x.status?x.status==='Active':true);});
-    if(!p){promoObj=null;approvedPin='';if(msgEl){msgEl.style.color='var(--red,#e63535)';msgEl.textContent='✕ Invalid or expired code';}afterPromoChange();return;}
-    if(p.max&&(p.used||0)>=p.max){promoObj=null;approvedPin='';if(msgEl){msgEl.style.color='var(--red,#e63535)';msgEl.textContent='✕ This code has reached its limit';}afterPromoChange();return;}
-    if(p.expires&&new Date(p.expires+'T23:59:59')<new Date()){promoObj=null;approvedPin='';if(msgEl){msgEl.style.color='var(--red,#e63535)';msgEl.textContent='✕ This code has expired';}afterPromoChange();return;}
-    if(p.requirePin){promoObj=null;approvedPin='';promptPin(p,msgEl);return;}
-    approvedPin='';promoObj=p;if(msgEl){msgEl.style.color='var(--ok,#1cb454)';msgEl.textContent='✓ Applied — the prices below now show your discount';}
+    if(!p){promoObj=null;if(msgEl){msgEl.style.color='var(--red,#e63535)';msgEl.textContent='✕ Invalid or expired code';}afterPromoChange();return;}
+    if(p.max&&(p.used||0)>=p.max){promoObj=null;if(msgEl){msgEl.style.color='var(--red,#e63535)';msgEl.textContent='✕ This code has reached its limit';}afterPromoChange();return;}
+    if(p.expires&&new Date(p.expires+'T23:59:59')<new Date()){promoObj=null;if(msgEl){msgEl.style.color='var(--red,#e63535)';msgEl.textContent='✕ This code has expired';}afterPromoChange();return;}
+    promoObj=p;if(msgEl){msgEl.style.color='var(--ok,#1cb454)';msgEl.textContent='✓ Applied — the prices below now show your discount';}
     afterPromoChange();
   }
-  // Promo codes marked "requires manager approval" ask for the shared staff PIN (verified server-side).
+  // Cash payment needs a manager PIN (verified server-side) to confirm the cash was collected.
   function ensurePinModal(){
     if(document.getElementById('pinModal'))return;
     var d=document.createElement('div');d.id='pinModal';d.className='modal-bg hidden';
     d.innerHTML='<div class="modal" style="max-width:340px;text-align:center">'
-      +'<h2 class="title">Manager approval</h2>'
-      +'<p class="sub" id="pinSub">This promo code requires a manager PIN.</p>'
+      +'<h2 class="title">Cash payment — manager approval</h2>'
+      +'<p class="sub" id="pinSub">A manager enters the PIN to confirm the cash was collected.</p>'
       +'<input id="pinInput" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" style="width:150px;text-align:center;letter-spacing:10px;font-size:24px;padding:12px;border:1px solid #cbd5e1;border-radius:10px;margin:4px auto 2px" />'
       +'<div id="pinMsg" style="font-size:12.5px;color:#e63535;min-height:16px;margin:6px 0"></div>'
       +'<div class="foot" style="flex-direction:column;gap:10px">'
-      +'<button class="btn btn-primary" style="width:100%" id="pinVerifyBtn">Verify &amp; apply</button>'
+      +'<button class="btn btn-primary" style="width:100%" id="pinVerifyBtn">Confirm cash &amp; complete</button>'
       +'<button class="btn btn-ghost" style="width:100%" onclick="pinCancel()">Cancel</button></div></div>';
     document.body.appendChild(d);
   }
   window.pinCancel=function(){var mo=document.getElementById('pinModal');if(mo)mo.classList.add('hidden');};
-  function promptPin(p,msgEl){
+  // Ask for the manager PIN, verify it server-side, then call onOk(pin).
+  function promptPin(onOk){
     ensurePinModal();
     var mo=document.getElementById('pinModal'),inp=document.getElementById('pinInput'),pm=document.getElementById('pinMsg');
-    inp.value='';pm.textContent='';document.getElementById('pinSub').textContent='Code '+p.code+' needs a manager PIN to apply.';
+    inp.value='';pm.textContent='';
     mo.classList.remove('hidden');setTimeout(function(){try{inp.focus();}catch(e){}},50);
     var btn=document.getElementById('pinVerifyBtn');
     function go(){
       var pin=(inp.value||'').trim();
       if(!/^\d{4}$/.test(pin)){pm.textContent='Enter the 4-digit PIN.';return;}
       btn.disabled=true;var ot=btn.textContent;btn.textContent='Checking…';
-      fetch('/api/promo-verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:p.code,pin:pin})})
+      fetch('/api/pin-verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:pin})})
         .then(function(r){return r.json();}).then(function(d){
           btn.disabled=false;btn.textContent=ot;
-          if(d&&d.ok){approvedPin=pin;promoObj=p;mo.classList.add('hidden');if(msgEl){msgEl.style.color='var(--ok,#1cb454)';msgEl.textContent='✓ Approved by manager — discount applied';}afterPromoChange();}
+          if(d&&d.ok){mo.classList.add('hidden');onOk(pin);}
           else{pm.textContent=(d&&d.error)||'Incorrect PIN.';}
         }).catch(function(){btn.disabled=false;btn.textContent=ot;pm.textContent='Network error. Please try again.';});
     }
@@ -128,6 +128,7 @@
       +'<div class="foot" style="flex-direction:column;gap:10px;margin-top:16px">'
       +'<button class="btn btn-ghost" style="width:100%" onclick="crBackToAdd()">‹ Add another student or program</button>'
       +'<button class="btn btn-primary" style="width:100%" id="crPay" onclick="crPay()">Pay &amp; complete registration</button>'
+      +'<button class="btn btn-ghost" style="width:100%" id="crPayCash" onclick="crPayCash()">💵 Pay cash at the desk</button>'
       +'</div>'
       +'<div id="crErr" style="color:var(--red,#e63535);font-size:13px;margin-top:10px;text-align:center;font-weight:600"></div>'
       +'<div class="note" style="text-align:center;margin-top:12px">Intro registration fees are non-refundable · 🔒 Secured by Stripe</div>'
@@ -148,16 +149,15 @@
     if(disc>0)html+='<div class="srow"><span class="disc">Promo'+(promoObj?' ('+esc(promoObj.code)+')':'')+'</span><span class="disc">−'+m(disc)+'</span></div>';
     html+='<div class="srow total"><span>Total ('+cart.length+' participant'+(cart.length>1?'s':'')+')</span><span>'+m(total)+'</span></div>';
     document.getElementById('crSummary').innerHTML=html;
-    var pay=document.getElementById('crPay');pay.textContent=total>0?('Pay '+m(total)+' & complete'):'Complete registration';
+    var pay=document.getElementById('crPay');pay.textContent=total>0?('Pay '+m(total)+' by card'):'Complete registration';
+    var payCash=document.getElementById('crPayCash');if(payCash)payCash.style.display=total>0?'block':'none';
   }
 
   window.crApply=function(){
-    var code=val('crPromo');var msg=document.getElementById('crPromoMsg');
-    var pc=PROMOS.find(function(x){return x.code&&x.code.toUpperCase()===code.toUpperCase();});
-    applyCode(code, (pc&&pc.requirePin)?msg:null);
-    if(pc&&pc.requirePin){renderReview();return;} // PIN modal drives the message; review updates on approval
+    applyCode(val('crPromo'), null);
+    var msg=document.getElementById('crPromoMsg');
     if(promoObj){ msg.style.color='var(--ok,#1cb454)';msg.textContent='✓ Applied to all '+cart.length+' participant'+(cart.length>1?'s':'')+' — you save '+m(orderDiscount(promoObj)); }
-    else if(code){ msg.style.color='var(--red,#e63535)';msg.textContent='✕ Invalid or expired code'; }
+    else if(val('crPromo')){ msg.style.color='var(--red,#e63535)';msg.textContent='✕ Invalid or expired code'; }
     else { msg.textContent=''; }
     renderReview();
   };
@@ -200,24 +200,40 @@
     if(typeof resetCustomer==='function')resetCustomer();else if(typeof cgo==='function')cgo(1);
   };
 
+  function orderPayload(extra){
+    var first=cart[0];var buyer;var g=(first.guardian||'').trim();
+    if(g){var gp=g.split(/\s+/);buyer={first:gp[0]||g,last:gp.slice(1).join(' '),email:first.email,phone:first.phone,source:first.heard||'signup'};}
+    else{buyer={first:first.first||first.student||'Customer',last:first.last||'',email:first.email,phone:first.phone,source:first.heard||'signup'};}
+    var participants=cart.map(function(it){return {programId:it.programId,first:it.first||it.student||'Student',last:it.last||'',age:it.age,slotDate:it.slotDate,slotTime:it.slotTime,when:it.when,medicalNotes:''};});
+    var p={buyer:buyer,participants:participants,promoCode:promoObj?promoObj.code:''};
+    if(extra){for(var k in extra)p[k]=extra[k];}
+    return p;
+  }
+  function submitOrder(payload,btn,oldText){
+    fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
+      .then(function(res){
+        var err=document.getElementById('crErr');
+        if(!res.ok){if(btn){btn.disabled=false;btn.textContent=oldText;}err.textContent=(res.d&&res.d.error)||'Something went wrong. Please try again.';return;}
+        var d=res.d;
+        if(d.pay&&d.checkoutUrl){location.href=d.checkoutUrl;return;}
+        location.href='/success?order='+d.orderId;
+      }).catch(function(){if(btn){btn.disabled=false;btn.textContent=oldText;}document.getElementById('crErr').textContent='Network error. Please try again.';});
+  }
   window.crPay=function(){
     var btn=document.getElementById('crPay');var err=document.getElementById('crErr');err.textContent='';
     if(!cart.length){err.textContent='Add at least one participant.';return;}
     btn.disabled=true;var old=btn.textContent;btn.textContent='Processing…';
-    var first=cart[0];var buyer;
-    var g=(first.guardian||'').trim();
-    if(g){var gp=g.split(/\s+/);buyer={first:gp[0]||g,last:gp.slice(1).join(' '),email:first.email,phone:first.phone,source:first.heard||'signup'};}
-    else{buyer={first:first.first||first.student||'Customer',last:first.last||'',email:first.email,phone:first.phone,source:first.heard||'signup'};}
-    var participants=cart.map(function(it){return {programId:it.programId,first:it.first||it.student||'Student',last:it.last||'',age:it.age,slotDate:it.slotDate,slotTime:it.slotTime,when:it.when,medicalNotes:''};});
-    var payload={buyer:buyer,participants:participants,promoCode:promoObj?promoObj.code:'',promoPin:approvedPin||''};
-    fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-      .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
-      .then(function(res){
-        if(!res.ok){btn.disabled=false;btn.textContent=old;err.textContent=(res.d&&res.d.error)||'Something went wrong. Please try again.';return;}
-        var d=res.d;
-        if(d.pay&&d.checkoutUrl){location.href=d.checkoutUrl;return;}
-        location.href='/success?order='+d.orderId;
-      }).catch(function(){btn.disabled=false;btn.textContent=old;err.textContent='Network error. Please try again.';});
+    submitOrder(orderPayload({payMethod:'card'}),btn,old);
+  };
+  // Pay the remaining balance in cash at the desk — a manager confirms with the PIN.
+  window.crPayCash=function(){
+    var err=document.getElementById('crErr');err.textContent='';
+    if(!cart.length){err.textContent='Add at least one participant.';return;}
+    promptPin(function(pin){
+      var btn=document.getElementById('crPayCash');btn.disabled=true;var old=btn.textContent;btn.textContent='Processing…';
+      submitOrder(orderPayload({payMethod:'cash',cashPin:pin}),btn,old);
+    });
   };
 
   function showRetry(orderId){
