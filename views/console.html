@@ -864,7 +864,7 @@ function openPreview(){custFrom='manager';resetCustomer();showView('cust');}
 function openPublic(){custFrom='login';resetCustomer();showView('cust');}
 function backFromCustomer(){showView('manager');}
 function resetCustomer(){cs={program:null,date:null,time:null,price:0,discount:0,promo:null,view:new Date(today),wlSlot:null};renderPrograms();cgo(1);}
-const APP_VERSION='v111';
+const APP_VERSION='v112';
 document.getElementById('persistNote').textContent = (persist
   ? 'Prototype · Your entries are saved on this device. Download them anytime from the Pipeline (Download Excel).'
   : '⚠ Preview mode — data won\'t persist here. Download this file and open it in your browser to save data permanently.') + '  ·  ' + APP_VERSION;
@@ -1065,7 +1065,7 @@ function exportExcel(){
 // ---- Dashboard trend data (illustrative sample so YoY / MoM comparisons are meaningful in the prototype) ----
 const MONTHS3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function leadMonth(l){var d=l.createdAt?new Date(l.createdAt):(l.created?new Date(l.created):null);return (d&&!isNaN(d))?d:null;}
-function monthlyCounts(){var yr=new Date().getFullYear(),intros=new Array(12).fill(0),enr=new Array(12).fill(0);(DB.leads||[]).forEach(function(l){if(l.archived||l.deleted||l.payStatus==='pending')return;var d=leadMonth(l);if(!d||d.getFullYear()!==yr)return;var m=d.getMonth();intros[m]++;if(l.status==='enrolled')enr[m]++;});return {intros:intros,enr:enr};}
+function monthlyCounts(){var yr=new Date().getFullYear(),intros=new Array(12).fill(0),enr=new Array(12).fill(0);(DB.leads||[]).forEach(function(l){if(l.deleted||l.payStatus==='pending')return;var d=leadMonth(l);if(!d||d.getFullYear()!==yr)return;var m=d.getMonth();intros[m]++;if(l.status==='enrolled')enr[m]++;});return {intros:intros,enr:enr};}
 let curRange='all';
 function curMonthIdx(){return Math.min(11,new Date().getMonth());}
 function pctDelta(cur,prev){if(prev==null||prev===0)return null;return Math.round((cur-prev)/prev*100);}
@@ -1114,7 +1114,7 @@ function setRange(r){curRange=r;const seg=document.getElementById('rangeSeg');if
 function saveGoal(){let v=parseInt(document.getElementById('goalInput').value,10);if(!v||v<1)v=1;DB.settings.monthlyGoal=v;save();renderStats();toast('Monthly goal set to '+v);}
 function renderStats(){
   const L=DB.leads,n=k=>L.filter(l=>l.status===k).length;
-  const A=L.filter(l=>!l.archived&&!l.deleted&&l.payStatus!=='pending'),booked=A.length,showed=A.filter(l=>['showed','followup','enrolled','lost'].includes(l.status)).length,enrolled=A.filter(l=>l.status==='enrolled').length;
+  const A=L.filter(l=>!l.deleted&&l.payStatus!=='pending'),booked=A.length,showed=A.filter(l=>['showed','followup','enrolled','lost'].includes(l.status)).length,enrolled=A.filter(l=>l.status==='enrolled').length;
   const CUR=curMonthIdx(),PREV=CUR>0?CUR-1:null,mc=monthlyCounts();
   const introsNow=mc.intros[CUR],introsPrev=PREV!=null?mc.intros[PREV]:null;
   const enrNow=mc.enr[CUR],enrPrev=PREV!=null?mc.enr[PREV]:null;
