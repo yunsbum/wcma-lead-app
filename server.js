@@ -226,7 +226,10 @@ app.post('/api/order', async (req, res) => {
     const appliedCode = (promoRec && discount > 0) ? promoRec.code : '';
     const payMethod = (b.payMethod === 'cash') ? 'cash' : 'card';
     const staffPin = String(_st.staffPin || '');
-    if (payMethod === 'cash' && (!staffPin || String(b.cashPin || '') !== staffPin)) return res.status(403).json({ error: 'Manager approval (PIN) is required to take cash.' });
+    // A PIN is required to take cash, OR when a "protected" promo (e.g. free/high-value) is applied — any method.
+    const needPin = (payMethod === 'cash') || !!(promoRec && promoRec.requirePin);
+    const suppliedPin = String(b.pin || b.cashPin || '');
+    if (needPin && (!staffPin || suppliedPin !== staffPin)) return res.status(403).json({ error: payMethod === 'cash' ? 'Manager approval (PIN) is required to take cash.' : 'Manager approval (PIN) is required for this promo code.' });
     const paymentMethod = payMethod === 'cash' ? 'cash' : (total > 0 ? 'card' : 'free');
     const cashApprovedAt = payMethod === 'cash' ? new Date().toISOString() : '';
     const buyerId = 'buyer_' + Date.now() + Math.floor(Math.random() * 1000);

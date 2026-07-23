@@ -51,12 +51,12 @@
     if(document.getElementById('pinModal'))return;
     var d=document.createElement('div');d.id='pinModal';d.className='modal-bg hidden';
     d.innerHTML='<div class="modal" style="max-width:340px;text-align:center">'
-      +'<h2 class="title">Cash payment — manager approval</h2>'
-      +'<p class="sub" id="pinSub">A manager enters the PIN to confirm the cash was collected.</p>'
+      +'<h2 class="title">Manager approval</h2>'
+      +'<p class="sub" id="pinSub">A manager enters the PIN to authorize this registration.</p>'
       +'<input id="pinInput" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" style="width:150px;text-align:center;letter-spacing:10px;font-size:24px;padding:12px;border:1px solid #cbd5e1;border-radius:10px;margin:4px auto 2px" />'
       +'<div id="pinMsg" style="font-size:12.5px;color:#e63535;min-height:16px;margin:6px 0"></div>'
       +'<div class="foot" style="flex-direction:column;gap:10px">'
-      +'<button class="btn btn-primary" style="width:100%" id="pinVerifyBtn">Confirm cash &amp; complete</button>'
+      +'<button class="btn btn-primary" style="width:100%" id="pinVerifyBtn">Confirm &amp; complete</button>'
       +'<button class="btn btn-ghost" style="width:100%" onclick="pinCancel()">Cancel</button></div></div>';
     document.body.appendChild(d);
   }
@@ -236,8 +236,10 @@
   window.crPay=function(){
     var btn=document.getElementById('crPay');var err=document.getElementById('crErr');err.textContent='';
     if(!cart.length){err.textContent='Add at least one participant.';return;}
-    btn.disabled=true;var old=btn.textContent;btn.textContent='Processing…';
-    submitOrder(orderPayload({payMethod:'card'}),btn,old);
+    var run=function(pin){btn.disabled=true;var old=btn.textContent;btn.textContent='Processing…';submitOrder(orderPayload({payMethod:'card',pin:pin||''}),btn,old);};
+    // Protected promo (free/high-value) → manager PIN before card/free completion too.
+    if(promoObj&&promoObj.requirePin){promptPin(function(pin){run(pin);});}
+    else{run('');}
   };
   // Pay the remaining balance in cash at the desk — a manager confirms with the PIN.
   window.crPayCash=function(){
