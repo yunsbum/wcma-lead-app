@@ -141,12 +141,36 @@ function computeOrderDiscount(promos, code, items) {
   });
   return { code: p.code, discount: total };
 }
+// Verify the shared manager PIN for a promo that requires approval. Public (used on /signup),
+// so it's rate-limited and never reveals the PIN. The PIN is re-checked again at order time.
+const pinTries = {};
+app.post('/api/promo-verify', async (req, res) => {
+  try {
+    const ip = (req.headers['x-forwarded-for'] || req.ip || '?').split(',')[0].trim();
+    const now = Date.now();
+    const rec = pinTries[ip] || { n: 0, until: 0 };
+    if (rec.until > now) return res.status(429).json({ ok: false, error: 'Too many attempts. Please wait a minute.' });
+    const b = req.body || {};
+    const code = String(b.code || '').toUpperCase();
+    const pin = String(b.pin || '');
+    const s = await db.getSettings();
+    const staffPin = String(s.staffPin || '');
+    const promos = (s && Array.isArray(s.promos)) ? s.promos : [];
+    const p = promos.find(x => x && x.code && String(x.code).toUpperCase() === code && (x.status ? x.status === 'Active' : true));
+    const okCode = !!(p && p.requirePin && !promoExpired(p) && !(p.max && (p.used || 0) >= p.max));
+    if (okCode && staffPin && pin === staffPin) { pinTries[ip] = { n: 0, until: 0 }; return res.json({ ok: true }); }
+    rec.n = (rec.n || 0) + 1; if (rec.n >= 6) { rec.until = now + 60000; rec.n = 0; } pinTries[ip] = rec;
+    return res.json({ ok: false, error: staffPin ? 'Incorrect PIN.' : 'No manager PIN is set yet. Please contact the front desk.' });
+  } catch (e) { return res.status(500).json({ ok: false, error: 'Could not verify right now.' }); }
+});
 app.post('/api/book', async (req, res) => {
   try {
     const b = req.body || {}; const _st = await db.getSettings(); const _list = (_st && Array.isArray(_st.programs) && _st.programs.length) ? _st.programs : programs; const program = _list.find(p => p.id === b.programId);
     if (!program) return res.status(400).json({ error: 'Invalid program' });
     if (!b.student || !b.email || !b.phone) return res.status(400).json({ error: 'Missing required fields' });
     const _promos = (_st && Array.isArray(_st.promos)) ? _st.promos : [];
+    const _prBook = findActivePromo(_promos, b.promoCode);
+    if (_prBook && _prBook.requirePin) { const sp = String(_st.staffPin || ''); if (!sp || String(b.promoPin || '') !== sp) return res.status(403).json({ error: 'Manager approval is required for this promo code.' }); }
     const applied = validatePromo(_promos, b.promoCode, program);
     const finalPrice = Math.max(0, (program.price || 0) - applied.discount);
     const lead = await db.createLead({ student: b.student, age: b.age ? Number(b.age) : undefined, guardian: b.guardian || '', email: b.email, phone: b.phone, program: program.name, programId: program.id, price: finalPrice, promo: applied.code, discount: applied.discount, when: b.when || '', source: b.source || 'direct', status: 'booked', payStatus: finalPrice > 0 ? 'pending' : 'none' });
@@ -203,16 +227,18 @@ app.post('/api/order', async (req, res) => {
     try { const busyDays = await gcal.getBusyDays(_st && _st.googleIcalUrl); if (busyDays && busyDays.length) { const bset = {}; busyDays.forEach(x => bset[x] = 1); for (const it of items) { if (it.p.slotDate && bset[it.p.slotDate]) return res.status(409).json({ error: 'That date is not available. Please pick another day.', slotFull: it.p.slotDate }); } } } catch (e) {}
     const _promos = (_st && Array.isArray(_st.promos)) ? _st.promos : [];
     const promoRec = findActivePromo(_promos, b.promoCode);
+    if (promoRec && promoRec.requirePin) { const sp = String(_st.staffPin || ''); if (!sp || String(b.promoPin || '') !== sp) return res.status(403).json({ error: 'Manager approval is required for this promo code.' }); }
     let discount = 0;
     items.forEach(it => { it.disc = itemDiscount(promoRec, it.prog, it.price); it.final = Math.max(0, it.price - it.disc); discount += it.disc; });
     const total = Math.max(0, subtotal - discount);
     const appliedCode = (promoRec && discount > 0) ? promoRec.code : '';
+    const promoApprovedAt = (promoRec && promoRec.requirePin && appliedCode) ? new Date().toISOString() : '';
     const buyerId = 'buyer_' + Date.now() + Math.floor(Math.random() * 1000);
-    const order = await db.createOrder({ schoolId: 'wcma', buyer: { first: buyer.first, last: buyer.last, email: buyer.email, phone: buyer.phone, address: buyer.address || '', contact: buyer.contact || '', source: buyer.source || 'signup' }, buyerId, status: 'pending', subtotal, discount, total, promo: appliedCode, participantCount: items.length, attempt: 1 });
+    const order = await db.createOrder({ schoolId: 'wcma', buyer: { first: buyer.first, last: buyer.last, email: buyer.email, phone: buyer.phone, address: buyer.address || '', contact: buyer.contact || '', source: buyer.source || 'signup' }, buyerId, status: 'pending', subtotal, discount, total, promo: appliedCode, promoApprovedAt, participantCount: items.length, attempt: 1 });
     const leadIds = [];
     for (const it of items) {
       // store the ACTUAL price this participant pays (after promo) so the admin sees the right amount / Free
-      const lead = await db.createLead({ schoolId: 'wcma', orderId: order._id, buyerId, student: it.name, first: it.p.first, last: it.p.last, age: it.p.age ? Number(it.p.age) : undefined, dob: it.p.dob || '', gender: it.p.gender || '', guardian: (buyer.first + ' ' + buyer.last).trim(), email: buyer.email, phone: buyer.phone, program: it.prog.name, programId: it.prog.id, price: it.final, discount: it.disc, when: it.when, slotDate: it.p.slotDate || '', slotTime: it.p.slotTime || '', medicalNotes: it.p.medicalNotes || '', source: buyer.source || 'signup', heard: buyer.source || '', status: 'booked', payStatus: it.final > 0 ? 'pending' : 'none', promo: appliedCode });
+      const lead = await db.createLead({ schoolId: 'wcma', orderId: order._id, buyerId, student: it.name, first: it.p.first, last: it.p.last, age: it.p.age ? Number(it.p.age) : undefined, dob: it.p.dob || '', gender: it.p.gender || '', guardian: (buyer.first + ' ' + buyer.last).trim(), email: buyer.email, phone: buyer.phone, program: it.prog.name, programId: it.prog.id, price: it.final, discount: it.disc, when: it.when, slotDate: it.p.slotDate || '', slotTime: it.p.slotTime || '', medicalNotes: it.p.medicalNotes || '', source: buyer.source || 'signup', heard: buyer.source || '', status: 'booked', payStatus: it.final > 0 ? 'pending' : 'none', promo: appliedCode, promoApprovedAt });
       leadIds.push(lead._id);
     }
     await db.updateOrder(order._id, { leadIds });
@@ -298,6 +324,7 @@ app.post('/api/leads/sync', auth.requireAuth, async (req, res) => {
     if (typeof s.googleAccount === 'string' && s.googleAccount) patch.googleAccount = s.googleAccount;
     if (typeof s.googleIcalUrl === 'string' && s.googleIcalUrl) patch.googleIcalUrl = s.googleIcalUrl;
     if (typeof s.googleConnected !== 'undefined') patch.googleConnected = !!s.googleConnected;
+    if (typeof s.staffPin === 'string' && /^\d{4}$/.test(s.staffPin)) patch.staffPin = s.staffPin; // 4-digit manager PIN; blank/invalid never wipes it
     if (typeof s.schoolEmail === 'string' && s.schoolEmail) patch.schoolEmail = s.schoolEmail;
     if (typeof s.schoolPhone === 'string' && s.schoolPhone) patch.schoolPhone = s.schoolPhone;
     if (typeof s.notifyEmail !== 'undefined') patch.notifyEmail = !!s.notifyEmail;
@@ -336,7 +363,7 @@ app.post('/api/test-email', auth.requireAuth, async (req, res) => {
 });
 app.get('/api/settings', auth.requireAuth, async (req, res) => {
   const s = await db.getSettings(); const sk = s.stripeKey || process.env.STRIPE_SECRET_KEY || '';
-  res.json({ stripeConnected: /^sk_/.test(sk), stripeMode: /^sk_live_/.test(sk) ? 'live' : (/^sk_test_/.test(sk) ? 'test' : 'none'), emailConnected: !!((s.smtpHost && s.smtpUser && s.smtpPass) || process.env.SMTP_HOST || ((s.sendgridKey || process.env.SENDGRID_KEY) && (s.fromEmail || process.env.FROM_EMAIL))), smsConnected: !!(s.twilioSid && s.twilioToken && s.twilioFrom), logo: s.logo || '', programsSaved: (Array.isArray(s.programs) && s.programs.length > 0), promos: Array.isArray(s.promos) ? s.promos : [], schedule: (s.schedule && typeof s.schedule === 'object') ? s.schedule : {}, exceptions: Array.isArray(s.exceptions) ? s.exceptions : [], confirmSubject: s.confirmSubject || '', confirmMessage: s.confirmMessage || '', googleAccount: s.googleAccount || '', googleIcalUrl: s.googleIcalUrl || '', googleConnected: !!s.googleConnected });
+  res.json({ stripeConnected: /^sk_/.test(sk), stripeMode: /^sk_live_/.test(sk) ? 'live' : (/^sk_test_/.test(sk) ? 'test' : 'none'), emailConnected: !!((s.smtpHost && s.smtpUser && s.smtpPass) || process.env.SMTP_HOST || ((s.sendgridKey || process.env.SENDGRID_KEY) && (s.fromEmail || process.env.FROM_EMAIL))), smsConnected: !!(s.twilioSid && s.twilioToken && s.twilioFrom), logo: s.logo || '', programsSaved: (Array.isArray(s.programs) && s.programs.length > 0), promos: Array.isArray(s.promos) ? s.promos : [], schedule: (s.schedule && typeof s.schedule === 'object') ? s.schedule : {}, exceptions: Array.isArray(s.exceptions) ? s.exceptions : [], confirmSubject: s.confirmSubject || '', confirmMessage: s.confirmMessage || '', googleAccount: s.googleAccount || '', googleIcalUrl: s.googleIcalUrl || '', googleConnected: !!s.googleConnected, staffPinSet: !!s.staffPin });
 });
 
 const PORT = process.env.PORT || 3000;
