@@ -8,7 +8,7 @@
   var cart = [], PROMOS = [], promoObj = null, approvedPin = '';
   function val(id){var e=document.getElementById(id);return e?String(e.value||'').trim():'';}
   function setVal(id,v){var e=document.getElementById(id);if(e)e.value=(v==null?'':v);}
-  function m(c){return (c===0)?'Free':'$'+((c||0)/100).toFixed(2);}
+  function m(c){return '$'+((c||0)/100).toFixed(2);}
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function computeDisc(p,price){if(!p)return 0;if(p.type==='percent')return Math.round(price*(p.value||0)/100);if(p.type==='amount')return Math.min(price,p.value||0);if(p.type==='free')return price;return 0;}
   // Promo applies to EVERY eligible participant (per-person), summed across the order.
@@ -99,7 +99,7 @@
       var elig=!(promoObj.scope&&promoObj.scope!=='All programs'&&String(promoObj.scope).indexOf(prog.name)===-1);
       var disc=elig?Math.max(0,Math.min(price,computeDisc(promoObj,price))):0;
       if(disc>0){var np=price-disc;
-        amt.innerHTML='<span style="text-decoration:line-through;color:#e63535;font-weight:600;font-size:12.5px">'+m(price)+'</span><br><span style="color:#1cb454;font-weight:800">'+(np<=0?'FREE':m(np))+'</span>';
+        amt.innerHTML='<span style="text-decoration:line-through;color:#e63535;font-weight:600;font-size:12.5px">'+m(price)+'</span><br><span style="color:#1cb454;font-weight:800">'+m(np)+'</span>';
       }
     });
   }
@@ -148,7 +148,7 @@
     if(disc>0)html+='<div class="srow"><span class="disc">Promo'+(promoObj?' ('+esc(promoObj.code)+')':'')+'</span><span class="disc">−'+m(disc)+'</span></div>';
     html+='<div class="srow total"><span>Total ('+cart.length+' participant'+(cart.length>1?'s':'')+')</span><span>'+m(total)+'</span></div>';
     document.getElementById('crSummary').innerHTML=html;
-    var pay=document.getElementById('crPay');pay.textContent=total>0?('Pay '+m(total)+' & complete'):'Complete free registration';
+    var pay=document.getElementById('crPay');pay.textContent=total>0?('Pay '+m(total)+' & complete'):'Complete registration';
   }
 
   window.crApply=function(){

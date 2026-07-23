@@ -1,6 +1,6 @@
 (function () {
   var LOADING = true, counter = 1; window.__idmap = {};
-  function money(s){if(s.payStatus==='pending')return 'Unpaid';if(s.price)return '$'+(s.price/100).toFixed(2);return s.payStatus==='paid'?'Paid':'Free';}
+  function money(s){if(s.payStatus==='pending')return 'Unpaid';if(s.price)return '$'+(s.price/100).toFixed(2);return '$0.00';}
   function conv(s,idnum){var created=s.createdAt?new Date(s.createdAt).toLocaleString():'';
     return {id:idnum,_sid:s._id,createdAt:s.createdAt||null,student:s.student||'(no name)',age:s.age,guardian:s.guardian||'',email:s.email||'',phone:s.phone||'',heard:s.source||'',program:s.program||'',when:s.when||'',src:s.source||'direct',paid:money(s),payStatus:s.payStatus||'none',status:s.status||'booked',notes:s.notes||'',created:created,archived:!!s.archived,deleted:!!s.deleted,promo:s.promo||'',promoApprovedAt:s.promoApprovedAt||'',activity:(s.activity&&s.activity.length)?s.activity:[{t:'Booking created',tm:created}]};}
   function busy(){return document.querySelector('.dragging')||document.querySelector('.drawer.on')||(document.getElementById('leadModal')&&!document.getElementById('leadModal').classList.contains('hidden'))||(document.getElementById('confirmModal')&&!document.getElementById('confirmModal').classList.contains('hidden'));}
