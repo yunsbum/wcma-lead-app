@@ -140,7 +140,7 @@
       +'<div id="crPromoMsg" style="font-size:12.5px;margin-top:6px"></div>'
       +'<div class="foot" style="flex-direction:column;gap:10px;margin-top:16px">'
       +'<button class="btn btn-ghost" style="width:100%" onclick="crBackToAdd()">‹ Add another student or program</button>'
-      +'<button class="btn" style="width:100%;background:#d9573f;color:#fff;border:0;font-weight:700" id="crPayCash" onclick="crPayCash()">💵 Pay cash at the desk</button>'
+      +'<button class="btn" style="width:100%;background:#d9573f;color:#fff;border:0;font-weight:700" id="crPayCash" onclick="crPayCash()">💵 Pay by cash</button>'
       +'<button class="btn btn-primary" style="width:100%" id="crPay" onclick="crPay()">Pay &amp; complete registration</button>'
       +'</div>'
       +'<div id="crErr" style="color:var(--red,#e63535);font-size:13px;margin-top:10px;text-align:center;font-weight:600"></div>'
@@ -163,7 +163,7 @@
     html+='<div class="srow total"><span>Total ('+cart.length+' participant'+(cart.length>1?'s':'')+')</span><span>'+m(total)+'</span></div>';
     document.getElementById('crSummary').innerHTML=html;
     var pay=document.getElementById('crPay');pay.textContent=total>0?('Pay '+m(total)+' by card'):'Complete registration';
-    var payCash=document.getElementById('crPayCash');if(payCash){payCash.textContent='💵 Pay '+m(total)+' cash at the desk';payCash.style.display=total>0?'block':'none';}
+    var payCash=document.getElementById('crPayCash');if(payCash){payCash.textContent='💵 Pay '+m(total)+' by cash';payCash.style.display=total>0?'block':'none';}
   }
 
   window.crApply=function(){
