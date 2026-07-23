@@ -279,19 +279,22 @@ app.post('/api/leads/sync', auth.requireAuth, async (req, res) => {
   try { const s = (req.body && req.body.settings) || {}; const patch = {};
     if (/^sk_/.test(s.stripeKey || '')) patch.stripeKey = s.stripeKey;
     if (s.sendgridKey) patch.sendgridKey = s.sendgridKey;
-    if (typeof s.fromEmail === 'string') patch.fromEmail = s.fromEmail;
-    if (typeof s.smtpHost === 'string') patch.smtpHost = s.smtpHost;
-    if (typeof s.smtpPort !== 'undefined') patch.smtpPort = s.smtpPort;
-    if (typeof s.smtpUser === 'string') patch.smtpUser = s.smtpUser;
+    // Guard: never let a blank/stale console push ERASE saved config (host/account/etc.).
+    // A console loaded on another device/tab can't re-read these (they're hidden for security),
+    // so it would otherwise send empty strings and wipe them. Only overwrite with a real value.
+    if (typeof s.fromEmail === 'string' && s.fromEmail) patch.fromEmail = s.fromEmail;
+    if (typeof s.smtpHost === 'string' && s.smtpHost) patch.smtpHost = s.smtpHost;
+    if (s.smtpPort) patch.smtpPort = s.smtpPort;
+    if (typeof s.smtpUser === 'string' && s.smtpUser) patch.smtpUser = s.smtpUser;
     if (typeof s.smtpPass === 'string' && s.smtpPass) patch.smtpPass = s.smtpPass;
     if (typeof s.smtpSecure !== 'undefined') patch.smtpSecure = !!s.smtpSecure;
-    if (typeof s.confirmSubject === 'string') patch.confirmSubject = s.confirmSubject;
-    if (typeof s.confirmMessage === 'string') patch.confirmMessage = s.confirmMessage;
-    if (typeof s.googleAccount === 'string') patch.googleAccount = s.googleAccount;
-    if (typeof s.googleIcalUrl === 'string') patch.googleIcalUrl = s.googleIcalUrl;
+    if (typeof s.confirmSubject === 'string' && s.confirmSubject) patch.confirmSubject = s.confirmSubject;
+    if (typeof s.confirmMessage === 'string' && s.confirmMessage) patch.confirmMessage = s.confirmMessage;
+    if (typeof s.googleAccount === 'string' && s.googleAccount) patch.googleAccount = s.googleAccount;
+    if (typeof s.googleIcalUrl === 'string' && s.googleIcalUrl) patch.googleIcalUrl = s.googleIcalUrl;
     if (typeof s.googleConnected !== 'undefined') patch.googleConnected = !!s.googleConnected;
-    if (typeof s.schoolEmail === 'string') patch.schoolEmail = s.schoolEmail;
-    if (typeof s.schoolPhone === 'string') patch.schoolPhone = s.schoolPhone;
+    if (typeof s.schoolEmail === 'string' && s.schoolEmail) patch.schoolEmail = s.schoolEmail;
+    if (typeof s.schoolPhone === 'string' && s.schoolPhone) patch.schoolPhone = s.schoolPhone;
     if (typeof s.notifyEmail !== 'undefined') patch.notifyEmail = !!s.notifyEmail;
     if (typeof s.notifySms !== 'undefined') patch.notifySms = !!s.notifySms;
     if (s.twilioSid) patch.twilioSid = s.twilioSid; if (s.twilioToken) patch.twilioToken = s.twilioToken; if (s.twilioFrom) patch.twilioFrom = s.twilioFrom;
