@@ -459,7 +459,10 @@
         <div class="card pad"><b style="font-size:14px">Conversion funnel</b><div id="funnel" style="margin-top:12px"></div></div>
       </div>
       <div class="card pad" style="margin-top:16px">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><b style="font-size:14px">Payments by day <span class="muted" style="font-weight:400">· this month</span></b><span class="muted" style="font-size:11.5px">Only days with sign-ups · match Cash to your drawer, Card to Stripe</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:6px"><b style="font-size:14px">Payments by day</b><button class="btn btn-ghost btn-sm" onclick="payMonthNav(-1)">‹</button><span id="payMonthLabel" style="font-size:13px;font-weight:600;min-width:92px;text-align:center"></span><button class="btn btn-ghost btn-sm" onclick="payMonthNav(1)">›</button></div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="muted" style="font-size:11.5px">Click a day for details · match Cash to your drawer, Card to Stripe</span><button class="btn btn-ghost btn-sm" onclick="exportPayMonth()">⬇︎ Export month</button></div>
+        </div>
         <div id="payReport" style="margin-top:12px;overflow-x:auto"></div>
       </div>
     </section>
@@ -884,7 +887,7 @@ function openPreview(){custFrom='manager';resetCustomer();showView('cust');}
 function openPublic(){custFrom='login';resetCustomer();showView('cust');}
 function backFromCustomer(){showView('manager');}
 function resetCustomer(){cs={program:null,date:null,time:null,price:0,discount:0,promo:null,view:new Date(today),wlSlot:null};renderPrograms();cgo(1);}
-const APP_VERSION='v119';
+const APP_VERSION='v120';
 document.getElementById('persistNote').textContent = (persist
   ? 'Prototype · Your entries are saved on this device. Download them anytime from the Pipeline (Download Excel).'
   : '⚠ Preview mode — data won\'t persist here. Download this file and open it in your browser to save data permanently.') + '  ·  ' + APP_VERSION;
@@ -1080,53 +1083,70 @@ function quickDeleteProg(id){doDeleteProg(id);}
 function doDeleteProg(id){const p=DB.programs.find(x=>x.id===id);if(!p)return;const used=DB.leads.some(l=>l.program===p.name);askConfirm('Delete "'+p.name+'"?'+(used?' Existing intro records keep their history.':''),function(){DB.programs=DB.programs.filter(x=>x.id!==id);save();renderSetup();toast('Program deleted');});}
 
 // ----- Excel download (all records; CSV opens directly in Excel/Sheets) -----
-function exportExcel(){
+function exportLeadsCSV(list,filename,msg){
   const cols=[['id','ID'],['student','Student'],['age','Age'],['guardian','Guardian'],['email','Email'],['phone','Phone'],['heard','Heard about us'],['program','Program'],['when','Date/Time'],['src','Source'],['paid','Paid'],['status','Status'],['archivedLabel','Archived'],['deletedLabel','Deleted'],['promo','Promo'],['paymentMethod','Payment method'],['cashApprovedAt','Cash approved'],['notes','Notes'],['created','Created']];
   const esc=v=>{v=(v==null?'':''+v).replace(/<[^>]+>/g,'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
-  const rows=DB.leads.map(l=>Object.assign({},l,{archivedLabel:l.archived?'Yes':'No',deletedLabel:l.deleted?'Yes':'No'}));
+  const rows=(list||[]).map(l=>Object.assign({},l,{archivedLabel:l.archived?'Yes':'No',deletedLabel:l.deleted?'Yes':'No'}));
   const csv=[cols.map(c=>c[1]).join(',')].concat(rows.map(l=>cols.map(c=>esc(l[c[0]])).join(','))).join('\r\n');
-  dl(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}),'WCMA-intros.csv');
-  toast('Downloaded '+DB.leads.length+' records incl. archived & deleted (opens in Excel)');
+  dl(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}),filename||'WCMA-intros.csv');
+  toast(msg||('Downloaded '+(list||[]).length+' records'));
+}
+function exportExcel(){
+  exportLeadsCSV(DB.leads,'WCMA-intros.csv','Downloaded '+DB.leads.length+' records incl. archived & deleted (opens in Excel)');
 }
 // ---- Dashboard trend data (illustrative sample so YoY / MoM comparisons are meaningful in the prototype) ----
 const MONTHS3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function leadMonth(l){var d=l.createdAt?new Date(l.createdAt):(l.created?new Date(l.created):null);return (d&&!isNaN(d))?d:null;}
-// Amount paid (in $) for a lead: use the numeric price if present, else parse the "Paid" label.
+// ---- Daily payments report (reconciliation): month nav, click a day for detail, Excel export ----
+function esch(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function leadAmount(l){if(typeof l.price==='number'&&l.price>0)return l.price/100;var v=parseFloat(String(l.paid||'').replace(/[^0-9.]/g,''));return isNaN(v)?0:v;}
 function leadMethod(l){if(l.paymentMethod)return l.paymentMethod;return leadAmount(l)>0?'card':'free';}
-// Daily payments report (this month, only days with sign-ups). Grouped by method for easy reconciliation.
+function leadPayLabel(l){if(l.paymentMethod){var a=(typeof l.price==='number'&&l.price>0)?('$'+(l.price/100).toFixed(2)):'';return l.paymentMethod+(a?(' · '+a):'');}return l.paid||'';}
+function leadDayKey(l){var d=leadMonth(l);return d?(d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()):null;}
+// Report set: real sign-ups (paid/cash/free), excluding pending & deleted. Archived stay included (Overview rule).
+function reportLeads(){return (DB.leads||[]).filter(function(l){return !l.deleted&&l.payStatus!=='pending';});}
+function monthLeads(y,m){return reportLeads().filter(function(l){var d=leadMonth(l);return d&&d.getFullYear()===y&&d.getMonth()===m;});}
+var payReportYM=null, payExpanded={};
+function payCurYM(){var n=new Date();return {y:n.getFullYear(),m:n.getMonth()};}
+function payMonthNav(delta){if(!payReportYM)payReportYM=payCurYM();var d=new Date(payReportYM.y,payReportYM.m+delta,1);var cur=payCurYM();if(d.getFullYear()>cur.y||(d.getFullYear()===cur.y&&d.getMonth()>cur.m))return;payReportYM={y:d.getFullYear(),m:d.getMonth()};payExpanded={};renderPayReport();}
 function renderPayReport(){
   var el=document.getElementById('payReport');if(!el)return;
-  var yr=new Date().getFullYear(),mo=new Date().getMonth(),days={};
-  (DB.leads||[]).forEach(function(l){
-    if(l.archived||l.deleted||l.payStatus==='pending')return;
-    var d=leadMonth(l);if(!d||d.getFullYear()!==yr||d.getMonth()!==mo)return;
-    var k=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
-    var r=days[k]||(days[k]={t:d.getTime(),label:MO[d.getMonth()]+' '+d.getDate(),card:{n:0,a:0},cash:{n:0,a:0},free:{n:0},tot:0});
+  if(!payReportYM)payReportYM=payCurYM();var y=payReportYM.y,m=payReportYM.m;
+  var lbl=document.getElementById('payMonthLabel');if(lbl)lbl.textContent=MO[m]+' '+y;
+  var days={};
+  monthLeads(y,m).forEach(function(l){var d=leadMonth(l);var k=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+    var r=days[k]||(days[k]={t:d.getTime(),label:MO[d.getMonth()]+' '+d.getDate(),card:{n:0,a:0},cash:{n:0,a:0},free:{n:0},tot:0,leads:[]});
     var amt=leadAmount(l),meth=leadMethod(l);
     if(meth==='cash'){r.cash.n++;r.cash.a+=amt;}else if(meth==='free'){r.free.n++;}else{r.card.n++;r.card.a+=amt;}
-    r.tot+=amt;
-  });
+    r.tot+=amt;r.leads.push(l);});
   var keys=Object.keys(days).sort(function(a,b){return days[b].t-days[a].t;});
-  if(!keys.length){el.innerHTML='<div class="muted" style="font-size:12.5px">No sign-ups yet this month.</div>';return;}
+  if(!keys.length){el.innerHTML='<div class="muted" style="font-size:12.5px">No sign-ups in '+MO[m]+' '+y+'.</div>';return;}
   var TC={n:0,a:0},TK={n:0,a:0},TF=0,TT=0;
-  var td='padding:7px 10px;border-bottom:1px solid var(--line)';
-  var tdr=td+';text-align:right';
+  var td='padding:7px 10px;border-bottom:1px solid var(--line)',tdr=td+';text-align:right';
   var body=keys.map(function(k){var r=days[k];TC.n+=r.card.n;TC.a+=r.card.a;TK.n+=r.cash.n;TK.a+=r.cash.a;TF+=r.free.n;TT+=r.tot;
-    return '<tr><td style="'+td+'">'+r.label+'</td>'
+    var open=!!payExpanded[k];
+    var main='<tr style="cursor:pointer" onclick="togglePayDay(\''+k+'\')"><td style="'+td+'">'+(open?'▾ ':'▸ ')+r.label+'</td>'
       +'<td style="'+tdr+'">'+(r.card.n?r.card.n+' · $'+r.card.a.toFixed(2):'—')+'</td>'
       +'<td style="'+tdr+'">'+(r.cash.n?r.cash.n+' · $'+r.cash.a.toFixed(2):'—')+'</td>'
       +'<td style="'+tdr+'">'+(r.free.n||'—')+'</td>'
-      +'<td style="'+tdr+';font-weight:700">$'+r.tot.toFixed(2)+'</td></tr>';}).join('');
+      +'<td style="'+tdr+';font-weight:700">$'+r.tot.toFixed(2)+'</td></tr>';
+    var det='';
+    if(open){
+      var drows=r.leads.slice().sort(function(a,b){return String(a.when||'').localeCompare(String(b.when||''));}).map(function(l){
+        return '<tr style="font-size:12px;color:#475569"><td style="padding:4px 10px">'+esch(l.student)+'</td><td style="padding:4px 10px">'+esch(l.program)+'</td><td style="padding:4px 10px">'+esch(l.when)+'</td><td style="padding:4px 10px">'+esch(leadMethod(l))+'</td><td style="padding:4px 10px;text-align:right">'+(leadAmount(l)>0?'$'+leadAmount(l).toFixed(2):'—')+'</td><td style="padding:4px 10px">'+esch(l.src||l.heard||'')+'</td></tr>';}).join('');
+      det='<tr><td colspan="5" style="padding:0 10px 10px;background:#f8fafc">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 4px;flex-wrap:wrap;gap:8px"><b style="font-size:12px;color:#334155">'+r.leads.length+' sign-up'+(r.leads.length>1?'s':'')+' on '+r.label+'</b><button class="btn btn-ghost btn-sm" onclick="exportPayDay(\''+k+'\')">⬇︎ Excel this day</button></div>'
+        +'<table style="width:100%;border-collapse:collapse"><thead><tr style="color:var(--muted);text-align:left;font-size:11px"><th style="padding:4px 10px">Student</th><th style="padding:4px 10px">Program</th><th style="padding:4px 10px">When</th><th style="padding:4px 10px">Method</th><th style="padding:4px 10px;text-align:right">Amount</th><th style="padding:4px 10px">Source</th></tr></thead><tbody>'+drows+'</tbody></table></td></tr>';
+    }
+    return main+det;}).join('');
   el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:13px">'
     +'<thead><tr style="color:var(--muted);text-align:left"><th style="'+td+'">Day</th><th style="'+tdr+'">💳 Card</th><th style="'+tdr+'">💵 Cash</th><th style="'+tdr+'">Free</th><th style="'+tdr+'">Day total</th></tr></thead>'
     +'<tbody>'+body+'</tbody>'
-    +'<tfoot><tr style="font-weight:800"><td style="'+td+'">Month total</td>'
-    +'<td style="'+tdr+'">'+TC.n+' · $'+TC.a.toFixed(2)+'</td>'
-    +'<td style="'+tdr+'">'+TK.n+' · $'+TK.a.toFixed(2)+'</td>'
-    +'<td style="'+tdr+'">'+TF+'</td>'
-    +'<td style="'+tdr+'">$'+TT.toFixed(2)+'</td></tr></tfoot></table>';
+    +'<tfoot><tr style="font-weight:800"><td style="'+td+'">Month total</td><td style="'+tdr+'">'+TC.n+' · $'+TC.a.toFixed(2)+'</td><td style="'+tdr+'">'+TK.n+' · $'+TK.a.toFixed(2)+'</td><td style="'+tdr+'">'+TF+'</td><td style="'+tdr+'">$'+TT.toFixed(2)+'</td></tr></tfoot></table>';
 }
+function togglePayDay(k){payExpanded[k]=!payExpanded[k];renderPayReport();}
+function exportPayDay(k){var list=reportLeads().filter(function(l){return leadDayKey(l)===k;});exportLeadsCSV(list,'WCMA-signups-'+k+'.csv',list.length+' sign-up(s) exported for '+k);}
+function exportPayMonth(){if(!payReportYM)payReportYM=payCurYM();var list=monthLeads(payReportYM.y,payReportYM.m);exportLeadsCSV(list,'WCMA-signups-'+MO[payReportYM.m]+'-'+payReportYM.y+'.csv',list.length+' sign-up(s) exported for '+MO[payReportYM.m]+' '+payReportYM.y);}
 function monthlyCounts(){var yr=new Date().getFullYear(),intros=new Array(12).fill(0),enr=new Array(12).fill(0);(DB.leads||[]).forEach(function(l){if(l.deleted||l.payStatus==='pending')return;var d=leadMonth(l);if(!d||d.getFullYear()!==yr)return;var m=d.getMonth();intros[m]++;if(l.status==='enrolled')enr[m]++;});return {intros:intros,enr:enr};}
 let curRange='all';
 function curMonthIdx(){return Math.min(11,new Date().getMonth());}
@@ -1203,7 +1223,7 @@ function renderStats(){
 }
 let showArchived=false;
 function toggleShowArch(){showArchived=document.getElementById('showArch').checked;renderBoard();}
-function renderBoard(){const board=document.getElementById('board');board.innerHTML='';const src=DB.leads.filter(l=>!l.deleted&&l.payStatus!=='pending'&&(showArchived?true:!l.archived));STAGES.forEach(s=>{const items=src.filter(l=>l.status===s.k);const col=document.createElement('div');col.className='col';col.innerHTML=`<div class="ch"><b>${s.label}</b><span class="n">${items.length}</span></div><div class="body"></div>`;board.appendChild(col);const body=col.querySelector('.body');body.ondragover=e=>{e.preventDefault();body.classList.add('dragover');};body.ondragleave=()=>body.classList.remove('dragover');body.ondrop=e=>{e.preventDefault();body.classList.remove('dragover');dropLead(e,s.k);};items.forEach(l=>{const c=document.createElement('div');c.className='lead'+(l.archived?' archived':'');c.draggable=!l.archived;c.ondragstart=e=>{if(l.archived){e.preventDefault();return;}e.dataTransfer.setData('text/plain',String(l.id));e.dataTransfer.effectAllowed='move';c.classList.add('dragging');};c.ondragend=()=>c.classList.remove('dragging');c.onclick=()=>openDrawer(l.id);const flag=l.archived?'<div class="warnflag" style="color:var(--muted2)">🗄 Archived</div>':(l.status==='noshow'?'<div class="warnflag">⚠ Needs follow-up</div>':(l.status==='followup'?'<div class="warnflag">⏳ Awaiting decision</div>':''));c.innerHTML=`<div class="nm">${l.student}</div><div class="mt">${l.program} · ${l.when}</div>${l.promo?`<div class="mt" style="color:var(--brand);font-weight:600">🏷️ ${l.promo}</div>`:''}<div class="foot"><span class="src">via ${l.src}</span><span>${l.paid}</span></div>${flag}`;body.appendChild(c);});if(!items.length)body.innerHTML='<div class="muted droph" style="padding:14px 4px;font-size:12.5px;text-align:center">Drop here</div>';});const ac=document.getElementById('archCount');if(ac)ac.textContent=DB.leads.filter(l=>l.archived).length;}
+function renderBoard(){const board=document.getElementById('board');board.innerHTML='';const src=DB.leads.filter(l=>!l.deleted&&l.payStatus!=='pending'&&(showArchived?true:!l.archived));STAGES.forEach(s=>{const items=src.filter(l=>l.status===s.k);const col=document.createElement('div');col.className='col';col.innerHTML=`<div class="ch"><b>${s.label}</b><span class="n">${items.length}</span></div><div class="body"></div>`;board.appendChild(col);const body=col.querySelector('.body');body.ondragover=e=>{e.preventDefault();body.classList.add('dragover');};body.ondragleave=()=>body.classList.remove('dragover');body.ondrop=e=>{e.preventDefault();body.classList.remove('dragover');dropLead(e,s.k);};items.forEach(l=>{const c=document.createElement('div');c.className='lead'+(l.archived?' archived':'');c.draggable=!l.archived;c.ondragstart=e=>{if(l.archived){e.preventDefault();return;}e.dataTransfer.setData('text/plain',String(l.id));e.dataTransfer.effectAllowed='move';c.classList.add('dragging');};c.ondragend=()=>c.classList.remove('dragging');c.onclick=()=>openDrawer(l.id);const flag=l.archived?'<div class="warnflag" style="color:var(--muted2)">🗄 Archived</div>':(l.status==='noshow'?'<div class="warnflag">⚠ Needs follow-up</div>':(l.status==='followup'?'<div class="warnflag">⏳ Awaiting decision</div>':''));c.innerHTML=`<div class="nm">${l.student}</div><div class="mt">${l.program} · ${l.when}</div>${l.promo?`<div class="mt" style="color:var(--brand);font-weight:600">🏷️ ${l.promo}</div>`:''}<div class="foot"><span class="src">via ${l.src}</span><span>${leadPayLabel(l)}</span></div>${flag}`;body.appendChild(c);});if(!items.length)body.innerHTML='<div class="muted droph" style="padding:14px 4px;font-size:12.5px;text-align:center">Drop here</div>';});const ac=document.getElementById('archCount');if(ac)ac.textContent=DB.leads.filter(l=>l.archived).length;}
 function archiveLead(){if(!curLead)return;curLead.archived=true;curLead.activity.push({t:'Archived (removed from active pipeline; kept for reports & export)',tm:'Just now'});save();closeDrawer();renderBoard();renderStats();toast(curLead.student.split(' ')[0]+' archived');}
 function unarchiveLead(){if(!curLead)return;curLead.archived=false;curLead.activity.push({t:'Restored to active pipeline',tm:'Just now'});save();renderDrawer();renderBoard();renderStats();toast(curLead.student.split(' ')[0]+' restored');}
 function deleteLead(){if(!curLead)return;var l=curLead,nm=(l.student||'Lead').split(' ')[0];askConfirm('Permanently delete '+nm+'? They will be removed from the pipeline and every report, but will still appear in Excel downloads (marked Deleted).',function(){l.deleted=true;l.activity.push({t:'Deleted — removed from pipeline & all reports; kept in Excel export',tm:'Just now'});save();closeDrawer();renderBoard();renderStats();toast(nm+' deleted');});}
