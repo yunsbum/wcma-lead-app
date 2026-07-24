@@ -278,18 +278,36 @@ app.post('/api/order/:id/retry', async (req, res) => {
     return res.json({ ok: true, pay: true, checkoutUrl: session.url });
   } catch (e) { console.error('[retry]', e); res.status(500).json({ error: 'Could not restart payment. Please try again.' }); }
 });
+// Non-sensitive booking receipt injected into the confirmation page (no email/phone).
+function buildSuccessSummary(order, leads) {
+  const esc = s => String(s == null ? '' : s).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+  const money = v => '$' + ((v || 0) / 100).toFixed(2);
+  const conf = 'WC-' + String(order._id || '').replace('order_', '');
+  const method = order.paymentMethod === 'cash' ? 'Paid in cash' : (((order.total || 0) === 0 || order.paymentMethod === 'free') ? 'Free' : 'Paid by card');
+  const rows = (leads || []).map(l => '<tr><td style="padding:7px 0;color:#334155;font-weight:600">' + esc(l.student) + '<div style="color:#94a3b8;font-size:12px;font-weight:400">' + esc(l.program) + (l.when ? ' &middot; ' + esc(l.when) : '') + '</div></td></tr>').join('');
+  return '<div style="text-align:left;border:1px solid #e5e7eb;border-radius:12px;padding:14px 16px;margin:14px 0 2px;background:#fafbfc">'
+    + '<div style="display:flex;justify-content:space-between;font-size:12px;color:#94a3b8;margin-bottom:6px"><span>Confirmation</span><span>' + esc(conf) + '</span></div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:14px">' + rows + '</table>'
+    + '<div style="display:flex;justify-content:space-between;border-top:1px solid #e5e7eb;margin-top:8px;padding-top:10px;font-weight:800"><span>' + esc(method) + '</span><span>' + money(order.total) + '</span></div>'
+    + '</div>';
+}
 app.get('/success', async (req, res) => {
+  let summaryHtml = '';
   try {
     if (req.query.order) {
-      const order = await db.getOrder(req.query.order);
+      let order = await db.getOrder(req.query.order);
       if (order && order.status !== 'paid') {
         let paid = !!req.query.mock;
         if (!paid && req.query.session_id) { try { const { stripe } = await getClient(); if (stripe) { const sess = await stripe.checkout.sessions.retrieve(req.query.session_id); paid = sess && sess.payment_status === 'paid'; } } catch (e) {} }
-        if (paid) { await db.updateOrder(order._id, { status: 'paid', paidAt: new Date().toISOString() }); await db.updateLeadsByOrder(order._id, { payStatus: 'paid', status: 'confirmed' }); const parts = (await db.listLeads()).filter(l => l.orderId === order._id); email.onOrder(order, parts).catch(() => {}); email.sendCalendarInvites(order, parts).catch(() => {}); }
+        if (paid) { await db.updateOrder(order._id, { status: 'paid', paidAt: new Date().toISOString() }); await db.updateLeadsByOrder(order._id, { payStatus: 'paid', status: 'confirmed' }); const parts = (await db.listLeads()).filter(l => l.orderId === order._id); email.onOrder(order, parts).catch(() => {}); email.sendCalendarInvites(order, parts).catch(() => {}); order = (await db.getOrder(order._id)) || order; }
       }
+      if (order) { const leads = (await db.listLeads()).filter(l => l.orderId === order._id && !l.deleted); summaryHtml = buildSuccessSummary(order, leads); }
     } else if (req.query.mock && req.query.lead) { try { await db.markPaidById(req.query.lead); } catch {} }
   } catch (e) { console.error('[success]', e.message); }
-  res.sendFile(path.join(__dirname, 'public', 'success.html'));
+  try {
+    let html = fs.readFileSync(path.join(__dirname, 'public', 'success.html'), 'utf8').replace('<!--SUMMARY-->', summaryHtml);
+    res.set('Cache-Control', 'no-store').set('Content-Type', 'text/html').send(html);
+  } catch (e) { res.sendFile(path.join(__dirname, 'public', 'success.html')); }
 });
 
 app.get('/console', auth.requireAuth, (req, res) => res.redirect('/admin'));

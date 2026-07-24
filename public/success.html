@@ -1,9 +1,25 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>You're booked! — World Class Martial Arts</title>
-<style>body{margin:0;font-family:-apple-system,Arial,sans-serif;background:#f5f7fb;color:#1e293b;display:flex;min-height:100vh;align-items:center;justify-content:center}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:36px;max-width:440px;text-align:center;box-shadow:0 1px 3px rgba(16,24,40,.06);margin:16px}
+<style>
+body{margin:0;font-family:-apple-system,Arial,sans-serif;background:#f5f7fb;color:#1e293b;display:flex;min-height:100vh;align-items:center;justify-content:center}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:32px;max-width:460px;width:100%;text-align:center;box-shadow:0 1px 3px rgba(16,24,40,.06);margin:16px;box-sizing:border-box}
 .check{width:64px;height:64px;border-radius:50%;background:#1cb45418;color:#1cb454;display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 14px}
-h1{font-size:22px;margin:0 0 8px}p{color:#64748b;line-height:1.6}a{display:inline-block;margin-top:18px;color:#3073F1;text-decoration:none;font-weight:600}</style></head>
-<body><div class="card"><div class="check">&#10003;</div><h1>You're booked!</h1>
-<p>Thanks for signing up at World Class Martial Arts. We'll send a confirmation to your email shortly. Please arrive 10 minutes early in comfortable clothes.</p>
-<a href="/signup">&larr; Book another</a></div></body></html>
+h1{font-size:22px;margin:0 0 8px}
+p{color:#64748b;line-height:1.6;margin:0}
+.next{text-align:left;font-size:13px;color:#475569;line-height:1.8;background:#f1f5ff;border:1px solid #dbe4ff;border-radius:11px;padding:12px 14px;margin:14px 0 2px}
+.btns{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.btn{display:block;padding:12px;border-radius:10px;font-weight:700;text-decoration:none;font-size:15px}
+.btn-primary{background:#3073F1;color:#fff}
+.btn-ghost{background:#fff;border:1px solid #cbd5e1;color:#334155}
+</style></head>
+<body><div class="card">
+<div class="check">&#10003;</div>
+<h1>You're booked!</h1>
+<p>Thanks for signing up at World Class Martial Arts — your intro is confirmed.</p>
+<!--SUMMARY-->
+<div class="next"><b>What's next</b><br>&bull; A confirmation email is on its way.<br>&bull; Please arrive 10 minutes early in comfortable clothes.<br>&bull; Questions? Just reply to your confirmation email.</div>
+<div class="btns">
+<a class="btn btn-primary" href="https://www.uswcma.com">Done</a>
+<a class="btn btn-ghost" href="/signup">Book another intro</a>
+</div>
+</div></body></html>
