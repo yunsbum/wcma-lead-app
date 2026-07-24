@@ -36,6 +36,18 @@
     list.parentNode.insertBefore(bar,list);
   }
   window.s1Apply=function(){ var i=document.getElementById('s1Promo'); applyCode(i?i.value:'', document.getElementById('s1PromoMsg')); };
+  // Gentle urgency badge when an applied code expires within 2 days (school-timezone based).
+  function promoUrgency(p){
+    if(!p||!p.expires)return '';
+    var pr=String(p.expires).split('-');if(pr.length<3)return '';
+    var exp=new Date(+pr[0],+pr[1]-1,+pr[2]);exp.setHours(0,0,0,0);
+    var today;try{today=schoolToday();}catch(e){today=new Date();today.setHours(0,0,0,0);}
+    var days=Math.round((exp.getTime()-today.getTime())/86400000);
+    if(isNaN(days)||days<0||days>2)return '';
+    var when=days===0?'Ends today':(days===1?'Ends tomorrow':'Ends in '+days+' days');
+    var mo=(typeof MO!=='undefined'&&MO[exp.getMonth()])?MO[exp.getMonth()]:(exp.getMonth()+1);
+    return '<br><span style="display:inline-block;margin-top:6px;background:#fff4e5;border:1px solid #f0c987;color:#8a5a00;border-radius:8px;padding:4px 9px;font-size:12px;font-weight:700">⏳ '+when+' ('+mo+' '+exp.getDate()+') — book now to keep your discount</span>';
+  }
   function applyCode(code, msgEl){
     code=(code||'').trim().toUpperCase();
     if(!code){promoObj=null;if(msgEl)msgEl.textContent='';afterPromoChange();return;}
@@ -43,7 +55,7 @@
     if(!p){promoObj=null;if(msgEl){msgEl.style.color='var(--red,#e63535)';msgEl.textContent='✕ Invalid or expired code';}afterPromoChange();return;}
     if(p.max&&(p.used||0)>=p.max){promoObj=null;if(msgEl){msgEl.style.color='var(--red,#e63535)';msgEl.textContent='✕ This code has reached its limit';}afterPromoChange();return;}
     if(p.expires&&new Date(p.expires+'T23:59:59')<new Date()){promoObj=null;if(msgEl){msgEl.style.color='var(--red,#e63535)';msgEl.textContent='✕ This code has expired';}afterPromoChange();return;}
-    promoObj=p;if(msgEl){msgEl.style.color='var(--ok,#1cb454)';msgEl.textContent='✓ Applied — the prices below now show your discount';}
+    promoObj=p;if(msgEl){msgEl.style.color='var(--ok,#1cb454)';msgEl.innerHTML='✓ Applied — the prices below now show your discount'+promoUrgency(p);}
     afterPromoChange();
   }
   // Cash payment needs a manager PIN (verified server-side) to confirm the cash was collected.
@@ -169,7 +181,7 @@
   window.crApply=function(){
     applyCode(val('crPromo'), null);
     var msg=document.getElementById('crPromoMsg');
-    if(promoObj){ msg.style.color='var(--ok,#1cb454)';msg.textContent='✓ Applied to all '+cart.length+' participant'+(cart.length>1?'s':'')+' — you save '+m(orderDiscount(promoObj)); }
+    if(promoObj){ msg.style.color='var(--ok,#1cb454)';msg.innerHTML='✓ Applied to all '+cart.length+' participant'+(cart.length>1?'s':'')+' — you save '+m(orderDiscount(promoObj))+promoUrgency(promoObj); }
     else if(val('crPromo')){ msg.style.color='var(--red,#e63535)';msg.textContent='✕ Invalid or expired code'; }
     else { msg.textContent=''; }
     renderReview();
