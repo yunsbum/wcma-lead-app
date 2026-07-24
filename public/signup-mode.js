@@ -37,7 +37,7 @@
   }
   window.s1Apply=function(){ var i=document.getElementById('s1Promo'); applyCode(i?i.value:'', document.getElementById('s1PromoMsg')); };
   // Gentle urgency badge when an applied code expires within 2 days (school-timezone based).
-  function promoUrgency(p){
+  function promoUrgencyBadge(p){
     if(!p||!p.expires)return '';
     var pr=String(p.expires).split('-');if(pr.length<3)return '';
     var exp=new Date(+pr[0],+pr[1]-1,+pr[2]);exp.setHours(0,0,0,0);
@@ -46,8 +46,9 @@
     if(isNaN(days)||days<0||days>2)return '';
     var when=days===0?'Ends today':(days===1?'Ends tomorrow':'Ends in '+days+' days');
     var mo=(typeof MO!=='undefined'&&MO[exp.getMonth()])?MO[exp.getMonth()]:(exp.getMonth()+1);
-    return '<br><span style="display:inline-block;margin-top:6px;background:#fff4e5;border:1px solid #f0c987;color:#8a5a00;border-radius:8px;padding:4px 9px;font-size:12px;font-weight:700">⏳ '+when+' ('+mo+' '+exp.getDate()+') — book now to keep your discount</span>';
+    return '<span style="display:inline-block;background:#fff4e5;border:1px solid #f0c987;color:#8a5a00;border-radius:8px;padding:4px 9px;font-size:12px;font-weight:700">⏳ '+when+' ('+mo+' '+exp.getDate()+') — book now to keep your discount</span>';
   }
+  function promoUrgency(p){var b=promoUrgencyBadge(p);return b?'<br>'+b:'';}
   function applyCode(code, msgEl){
     code=(code||'').trim().toUpperCase();
     if(!code){promoObj=null;if(msgEl)msgEl.textContent='';afterPromoChange();return;}
@@ -173,6 +174,7 @@
     var html=rows;
     if(disc>0)html+='<div class="srow"><span class="disc">Promo'+(promoObj?' ('+esc(promoObj.code)+')':'')+'</span><span class="disc">−'+m(disc)+'</span></div>';
     html+='<div class="srow total"><span>Total ('+cart.length+' participant'+(cart.length>1?'s':'')+')</span><span>'+m(total)+'</span></div>';
+    if(disc>0){var urg=promoUrgencyBadge(promoObj);if(urg)html+='<div style="text-align:center;margin-top:10px">'+urg+'</div>';}
     document.getElementById('crSummary').innerHTML=html;
     var pay=document.getElementById('crPay');pay.textContent=total>0?('Pay '+m(total)+' by card'):'Complete registration';
     var payCash=document.getElementById('crPayCash');if(payCash){payCash.textContent='💵 Pay '+m(total)+' by cash';payCash.style.display=total>0?'block':'none';}
@@ -288,7 +290,7 @@
     if(typeof window.renderIntro==='function'){ var _ri=window.renderIntro; window.renderIntro=function(){ var r=_ri.apply(this,arguments); try{decorateIntro();}catch(e){} return r; }; }
     if(typeof renderPrograms==='function'){try{renderPrograms();}catch(e){}}
     // reflect the promo discount on the details-step summary (s3) too
-    if(typeof window.renderCSummary==='function'){ var _rcs=window.renderCSummary; window.renderCSummary=function(){ try{ if(typeof cs!=='undefined'&&cs&&cs.program){ if(promoObj){ var price=cs.program.price||0; var elig=!(promoObj.scope&&promoObj.scope!=='All programs'&&String(promoObj.scope).indexOf(cs.program.name)===-1); cs.discount=elig?Math.max(0,Math.min(price,computeDisc(promoObj,price))):0; cs.promo=(elig&&cs.discount>0)?promoObj.code:''; } else { cs.discount=0; cs.promo=''; } } }catch(e){} return _rcs.apply(this,arguments); }; }
+    if(typeof window.renderCSummary==='function'){ var _rcs=window.renderCSummary; window.renderCSummary=function(){ try{ if(typeof cs!=='undefined'&&cs&&cs.program){ if(promoObj){ var price=cs.program.price||0; var elig=!(promoObj.scope&&promoObj.scope!=='All programs'&&String(promoObj.scope).indexOf(cs.program.name)===-1); cs.discount=elig?Math.max(0,Math.min(price,computeDisc(promoObj,price))):0; cs.promo=(elig&&cs.discount>0)?promoObj.code:''; } else { cs.discount=0; cs.promo=''; } } }catch(e){} var r=_rcs.apply(this,arguments); try{ if(typeof cs!=='undefined'&&cs&&cs.discount>0&&promoObj){ var sm=document.getElementById('summary'); var urg=promoUrgencyBadge(promoObj); if(sm&&urg) sm.insertAdjacentHTML('beforeend','<div style="text-align:center;margin-top:8px">'+urg+'</div>'); } }catch(e){} return r; }; }
     bindFieldClearing();
     if(typeof window.toPayStep==='function'){ window.toPayStep=function(){ if(!validateUI())return; if(!captureEntry())return; showReview(); }; }
     if(typeof renderLogos==='function'){try{renderLogos();}catch(e){}}
